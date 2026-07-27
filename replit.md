@@ -1,45 +1,15 @@
-# [Project name]
+# Project: Tiered Wireframe Library (design-logic hub)
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Hub-and-spoke system where LLM agents auto-design knowledge/property graphs and workflow diagrams.
 
-## Run & Operate
+## Structure
+- `docs/wireframe-library/SPEC.md` — tiers, five growth axes (A1 shape, A2 color, A3 size, A4 stroke, A5 labels), librarian selection rules. v0.1.0
+- `docs/wireframe-library/manifest.json` (+ `manifest.schema.json`) — machine-readable component manifest for LLM consumption; `figmaNodeId: null` means the React reference render is source of truth.
+- `artifacts/mockup-sandbox/src/components/mockups/wireframe-library/` — React reference sheets (TierLadder, GrowthAxes, KnowledgeGraphExample, WorkflowExample) rendered on the canvas.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
-
-## Stack
-
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
-
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
+## Core design logic
+Tier 1 primitives are equal-consequence (S2 size, mono ink, W1 stroke, no label); complexity grows along parallel, independent, linear axes so a semi-autonomous "librarian" can map need → tier → axis coordinates deterministically. Invariant: `max(axes) ≤ tier` (checked ad hoc via node script against manifest).
 
 ## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- User has full dev-org Figma privileges; Figma MCP is configured. Figma component intake is a planned follow-up (needs file URL from user).
+- Future spokes (out of scope for now): librarian runtime agent, GeoGebra/Wolfram/data-viz vocabularies.
