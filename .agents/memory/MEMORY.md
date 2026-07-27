@@ -1,0 +1,1 @@
+- [Post-merge lockfile drift](post-merge-lockfile.md) — if post-merge setup fails with ERR_PNPM_OUTDATED_LOCKFILE, run `pnpm install --no-frozen-lockfile` then re-run setup.
