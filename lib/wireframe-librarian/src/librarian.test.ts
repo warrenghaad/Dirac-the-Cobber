@@ -538,6 +538,153 @@ describe("validatePlan – constraint: manifest-id", () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildPlan — unknown kind coercion (simulates a malformed LLM response)
+// ---------------------------------------------------------------------------
+
+describe("buildPlan – unknown node kind falls back gracefully", () => {
+  // Simulate an LLM that returned "process" as a node kind for a workflow,
+  // which is not in WF_NODE_COMPONENT.  buildPlan should not throw.
+  const plan = build({
+    need: "checkout flow",
+    family: "workflow",
+    nodes: [
+      { id: "start",  label: "Start",   className: "terminator", kind: "start" },
+      { id: "pay",    label: "Pay",     className: "task",       kind: "process" as never },
+      { id: "end",    label: "End",     className: "terminator", kind: "end" },
+    ],
+    edges: [
+      { from: "start", to: "pay", kind: "flow" },
+      { from: "pay",   to: "end", kind: "flow" },
+    ],
+  });
+
+  it("does not throw — plan is returned", () => {
+    expect(plan).toBeDefined();
+    expect(plan.placements.length).toBeGreaterThan(0);
+  });
+
+  it("records a coercion note", () => {
+    expect(plan.notes.some((n) => n.includes('"pay"') && n.includes('"process"'))).toBe(true);
+  });
+
+  it("coerces the unknown kind to wf.task (workflow default)", () => {
+    const payP = plan.placements.find((p) => p.id === "pay")!;
+    expect(payP.componentId).toBe("wf.task");
+  });
+
+  it("passes validatePlan with no errors", () => {
+    expect(validatePlan(plan, MANIFEST).valid).toBe(true);
+  });
+});
+
+describe("buildPlan – unknown node kind falls back gracefully (knowledge-graph)", () => {
+  // Simulate an LLM that returned "node" as a node kind for a knowledge-graph.
+  const plan = build({
+    need: "org chart",
+    family: "knowledge-graph",
+    nodes: [
+      { id: "a1", label: "Alice", className: "Person", kind: "node" as never },
+      { id: "b1", label: "Bob",   className: "Person", kind: "entity" },
+    ],
+    edges: [
+      { from: "a1", to: "b1", kind: "relation" },
+    ],
+  });
+
+  it("does not throw — plan is returned", () => {
+    expect(plan).toBeDefined();
+  });
+
+  it("records a coercion note", () => {
+    expect(plan.notes.some((n) => n.includes('"a1"') && n.includes('"node"'))).toBe(true);
+  });
+
+  it("coerces to kg.entity (knowledge-graph default)", () => {
+    const a1P = plan.placements.find((p) => p.id === "a1")!;
+    expect(a1P.componentId).toBe("kg.entity");
+  });
+
+  it("passes validatePlan with no errors", () => {
+    expect(validatePlan(plan, MANIFEST).valid).toBe(true);
+  });
+});
+
+describe("buildPlan – unknown edge kind falls back gracefully", () => {
+  // Simulate an LLM that returned "link" as an edge kind.
+  const plan = build({
+    need: "entity diagram",
+    family: "knowledge-graph",
+    nodes: [
+      { id: "a", label: "A", className: "Widget", kind: "entity" },
+      { id: "b", label: "B", className: "Widget", kind: "entity" },
+    ],
+    edges: [
+      { id: "e1", from: "a", to: "b", kind: "link" as never, label: "connects" },
+    ],
+  });
+
+  it("does not throw — plan is returned", () => {
+    expect(plan).toBeDefined();
+  });
+
+  it("records a coercion note for the edge", () => {
+    expect(plan.notes.some((n) => n.includes('"e1"') && n.includes('"link"'))).toBe(true);
+  });
+
+  it("coerces to kg.relation-edge (knowledge-graph default)", () => {
+    const edgeP = plan.placements.find((p) => p.id === "e1")!;
+    expect(edgeP.componentId).toBe("kg.relation-edge");
+  });
+
+  it("passes validatePlan with no errors", () => {
+    expect(validatePlan(plan, MANIFEST).valid).toBe(true);
+  });
+});
+
+describe("buildPlan – all kinds unknown (maximally malformed LLM response)", () => {
+  // Every node and edge has a garbage kind — nothing should crash.
+  const plan = build({
+    need: "purchase workflow",
+    family: "workflow",
+    nodes: [
+      { id: "start",    label: "Start",   className: "terminator", kind: "start" },
+      { id: "activity", label: "Do it",   className: "task",       kind: "action" as never },
+      { id: "gate",     label: "Gate",    className: "task",       kind: "gateway" as never },
+      { id: "end",      label: "End",     className: "terminator", kind: "end" },
+    ],
+    edges: [
+      { id: "e1", from: "start",    to: "activity", kind: "sequence" as never },
+      { id: "e2", from: "activity", to: "gate",     kind: "arrow" as never },
+      { id: "e3", from: "gate",     to: "end",      kind: "flow" },
+    ],
+  });
+
+  it("produces a plan without throwing", () => {
+    expect(plan).toBeDefined();
+    expect(plan.placements.length).toBeGreaterThan(0);
+  });
+
+  it("all node placements reference valid manifest component ids", () => {
+    const validIds = new Set(MANIFEST.components.map((c) => c.id));
+    for (const p of plan.placements) {
+      expect(validIds.has(p.componentId)).toBe(true);
+    }
+  });
+
+  it("records coercion notes for each unknown kind", () => {
+    const noteText = plan.notes.join(" ");
+    expect(noteText).toContain('"action"');
+    expect(noteText).toContain('"gateway"');
+    expect(noteText).toContain('"sequence"');
+    expect(noteText).toContain('"arrow"');
+  });
+
+  it("passes validatePlan with no errors", () => {
+    expect(validatePlan(plan, MANIFEST).valid).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Round-trip: every plan buildPlan emits passes validatePlan
 // ---------------------------------------------------------------------------
 

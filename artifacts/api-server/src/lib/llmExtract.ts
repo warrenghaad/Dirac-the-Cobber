@@ -21,6 +21,51 @@ import type {
   StructuredNode,
 } from "@workspace/wireframe-librarian";
 
+// ---------------------------------------------------------------------------
+// Allowed kind vocabularies — must stay in sync with librarian.ts tables.
+// ---------------------------------------------------------------------------
+
+const KG_NODE_KINDS = new Set(["entity", "class", "literal"]);
+const WF_NODE_KINDS = new Set(["task", "start", "end", "decision", "parallel", "data"]);
+const KG_EDGE_KINDS = new Set(["relation", "property", "subclass"]);
+const WF_EDGE_KINDS = new Set(["flow", "conditional"]);
+
+/**
+ * Coerce a node kind string to a value the librarian's component-selection
+ * tables recognise.  Returns [coercedKind, didCoerce].
+ */
+function coerceNodeKind(
+  kind: unknown,
+  family: DiagramFamily,
+): [StructuredNode["kind"], boolean] {
+  const allowed = family === "workflow" ? WF_NODE_KINDS : KG_NODE_KINDS;
+  const fallback = family === "workflow" ? "task" : "entity";
+  const str = typeof kind === "string" ? kind.trim().toLowerCase() : "";
+  if (allowed.has(str as StructuredNode["kind"])) {
+    return [str as StructuredNode["kind"], false];
+  }
+  return [fallback as StructuredNode["kind"], true];
+}
+
+/**
+ * Coerce an edge kind string to a value the librarian's component-selection
+ * tables recognise.  Returns [coercedKind, didCoerce].
+ */
+function coerceEdgeKind(
+  kind: unknown,
+  family: DiagramFamily,
+): [StructuredEdge["kind"], boolean] {
+  const allowed = family === "workflow" ? WF_EDGE_KINDS : KG_EDGE_KINDS;
+  const fallback = family === "workflow" ? "flow" : "relation";
+  const str = typeof kind === "string" ? kind.trim().toLowerCase() : "";
+  if (allowed.has(str as StructuredEdge["kind"])) {
+    return [str as StructuredEdge["kind"], false];
+  }
+  return [fallback as StructuredEdge["kind"], true];
+}
+
+// ---------------------------------------------------------------------------
+
 export interface LLMExtractionResult {
   family: DiagramFamily;
   nodes: StructuredNode[];
@@ -155,17 +200,41 @@ export async function extractWithLLM(
   const family: DiagramFamily =
     result.family === "workflow" ? "workflow" : "knowledge-graph";
 
-  const modelLabel = config.model;
+  const coercionWarnings: string[] = [];
+
+  // Sanitise node kinds — coerce anything outside the allowed set so buildPlan
+  // never receives a kind it cannot look up in its component-selection tables.
+  const nodes = (result.nodes as Record<string, unknown>[]).map((raw) => {
+    const [kind, coerced] = coerceNodeKind(raw.kind, family);
+    if (coerced) {
+      coercionWarnings.push(
+        `Node "${raw.id ?? "?"}" had unknown kind "${raw.kind}" — coerced to "${kind}".`,
+      );
+    }
+    return { ...raw, kind } as StructuredNode;
+  });
+
+  // Sanitise edge kinds similarly.
+  const edges = (result.edges as Record<string, unknown>[]).map((raw) => {
+    const [kind, coerced] = coerceEdgeKind(raw.kind, family);
+    if (coerced) {
+      coercionWarnings.push(
+        `Edge "${raw.id ?? raw.from + "→" + raw.to}" had unknown kind "${raw.kind}" — coerced to "${kind}".`,
+      );
+    }
+    return { ...raw, kind } as StructuredEdge;
+  });
 
   return {
     family,
-    nodes: result.nodes as StructuredNode[],
-    edges: result.edges as StructuredEdge[],
+    nodes,
+    edges,
     groups: Array.isArray(result.groups)
       ? (result.groups as StructuredGroup[])
       : [],
     notes: [
-      `Structure extracted by LLM (${modelLabel}) from: "${need.slice(0, 80)}${need.length > 80 ? "…" : ""}".`,
+      `Structure extracted by LLM (${config.model}) from: "${need.slice(0, 80)}${need.length > 80 ? "…" : ""}".`,
+      ...coercionWarnings,
     ],
   };
 }
