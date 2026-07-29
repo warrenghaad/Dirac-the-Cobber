@@ -1,12 +1,17 @@
 /**
  * LLM-backed structure extraction for the librarian.
  *
- * When AI_INTEGRATIONS_OPENAI_BASE_URL and AI_INTEGRATIONS_OPENAI_API_KEY are
- * set (via Replit AI Integrations), this uses an LLM to parse a free-form need
- * description into structured nodes/edges/groups.
+ * Supports two configuration paths (checked in order):
  *
- * When the integration is not configured the function returns null and the
- * caller falls back to the deterministic keyword extractor in the librarian.
+ * 1. Replit AI Integration — when AI_INTEGRATIONS_OPENAI_BASE_URL and
+ *    AI_INTEGRATIONS_OPENAI_API_KEY are set, uses the Replit-proxied endpoint
+ *    with Replit AI Integration model names (gpt-5.6-luna).
+ *
+ * 2. Direct OpenAI — when OPENAI_API_KEY is set, uses the standard OpenAI
+ *    endpoint with a real model name (gpt-4o-mini).
+ *
+ * When neither is configured the function returns null and the caller falls
+ * back to the deterministic keyword extractor in the librarian.
  */
 
 import type {
@@ -24,12 +29,29 @@ export interface LLMExtractionResult {
   notes: string[];
 }
 
-/** Returns true when the OpenAI AI integration env vars are present. */
+type LLMConfig =
+  | { kind: "replit"; baseURL: string; apiKey: string; model: string }
+  | { kind: "openai"; apiKey: string; model: string };
+
+/** Resolves the active LLM configuration, or returns null when unconfigured. */
+function getLLMConfig(): LLMConfig | null {
+  const replitBase = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+  const replitKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (replitBase && replitKey) {
+    return { kind: "replit", baseURL: replitBase, apiKey: replitKey, model: "gpt-5.6-luna" };
+  }
+
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    return { kind: "openai", apiKey: openaiKey, model: "gpt-4o-mini" };
+  }
+
+  return null;
+}
+
+/** Returns true when any supported LLM config is present. */
 export function isLLMConfigured(): boolean {
-  return Boolean(
-    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL &&
-      process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  );
+  return getLLMConfig() !== null;
 }
 
 const SYSTEM_PROMPT = `You are a diagram-structure extractor. Given a plain-English description of a diagram need, output a JSON object (no markdown fences) with this exact shape:
@@ -75,30 +97,34 @@ Rules:
 
 /**
  * Attempts LLM extraction of nodes/edges/groups from a need string.
- * Returns null when the integration is not configured, so the caller can
- * fall back to deterministic extraction without any error.
+ * Returns null when no LLM is configured, so the caller can fall back to
+ * deterministic extraction without any error.
  */
 export async function extractWithLLM(
   need: string,
   hintFamily?: DiagramFamily,
 ): Promise<LLMExtractionResult | null> {
-  if (!isLLMConfigured()) {
+  const config = getLLMConfig();
+  if (!config) {
     return null;
   }
 
   // Lazy import so the module can always be loaded regardless of env vars.
   const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({
-    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-  });
+
+  const clientOptions =
+    config.kind === "replit"
+      ? { apiKey: config.apiKey, baseURL: config.baseURL }
+      : { apiKey: config.apiKey };
+
+  const client = new OpenAI(clientOptions);
 
   const userContent = hintFamily
     ? `Diagram family hint: ${hintFamily}\n\nNeed: ${need}`
     : `Need: ${need}`;
 
   const response = await client.chat.completions.create({
-    model: "gpt-5.6-luna",
+    model: config.model,
     max_completion_tokens: 2048,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
@@ -129,6 +155,8 @@ export async function extractWithLLM(
   const family: DiagramFamily =
     result.family === "workflow" ? "workflow" : "knowledge-graph";
 
+  const modelLabel = config.model;
+
   return {
     family,
     nodes: result.nodes as StructuredNode[],
@@ -137,7 +165,7 @@ export async function extractWithLLM(
       ? (result.groups as StructuredGroup[])
       : [],
     notes: [
-      `Structure extracted by LLM (gpt-5.6-luna) from: "${need.slice(0, 80)}${need.length > 80 ? "…" : ""}".`,
+      `Structure extracted by LLM (${modelLabel}) from: "${need.slice(0, 80)}${need.length > 80 ? "…" : ""}".`,
     ],
   };
 }
