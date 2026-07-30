@@ -18,16 +18,23 @@ type GlyphProps = {
 };
 
 function resolveShape(c: LibraryComponent, a1: number): string {
-  if (a1 <= 0) return c.shape === "dot" ? "dot" : c.shape.startsWith("arrow") || c.shape.startsWith("line") ? "arrow" : "rounded-rect";
+  // Edge / line shapes — always render as their specific edge type
+  if (c.shape === "line-plain") return "line-plain";
+  if (c.shape === "arrow-bidir") return "arrow-bidir";
+  if (c.shape.startsWith("arrow") || c.shape.startsWith("line")) return "arrow";
+  if (a1 <= 0) return c.shape === "dot" ? "dot" : "rounded-rect";
   if (a1 === 1) {
     if (c.shape === "ellipse") return "ellipse";
+    if (c.shape === "pill") return "pill";
+    if (c.shape === "diamond") return "diamond";
+    if (c.shape === "hexagon") return "hexagon";
+    if (c.shape === "parallelogram") return "parallelogram";
+    if (c.shape === "cylinder") return "cylinder";
     if (c.shape.includes("container") || c.shape === "rect-outline" || c.shape === "rectangle") return "rectangle";
-    if (c.shape.startsWith("arrow") || c.shape.startsWith("line")) return "arrow";
     if (c.shape === "dot") return "dot";
     return "rounded-rect";
   }
-  if (c.shape.startsWith("arrow") || c.shape.startsWith("line")) return "arrow";
-  return c.shape === "rect-outline" ? "rectangle" : c.shape.replace("container-header", "container").replace("arrow-labeled", "arrow");
+  return c.shape === "rect-outline" ? "rectangle" : c.shape.replace("container-header", "container");
 }
 
 export function glyphColors(axes: AxisCoords, hueIndex: number) {
@@ -50,22 +57,36 @@ export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, sca
   const tag = axes.a5 >= 2 ? (typeTag ?? component.family) : undefined;
   const propLines = axes.a5 >= 3 ? (props ?? ["name: string", "type: node"]).slice(0, axes.a5 >= 4 ? 4 : 2) : [];
 
-  if (shape === "arrow") {
+  if (shape === "arrow" || shape === "line-plain" || shape === "arrow-bidir") {
     const len = W + 40;
+    const edgeColor = axes.a2 > 0 ? stroke : INK;
     const markerId = `m-${component.id.replace(/\W/g, "")}-${axes.a4}-${hueIndex}-${axes.a2}`;
+    const markerStartId = `ms-${component.id.replace(/\W/g, "")}-${axes.a4}-${hueIndex}-${axes.a2}`;
+    const dashArr = axes.a4 >= 2 && dashy ? "6 4" : axes.a4 >= 3 ? "6 4" : undefined;
     return (
       <svg width={len} height={40} viewBox={`0 0 ${len} 40`}>
         <defs>
           <marker id={markerId} markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-            <path d="M0,0 L9,4.5 L0,9 z" fill={axes.a2 > 0 ? stroke : INK} />
+            <path d="M0,0 L9,4.5 L0,9 z" fill={edgeColor} />
           </marker>
+          {shape === "arrow-bidir" && (
+            <marker id={markerStartId} markerWidth="9" markerHeight="9" refX="1" refY="4.5" orient="auto">
+              <path d="M9,0 L0,4.5 L9,9 z" fill={edgeColor} />
+            </marker>
+          )}
         </defs>
         {label && (
           <text x={len / 2} y={12} textAnchor="middle" fontSize={10} fontStyle="italic" fill="#6B7280">
             {label}
           </text>
         )}
-        <line x1={2} y1={26} x2={len - 12} y2={26} stroke={axes.a2 > 0 ? stroke : INK} strokeWidth={sw} strokeDasharray={axes.a4 >= 2 && dashy ? "6 4" : axes.a4 >= 3 ? "6 4" : undefined} markerEnd={`url(#${markerId})`} />
+        <line
+          x1={shape === "arrow-bidir" ? 14 : 2} y1={26}
+          x2={shape === "line-plain" ? len - 2 : len - 12} y2={26}
+          stroke={edgeColor} strokeWidth={sw} strokeDasharray={dashArr}
+          markerEnd={shape !== "line-plain" ? `url(#${markerId})` : undefined}
+          markerStart={shape === "arrow-bidir" ? `url(#${markerStartId})` : undefined}
+        />
       </svg>
     );
   }
@@ -95,6 +116,16 @@ export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, sca
         <polygon points={`${W * 0.2},0 ${W * 0.8},0 ${W},${totH / 2} ${W * 0.8},${totH} ${W * 0.2},${totH} 0,${totH / 2}`} {...common} />
       )}
       {shape === "parallelogram" && <polygon points={`${W * 0.18},0 ${W},0 ${W * 0.82},${totH} 0,${totH}`} {...common} />}
+      {shape === "cylinder" && (() => {
+        const ry = Math.max(6, totH * 0.14);
+        return (
+          <g>
+            <rect x={0} y={ry} width={W} height={totH - ry} {...common} />
+            <ellipse cx={cx} cy={ry} rx={cx} ry={ry} {...common} />
+            <ellipse cx={cx} cy={totH} rx={cx} ry={ry} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} />
+          </g>
+        );
+      })()}
       {label && (
         <text x={cx} y={propLines.length ? 16 : tag ? cy - 2 : cy + 4} textAnchor="middle" fontSize={Math.max(10, 12 * scale)} fontWeight={600} fill={INK}>
           {label}

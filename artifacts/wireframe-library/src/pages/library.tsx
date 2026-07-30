@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Glyph } from "@/components/Glyph";
+import { LibrarianExplorer } from "@/components/LibrarianExplorer";
 import {
   MANIFEST, FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
   AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent,
@@ -212,6 +213,7 @@ export default function LibraryPage() {
           <TabsTrigger value="library" data-testid="tab-library">Library</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
+          <TabsTrigger value="explorer" data-testid="tab-explorer">Librarian Explorer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="space-y-8">
@@ -236,6 +238,10 @@ export default function LibraryPage() {
 
         <TabsContent value="rules">
           <LibrarianRules />
+        </TabsContent>
+
+        <TabsContent value="explorer">
+          <LibrarianExplorer />
         </TabsContent>
       </Tabs>
     </div>
