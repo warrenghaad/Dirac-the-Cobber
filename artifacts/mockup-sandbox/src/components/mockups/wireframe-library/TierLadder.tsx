@@ -1,4 +1,4 @@
-import { INK, PAPER, ACCENT, PALETTE, sizeOf, tint, SheetHeader, DASHED } from "./_shared/tokens";
+import { INK, PAPER, ACCENT, PALETTE, sizeOf, tint, SheetHeader, DASHED, DOTTED, BORDER, TEXT_SECONDARY, TEXT_MUTED, TEXT_BODY } from "./_shared/tokens";
 
 function Node({
   shape = "rounded-rect",
@@ -46,7 +46,7 @@ function Node({
         </text>
       )}
       {tag && (
-        <text x={cx} y={cy + 14} textAnchor="middle" fontSize={9} fill="#6B7280" fontFamily="Inter, sans-serif">
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize={9} fill={TEXT_SECONDARY} fontFamily="Inter, sans-serif">
           {tag}
         </text>
       )}
@@ -62,7 +62,7 @@ function Edge({ w = 100, dash, stroke = 1, label }: { w?: number; dash?: string;
           <path d="M0,0 L8,4 L0,8 z" fill={INK} />
         </marker>
       </defs>
-      {label && <text x={w / 2} y={8} textAnchor="middle" fontSize={9} fill="#6B7280" fontFamily="Inter, sans-serif">{label}</text>}
+      {label && <text x={w / 2} y={8} textAnchor="middle" fontSize={9} fill={TEXT_SECONDARY} fontFamily="Inter, sans-serif">{label}</text>}
       <line x1={2} y1={18} x2={w - 10} y2={18} stroke={INK} strokeWidth={stroke} strokeDasharray={dash} markerEnd={`url(#arr-${stroke}-${dash ?? "s"})`} />
     </svg>
   );
@@ -70,10 +70,10 @@ function Edge({ w = 100, dash, stroke = 1, label }: { w?: number; dash?: string;
 
 function Cell({ children, name, note }: { children: React.ReactNode; name: string; note?: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 p-4 rounded-lg border" style={{ borderColor: "#E5E3DC", background: "white" }}>
+    <div className="flex flex-col items-center gap-2 p-4 rounded-lg border" style={{ borderColor: BORDER, background: "white" }}>
       <div className="flex-1 flex items-center justify-center min-h-[80px]">{children}</div>
       <div className="text-xs font-semibold text-center" style={{ color: INK }}>{name}</div>
-      {note && <div className="text-[10px] text-center" style={{ color: "#8A8F99" }}>{note}</div>}
+      {note && <div className="text-[10px] text-center" style={{ color: TEXT_MUTED }}>{note}</div>}
     </div>
   );
 }
@@ -89,7 +89,7 @@ function TierBand({ n, title, rule, children }: { n: number; title: string; rule
           TIER {n}
         </span>
         <span className="text-sm font-semibold" style={{ color: INK }}>{title}</span>
-        <span className="text-xs" style={{ color: "#8A8F99" }}>{rule}</span>
+        <span className="text-xs" style={{ color: TEXT_MUTED }}>{rule}</span>
       </div>
       <div className="grid grid-cols-5 gap-3">{children}</div>
     </div>
@@ -126,7 +126,7 @@ export function TierLadder() {
         <Cell name="wf.parallel" note="hexagon gateway"><Node shape="hexagon" stroke={2} fillColor={tint(PALETTE[0], 0.1)} label="Fork" w={s2.w} h={s2.h} /></Cell>
         <Cell name="wf.data" note="parallelogram"><Node shape="parallelogram" fillColor={tint(PALETTE[1], 0.1)} label="Invoice.csv" tag="data" w={s2.w} h={s2.h} /></Cell>
         <Cell name="edge · weighted" note="W3 = strong relation"><Edge stroke={3} label="employs" /></Cell>
-        <Cell name="edge · derived" note="dotted = inferred"><Edge dash="2 3" label="inferred" /></Cell>
+        <Cell name="edge · derived" note="dotted = inferred"><Edge dash={DOTTED} label="inferred" /></Cell>
       </TierBand>
 
       <TierBand n={4} title="Expressive — one hero per view" rule="max one Tier-4 component per view (focal element only)">
@@ -134,7 +134,7 @@ export function TierLadder() {
           <Node fillColor={tint(PALETTE[0], 0.25)} stroke={3} label="ACME Corp" tag="Organization · 14 links" w={156} h={97} />
         </Cell>
         <Cell name="rule" note="everything else ≤ Tier 3">
-          <div className="text-[11px] leading-relaxed px-2" style={{ color: "#5A5F6B" }}>
+          <div className="text-[11px] leading-relaxed px-2" style={{ color: TEXT_BODY }}>
             E = a1+a2+a3+a4+a5.<br />Spend emphasis one axis-step at a time; one meaning per axis.
           </div>
         </Cell>
@@ -147,7 +147,7 @@ export function TierLadder() {
           </div>
         </Cell>
         <Cell name="no double-encoding" note="unless declared for a11y">
-          <div className="text-[11px] leading-relaxed px-2" style={{ color: "#5A5F6B" }}>
+          <div className="text-[11px] leading-relaxed px-2" style={{ color: TEXT_BODY }}>
             Category→shape · Class→hue · Importance→size · Edge kind→stroke · Detail→labels
           </div>
         </Cell>

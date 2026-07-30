@@ -1,4 +1,4 @@
-import { INK, PAPER, PALETTE, tint, SheetHeader, DASHED } from "./_shared/tokens";
+import { INK, PAPER, PALETTE, tint, SheetHeader, DASHED, BORDER, TEXT_SECONDARY, TEXT_LABEL } from "./_shared/tokens";
 
 // Example composition assembled ONLY from manifest components (kg.* family, Tier 2 defaults).
 // Hues: PALETTE[0]=Person, PALETTE[1]=Organization, PALETTE[2]=Place. Literals = white ellipses.
@@ -30,7 +30,7 @@ function GNode({ n }: { n: NodeSpec }) {
         <rect x={n.x} y={n.y} width={n.w} height={n.h} rx={10} fill={fill} stroke={n.hue} strokeWidth={stroke} />
       )}
       <text x={cx} y={n.tag ? cy : cy + 4} textAnchor="middle" fontSize={13} fontWeight={600} fill={INK} fontFamily="Inter, sans-serif">{n.label}</text>
-      {n.tag && <text x={cx} y={cy + 16} textAnchor="middle" fontSize={10} fill="#6B7280" fontFamily="Inter, sans-serif">{n.tag}</text>}
+      {n.tag && <text x={cx} y={cy + 16} textAnchor="middle" fontSize={10} fill={TEXT_SECONDARY} fontFamily="Inter, sans-serif">{n.tag}</text>}
     </g>
   );
 }
@@ -56,7 +56,7 @@ function GEdge({ id, from, to, label, hue = INK, dash, stroke = 1 }: { id: strin
       {label && (
         <>
           <rect x={mx - label.length * 3.4 - 4} y={my - 18} width={label.length * 6.8 + 8} height={15} rx={4} fill={PAPER} />
-          <text x={mx} y={my - 6.5} textAnchor="middle" fontSize={10.5} fontStyle="italic" fill="#4B5563" fontFamily="Inter, sans-serif">{label}</text>
+          <text x={mx} y={my - 6.5} textAnchor="middle" fontSize={10.5} fontStyle="italic" fill={TEXT_LABEL} fontFamily="Inter, sans-serif">{label}</text>
         </>
       )}
     </g>
@@ -81,14 +81,14 @@ export function KnowledgeGraphExample() {
         <GEdge id="e8" from={N.person2} to={N.classPerson} label="instanceOf" dash={DASHED} stroke={1} />
         {Object.values(N).map((n) => <GNode key={n.label} n={n as NodeSpec} />)}
         <g fontFamily="Inter, sans-serif">
-          <rect x={700} y={520} width={260} height={150} rx={8} fill="white" stroke="#E5E3DC" />
+          <rect x={700} y={520} width={260} height={150} rx={8} fill="white" stroke={BORDER} />
           <text x={716} y={545} fontSize={11} fontWeight={700} fill={INK}>LEGEND</text>
-          <text x={716} y={566} fontSize={10.5} fill="#4B5563">hue = class (A2:2) · 3 of 5 hues used</text>
-          <text x={716} y={584} fontSize={10.5} fill="#4B5563">S3 + W3 = focal entity (A3, A4)</text>
-          <text x={716} y={602} fontSize={10.5} fill="#4B5563">dashed = taxonomic edge (A4:2)</text>
-          <text x={716} y={620} fontSize={10.5} fill="#4B5563">ellipse = literal (A1:1)</text>
-          <text x={716} y={638} fontSize={10.5} fill="#4B5563">italic mid-label = property edge (A5:1)</text>
-          <text x={716} y={656} fontSize={10.5} fill="#4B5563">E spread: hero 9 · entities 7 · literals 3</text>
+          <text x={716} y={566} fontSize={10.5} fill={TEXT_LABEL}>hue = class (A2:2) · 3 of 5 hues used</text>
+          <text x={716} y={584} fontSize={10.5} fill={TEXT_LABEL}>S3 + W3 = focal entity (A3, A4)</text>
+          <text x={716} y={602} fontSize={10.5} fill={TEXT_LABEL}>dashed = taxonomic edge (A4:2)</text>
+          <text x={716} y={620} fontSize={10.5} fill={TEXT_LABEL}>ellipse = literal (A1:1)</text>
+          <text x={716} y={638} fontSize={10.5} fill={TEXT_LABEL}>italic mid-label = property edge (A5:1)</text>
+          <text x={716} y={656} fontSize={10.5} fill={TEXT_LABEL}>E spread: hero 9 · entities 7 · literals 3</text>
         </g>
       </svg>
     </div>

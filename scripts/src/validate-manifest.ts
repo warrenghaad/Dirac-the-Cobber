@@ -10,7 +10,7 @@
  *  3. Token mirror consistency with the React token sheet
  *     (artifacts/mockup-sandbox/src/components/mockups/wireframe-library/_shared/tokens.tsx)
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Ajv from "ajv";
@@ -137,6 +137,45 @@ expectInTokens(
   `version=${manifest.version}`,
   new RegExp(`v${esc(manifest.version)}`),
 );
+
+// ---------- 4. Sheet hardcode lint ----------
+// Ensure no wireframe sheet file (outside tokens.tsx) contains raw manifest
+// token hex or dash-string literals that should be imported from tokens.tsx.
+const sheetsDir = path.join(
+  root,
+  "artifacts/mockup-sandbox/src/components/mockups/wireframe-library",
+);
+const sheetFiles = readdirSync(sheetsDir, { withFileTypes: true })
+  .filter((d) => d.isFile() && d.name.endsWith(".tsx") && d.name !== "tokens.tsx")
+  .map((d) => path.join(sheetsDir, d.name));
+
+// Build the set of raw manifest hex strings and dash-pattern strings to forbid.
+const forbiddenTokens: Array<{ value: string; name: string }> = [
+  { value: t.ink, name: "INK" },
+  { value: t.paper, name: "PAPER" },
+  { value: t.accent, name: "ACCENT" },
+  ...((t.palette ?? []) as string[]).map((h: string, i: number) => ({ value: h, name: `PALETTE[${i}]` })),
+];
+if (Array.isArray(t.dashVocabulary?.dashed)) {
+  forbiddenTokens.push({ value: (t.dashVocabulary.dashed as number[]).join(" "), name: "DASHED" });
+}
+if (Array.isArray(t.dashVocabulary?.dotted)) {
+  forbiddenTokens.push({ value: (t.dashVocabulary.dotted as number[]).join(" "), name: "DOTTED" });
+}
+
+for (const filePath of sheetFiles) {
+  const src = readFileSync(filePath, "utf8");
+  const fileName = path.relative(root, filePath);
+  for (const { value, name } of forbiddenTokens) {
+    // Match the value as a quoted string literal (single or double quotes)
+    const pattern = new RegExp(`["']${esc(value)}["']`);
+    if (pattern.test(src)) {
+      fail(
+        `sheet-hardcode: ${fileName} contains raw literal "${value}" — import ${name} from _shared/tokens.tsx instead`,
+      );
+    }
+  }
+}
 
 // ---------- report ----------
 if (errors.length > 0) {

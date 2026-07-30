@@ -242,9 +242,16 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
 
   const focalId = nodes.find((n) => n.focal)?.id;
   for (const n of nodes) {
-    const kind = n.kind ?? (family === "workflow" ? "task" : "entity");
-    const compId = family === "workflow" ? WF_NODE_COMPONENT[kind] : KG_NODE_COMPONENT[kind];
-    if (!compId) throw new Error(`No ${family} component for node kind "${kind}"`);
+    let kind = n.kind ?? (family === "workflow" ? "task" : "entity");
+    const nodeTable = family === "workflow" ? WF_NODE_COMPONENT : KG_NODE_COMPONENT;
+    if (!nodeTable[kind]) {
+      const fallback = family === "workflow" ? "task" : "entity";
+      notes.push(
+        `Node "${n.id}" has unrecognised kind "${kind}" for ${family}; falling back to "${fallback}".`,
+      );
+      kind = fallback as typeof kind;
+    }
+    const compId = nodeTable[kind];
     const comp = component(compId);
     const axes: AxisCoords = { ...comp.axes };
     const hueIndex = hueByClass.get(n.className);
@@ -278,9 +285,16 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
   }
 
   edges.forEach((e, i) => {
-    const kind = e.kind ?? (family === "workflow" ? "flow" : "relation");
-    const compId = family === "workflow" ? WF_EDGE_COMPONENT[kind] : KG_EDGE_COMPONENT[kind];
-    if (!compId) throw new Error(`No ${family} component for edge kind "${kind}"`);
+    let kind = e.kind ?? (family === "workflow" ? "flow" : "relation");
+    const edgeTable = family === "workflow" ? WF_EDGE_COMPONENT : KG_EDGE_COMPONENT;
+    if (!edgeTable[kind]) {
+      const fallback = family === "workflow" ? "flow" : "relation";
+      notes.push(
+        `Edge "${e.id ?? `edge-${i + 1}`}" has unrecognised kind "${kind}" for ${family}; falling back to "${fallback}".`,
+      );
+      kind = fallback as typeof kind;
+    }
+    const compId = edgeTable[kind];
     const comp = component(compId);
     const axes: AxisCoords = { ...comp.axes };
     if (!e.label && axes.a5 > 0) axes.a5 = 0;
