@@ -1,4 +1,4 @@
-import { INK, PAPER, ACCENT, PALETTE, sizeOf, tint, SheetHeader, DASHED, DOTTED } from "./_shared/tokens";
+import { INK, PAPER, ACCENT, PALETTE, sizeOf, tint, SheetHeader, DASHED, DOTTED, BORDER, TEXT_SECONDARY, TEXT_MUTED } from "./_shared/tokens";
 
 function Box({
   w = 62, h = 40, rx = 6, fill = "white", stroke = 1, dash, color = INK, shape = "rounded-rect", label, tag, props,
@@ -24,9 +24,9 @@ function Box({
         </>
       )}
       {label && <text x={cx} y={textY} textAnchor="middle" fontSize={10} fontWeight={600} fill={INK} fontFamily="Inter, sans-serif">{label}</text>}
-      {tag && !props && <text x={cx} y={cy + 12} textAnchor="middle" fontSize={8} fill="#6B7280" fontFamily="Inter, sans-serif">{tag}</text>}
+      {tag && !props && <text x={cx} y={cy + 12} textAnchor="middle" fontSize={8} fill={TEXT_SECONDARY} fontFamily="Inter, sans-serif">{tag}</text>}
       {props?.map((p, i) => (
-        <text key={p} x={cx} y={26 + i * 10} textAnchor="middle" fontSize={7.5} fill="#6B7280" fontFamily="Inter, sans-serif">{p}</text>
+        <text key={p} x={cx} y={26 + i * 10} textAnchor="middle" fontSize={7.5} fill={TEXT_SECONDARY} fontFamily="Inter, sans-serif">{p}</text>
       ))}
     </svg>
   );
@@ -34,17 +34,17 @@ function Box({
 
 function AxisRow({ id, name, meaning, children }: { id: string; name: string; meaning: string; children: React.ReactNode[] }) {
   return (
-    <div className="mb-5 rounded-lg border bg-white p-4" style={{ borderColor: "#E5E3DC" }}>
+    <div className="mb-5 rounded-lg border bg-white p-4" style={{ borderColor: BORDER }}>
       <div className="flex items-baseline gap-3 mb-3">
         <span className="text-[11px] font-bold px-2 py-0.5 rounded" style={{ background: tint(ACCENT, 0.12), color: ACCENT }}>{id}</span>
         <span className="text-sm font-semibold" style={{ color: INK }}>{name}</span>
-        <span className="text-xs" style={{ color: "#8A8F99" }}>{meaning}</span>
+        <span className="text-xs" style={{ color: TEXT_MUTED }}>{meaning}</span>
       </div>
       <div className="grid grid-cols-5 gap-3">
         {children.map((c, i) => (
           <div key={i} className="flex flex-col items-center gap-1.5">
             <div className="h-[104px] flex items-center justify-center">{c}</div>
-            <div className="text-[10px] font-semibold" style={{ color: "#8A8F99" }}>Level {i}</div>
+            <div className="text-[10px] font-semibold" style={{ color: TEXT_MUTED }}>Level {i}</div>
           </div>
         ))}
       </div>
@@ -91,9 +91,9 @@ export function GrowthAxes() {
           <div key={2} className="flex gap-1">{PALETTE.slice(0, 3).map((c) => <Box key={c} w={26} h={26} fill={tint(c, 0.5)} color={c} />)}</div>,
           <div key={3} className="flex gap-1">{[0.6, 0.35, 0.15].map((a) => <Box key={a} w={26} h={26} fill={tint(PALETTE[0], a)} color={PALETTE[0]} />)}</div>,
           <div key={4} className="flex gap-1">
-            <Box w={26} h={26} fill={tint("#059669", 0.5)} color="#059669" />
-            <Box w={26} h={26} fill={tint("#D97706", 0.5)} color="#D97706" />
-            <Box w={26} h={26} fill={tint("#DC2626", 0.5)} color="#DC2626" />
+            <Box w={26} h={26} fill={tint(PALETTE[2], 0.5)} color={PALETTE[2]} />
+            <Box w={26} h={26} fill={tint(PALETTE[1], 0.5)} color={PALETTE[1]} />
+            <Box w={26} h={26} fill={tint(PALETTE[4], 0.5)} color={PALETTE[4]} />
           </div>,
         ]}
       </AxisRow>
@@ -125,7 +125,7 @@ export function GrowthAxes() {
         ]}
       </AxisRow>
 
-      <div className="text-xs mt-2" style={{ color: "#8A8F99" }}>
+      <div className="text-xs mt-2" style={{ color: TEXT_MUTED }}>
         Librarian priority: category→A1 · class→A2 · importance→A3 · edge-kind→A4 · information-need→A5. Constraints: ≤5 hues, ≤2 size steps of spread, one Tier-4 hero per view.
       </div>
     </div>

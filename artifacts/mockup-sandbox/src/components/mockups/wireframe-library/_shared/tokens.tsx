@@ -1,4 +1,8 @@
-// Canonical tokens — mirror of docs/wireframe-library/manifest.json v0.1.0
+// AUTO-GENERATED — do not edit by hand.
+// Run `pnpm --filter @workspace/scripts run generate:tokens` to regenerate.
+// Source: docs/wireframe-library/manifest.json v0.1.0
+
+// ── Manifest tokens ──────────────────────────────────────────────────────────
 export const INK = "#1A1D23";
 export const PAPER = "#FBFAF7";
 export const ACCENT = "#2563EB";
@@ -9,6 +13,14 @@ export const STROKES = [1, 2, 3, 4]; // W1..W4
 export const DASHED = "6 4";
 export const DOTTED = "2 3";
 
+// ── UI constants (not in manifest; kept here so sheets never hardcode) ────────
+export const BORDER = "#E5E3DC";         // card / row borders
+export const TEXT_SECONDARY = "#6B7280"; // tag / secondary-label text
+export const TEXT_MUTED = "#8A8F99";     // level captions, note text
+export const TEXT_BODY = "#5A5F6B";      // explanatory body copy
+export const TEXT_LABEL = "#4B5563";     // legend / annotation text
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 export function sizeOf(level: number) {
   const w = SIZE_WIDTHS[level];
   return { w, h: Math.round(w * ASPECT) };
@@ -27,7 +39,7 @@ export function SheetHeader({ title, subtitle }: { title: string; subtitle: stri
         Tiered Wireframe Library · v0.1.0
       </div>
       <h1 className="text-2xl font-bold mt-1" style={{ color: INK }}>{title}</h1>
-      <p className="text-sm mt-1 max-w-3xl" style={{ color: "#5A5F6B" }}>{subtitle}</p>
+      <p className="text-sm mt-1 max-w-3xl" style={{ color: TEXT_BODY }}>{subtitle}</p>
     </div>
   );
 }
