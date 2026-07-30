@@ -25,10 +25,10 @@ import type {
 // Allowed kind vocabularies — must stay in sync with librarian.ts tables.
 // ---------------------------------------------------------------------------
 
-const KG_NODE_KINDS = new Set(["entity", "class", "literal"]);
-const WF_NODE_KINDS = new Set(["task", "start", "end", "decision", "parallel", "data"]);
-const KG_EDGE_KINDS = new Set(["relation", "property", "subclass"]);
-const WF_EDGE_KINDS = new Set(["flow", "conditional"]);
+const KG_NODE_KINDS: Set<string> = new Set(["entity", "class", "literal"]);
+const WF_NODE_KINDS: Set<string> = new Set(["task", "start", "end", "decision", "parallel", "data"]);
+const KG_EDGE_KINDS: Set<string> = new Set(["relation", "property", "subclass"]);
+const WF_EDGE_KINDS: Set<string> = new Set(["flow", "conditional"]);
 
 /**
  * Coerce a node kind string to a value the librarian's component-selection
@@ -41,7 +41,7 @@ function coerceNodeKind(
   const allowed = family === "workflow" ? WF_NODE_KINDS : KG_NODE_KINDS;
   const fallback = family === "workflow" ? "task" : "entity";
   const str = typeof kind === "string" ? kind.trim().toLowerCase() : "";
-  if (allowed.has(str as StructuredNode["kind"])) {
+  if (allowed.has(str)) {
     return [str as StructuredNode["kind"], false];
   }
   return [fallback as StructuredNode["kind"], true];
@@ -58,7 +58,7 @@ function coerceEdgeKind(
   const allowed = family === "workflow" ? WF_EDGE_KINDS : KG_EDGE_KINDS;
   const fallback = family === "workflow" ? "flow" : "relation";
   const str = typeof kind === "string" ? kind.trim().toLowerCase() : "";
-  if (allowed.has(str as StructuredEdge["kind"])) {
+  if (allowed.has(str)) {
     return [str as StructuredEdge["kind"], false];
   }
   return [fallback as StructuredEdge["kind"], true];
