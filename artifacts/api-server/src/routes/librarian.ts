@@ -56,11 +56,18 @@ router.post("/librarian/plan", async (req, res) => {
           extraNotes.push(...llmResult.notes);
         }
       } catch (llmErr) {
-        req.log.warn({ err: llmErr }, "LLM extraction failed; falling back to deterministic");
-        extraNotes.push(
-          `LLM extraction failed (${llmErr instanceof Error ? llmErr.message : String(llmErr)}); ` +
-            "falling back to deterministic keyword extraction.",
-        );
+        // LLM is configured but failed — surface the error so the caller can
+        // show a user-facing message and offer a retry.  Do NOT silently fall
+        // back to deterministic: for free-form needs the keyword extractor
+        // produces a misleading diagram that the user has no way to identify
+        // as wrong unless they read the notes carefully.
+        req.log.warn({ err: llmErr }, "LLM extraction failed");
+        const detail = llmErr instanceof Error ? llmErr.message : String(llmErr);
+        res.status(503).json({
+          message: `AI extraction failed — ${detail}. Please retry or simplify your description.`,
+          llmError: true,
+        });
+        return;
       }
     }
   }

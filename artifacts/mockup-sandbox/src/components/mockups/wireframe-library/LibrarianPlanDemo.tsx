@@ -7,9 +7,15 @@ import PlanRenderer from "./PlanRenderer";
 
 const NEED = "map who works where";
 
+interface FetchError {
+  message: string;
+  /** True when the API server responded but LLM extraction failed server-side. */
+  llmError: boolean;
+}
+
 export default function LibrarianPlanDemo() {
   const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FetchError | null>(null);
 
   useEffect(() => {
     fetch("/api/librarian/plan", {
@@ -18,11 +24,20 @@ export default function LibrarianPlanDemo() {
       body: JSON.stringify({ need: NEED }),
     })
       .then(async (r) => {
-        if (!r.ok) throw new Error(`API ${r.status}: ${await r.text()}`);
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw { message: body?.message ?? `API ${r.status}`, llmError: body?.llmError === true };
+        }
         return r.json();
       })
       .then(setResult)
-      .catch((e) => setError(String(e)));
+      .catch((e: unknown) => {
+        const fe = e as Partial<FetchError>;
+        setError({
+          message: fe.message ?? String(e),
+          llmError: fe.llmError === true,
+        });
+      });
   }, []);
 
   return (
@@ -32,9 +47,15 @@ export default function LibrarianPlanDemo() {
         subtitle={`Live plan for the need “${NEED}” — fetched from POST /api/librarian/plan and drawn by PlanRenderer. Axes drive every visual channel.`}
       />
       {error && (
-        <pre className="text-sm text-red-600 whitespace-pre-wrap">
-          Could not reach the librarian API. Is the API Server workflow running?{"\n"}{error}
-        </pre>
+        <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+          <p className="font-semibold mb-1">
+            {error.llmError ? "AI extraction failed" : "Could not reach the librarian API"}
+          </p>
+          <p className="whitespace-pre-wrap">{error.message}</p>
+          {!error.llmError && (
+            <p className="mt-1 text-red-500 text-xs">Is the API Server workflow running?</p>
+          )}
+        </div>
       )}
       {result && (
         <>
