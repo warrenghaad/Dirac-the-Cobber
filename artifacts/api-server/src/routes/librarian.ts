@@ -1,5 +1,7 @@
 import { Router, type IRouter } from "express";
 import {
+  AtomicLevel,
+  CompositionsResponse,
   CreateDiagramPlanBody,
   CreateDiagramPlanResponse,
   ValidateDiagramPlanBody,
@@ -18,6 +20,28 @@ const router: IRouter = Router();
 
 router.get("/librarian/manifest", (_req, res) => {
   res.json(loadManifest());
+});
+
+router.get("/librarian/compositions", (req, res) => {
+  const manifest = loadManifest();
+  const compositions = manifest.compositions ?? [];
+
+  const levelParam = req.query.level;
+  const parsed = levelParam != null ? AtomicLevel.safeParse(levelParam) : null;
+
+  if (parsed && !parsed.success) {
+    res.status(400).json({
+      message: `Invalid level "${levelParam}". Must be one of: molecule, organism, template.`,
+    });
+    return;
+  }
+
+  const filtered =
+    parsed && parsed.success
+      ? compositions.filter((c) => c.atomicLevel === parsed.data)
+      : compositions;
+
+  res.json(CompositionsResponse.parse({ compositions: filtered }));
 });
 
 router.post("/librarian/plan", async (req, res) => {

@@ -35,11 +35,47 @@ export interface ManifestTokens {
   dashVocabulary: Record<string, unknown>;
 }
 
+// ---------------------------------------------------------------------------
+// Atomic Design composition model
+// ---------------------------------------------------------------------------
+
+export type AtomicLevel = "molecule" | "organism" | "template";
+
+export type CompositionFamily =
+  | "tier1"
+  | "knowledge-graph"
+  | "workflow"
+  | "cross-family";
+
+export interface CompositionSlot {
+  /** Must reference a valid component id in the same manifest. */
+  componentId: string;
+  /** Semantic role this slot plays (e.g. "container", "label", "edge"). */
+  role: string;
+  /** Unit-fraction position relative to a 1×1 bounding box. */
+  position: { x: number; y: number };
+  /** Optional partial axis overrides; unset axes inherit the component default. */
+  axes?: Partial<AxisCoords>;
+}
+
+export interface Composition {
+  id: string;
+  atomicLevel: AtomicLevel;
+  label: string;
+  description?: string;
+  family: CompositionFamily;
+  slots: CompositionSlot[];
+}
+
+// ---------------------------------------------------------------------------
+
 export interface Manifest {
   name: string;
   version: string;
   tokens: ManifestTokens;
   components: ManifestComponent[];
+  /** Atomic Design compositions (Molecules, Organisms, Templates). */
+  compositions?: Composition[];
 }
 
 export type DiagramFamily = "knowledge-graph" | "workflow";

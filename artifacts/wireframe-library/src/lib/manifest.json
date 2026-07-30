@@ -610,5 +610,237 @@
       },
       "figmaNodeId": null
     }
+  ],
+  "compositions": [
+    {
+      "id": "mol.task-card",
+      "atomicLevel": "molecule",
+      "label": "Task Card",
+      "description": "A generic task node with an inline label and a status-badge anchor point.",
+      "family": "tier1",
+      "slots": [
+        {
+          "componentId": "prim.node.generic",
+          "role": "container",
+          "position": { "x": 0.5, "y": 0.5 }
+        },
+        {
+          "componentId": "prim.node.generic",
+          "role": "label",
+          "position": { "x": 0.5, "y": 0.35 },
+          "axes": { "a5": 1 }
+        },
+        {
+          "componentId": "prim.anchor.point",
+          "role": "status-badge",
+          "position": { "x": 0.85, "y": 0.15 }
+        }
+      ]
+    },
+    {
+      "id": "mol.kg-entity-labeled",
+      "atomicLevel": "molecule",
+      "label": "Labeled KG Entity",
+      "description": "A knowledge-graph entity linked to a literal value via a property edge.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.entity",
+          "role": "subject",
+          "position": { "x": 0.15, "y": 0.5 }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "edge",
+          "position": { "x": 0.5, "y": 0.5 }
+        },
+        {
+          "componentId": "kg.literal",
+          "role": "literal",
+          "position": { "x": 0.85, "y": 0.5 }
+        }
+      ]
+    },
+    {
+      "id": "org.workflow-decision-branch",
+      "atomicLevel": "organism",
+      "label": "Workflow Decision Branch",
+      "description": "A decision diamond that fans out to two conditional task branches.",
+      "family": "workflow",
+      "slots": [
+        {
+          "componentId": "wf.decision",
+          "role": "decision",
+          "position": { "x": 0.5, "y": 0.2 }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-left",
+          "position": { "x": 0.25, "y": 0.5 }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-right",
+          "position": { "x": 0.75, "y": 0.5 }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task-left",
+          "position": { "x": 0.2, "y": 0.8 }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task-right",
+          "position": { "x": 0.8, "y": 0.8 }
+        }
+      ]
+    },
+    {
+      "id": "org.kg-class-hierarchy",
+      "atomicLevel": "organism",
+      "label": "KG Class Hierarchy",
+      "description": "A parent class with two subclass edges leading to two entity nodes.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.class",
+          "role": "parent-class",
+          "position": { "x": 0.5, "y": 0.15 }
+        },
+        {
+          "componentId": "kg.subclass-edge",
+          "role": "subclass-left",
+          "position": { "x": 0.3, "y": 0.5 }
+        },
+        {
+          "componentId": "kg.subclass-edge",
+          "role": "subclass-right",
+          "position": { "x": 0.7, "y": 0.5 }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-left",
+          "position": { "x": 0.2, "y": 0.85 }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-right",
+          "position": { "x": 0.8, "y": 0.85 }
+        }
+      ]
+    },
+    {
+      "id": "tpl.simple-workflow",
+      "atomicLevel": "template",
+      "label": "Simple Workflow",
+      "description": "Start → task → decision → two conditional branches → two end nodes.",
+      "family": "workflow",
+      "slots": [
+        {
+          "componentId": "wf.start-end",
+          "role": "start",
+          "position": { "x": 0.5, "y": 0.05 }
+        },
+        {
+          "componentId": "wf.flow-edge",
+          "role": "flow-1",
+          "position": { "x": 0.5, "y": 0.2 }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task",
+          "position": { "x": 0.5, "y": 0.35 }
+        },
+        {
+          "componentId": "wf.flow-edge",
+          "role": "flow-2",
+          "position": { "x": 0.5, "y": 0.5 }
+        },
+        {
+          "componentId": "wf.decision",
+          "role": "decision",
+          "position": { "x": 0.5, "y": 0.62 }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-yes",
+          "position": { "x": 0.25, "y": 0.75 }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-no",
+          "position": { "x": 0.75, "y": 0.75 }
+        },
+        {
+          "componentId": "wf.start-end",
+          "role": "end-yes",
+          "position": { "x": 0.2, "y": 0.92 }
+        },
+        {
+          "componentId": "wf.start-end",
+          "role": "end-no",
+          "position": { "x": 0.8, "y": 0.92 }
+        }
+      ]
+    },
+    {
+      "id": "tpl.knowledge-graph-overview",
+      "atomicLevel": "template",
+      "label": "Knowledge Graph Overview",
+      "description": "A grouped KG view: one class, three entities, property edges, and a surrounding group container.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.group",
+          "role": "group",
+          "position": { "x": 0.5, "y": 0.5 }
+        },
+        {
+          "componentId": "kg.class",
+          "role": "class",
+          "position": { "x": 0.5, "y": 0.15 }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-1",
+          "position": { "x": 0.3, "y": 0.38 }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-2",
+          "position": { "x": 0.5, "y": 0.45 }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-3",
+          "position": { "x": 0.7, "y": 0.38 }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-1",
+          "position": { "x": 0.2, "y": 0.65 }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-2",
+          "position": { "x": 0.5, "y": 0.72 }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-3",
+          "position": { "x": 0.8, "y": 0.65 }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "property-1",
+          "position": { "x": 0.35, "y": 0.85 }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "property-2",
+          "position": { "x": 0.65, "y": 0.85 }
+        }
+      ]
+    }
   ]
 }
