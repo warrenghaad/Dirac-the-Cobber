@@ -112,7 +112,7 @@ export function isLLMConfigured(): boolean {
 // knows about.  Never hand-edit the kind lists here; edit the tables instead.
 // ---------------------------------------------------------------------------
 
-function buildSystemPrompt(): string {
+export function buildSystemPrompt(): string {
   const kgNodeKinds = [...KG_NODE_KINDS].join("|");
   const kgEdgeKinds = [...KG_EDGE_KINDS].join("|");
   const wfNodeKinds = [...WF_NODE_KINDS].join("|");
