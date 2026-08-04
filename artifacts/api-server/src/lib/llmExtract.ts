@@ -106,7 +106,19 @@ export function isLLMConfigured(): boolean {
   return getLLMConfig() !== null;
 }
 
-const SYSTEM_PROMPT = `You are a diagram-structure extractor. Given a plain-English description of a diagram need, output a JSON object (no markdown fences) with this exact shape:
+// ---------------------------------------------------------------------------
+// System prompt — generated at module load time from the librarian's component
+// tables so that adding a new kind there automatically updates what the LLM
+// knows about.  Never hand-edit the kind lists here; edit the tables instead.
+// ---------------------------------------------------------------------------
+
+function buildSystemPrompt(): string {
+  const kgNodeKinds = [...KG_NODE_KINDS].join("|");
+  const kgEdgeKinds = [...KG_EDGE_KINDS].join("|");
+  const wfNodeKinds = [...WF_NODE_KINDS].join("|");
+  const wfEdgeKinds = [...WF_EDGE_KINDS].join("|");
+
+  return `You are a diagram-structure extractor. Given a plain-English description of a diagram need, output a JSON object (no markdown fences) with this exact shape:
 
 {
   "family": "knowledge-graph" | "workflow",
@@ -115,7 +127,7 @@ const SYSTEM_PROMPT = `You are a diagram-structure extractor. Given a plain-Engl
       "id": "<slug>",
       "label": "<display label>",
       "className": "<role/type name, e.g. Supplier, Warehouse, Task>",
-      "kind": "<entity|class|task|start|end|decision|parallel|data>",
+      "kind": "<see valid kinds per family below>",
       "focal": <true for the single most important node, omit otherwise>,
       "properties": ["<key prop>", ...] // omit when none
     }
@@ -126,7 +138,7 @@ const SYSTEM_PROMPT = `You are a diagram-structure extractor. Given a plain-Engl
       "from": "<node id>",
       "to": "<node id>",
       "label": "<relation label>",   // omit for unlabelled flow edges
-      "kind": "<relation|property|subclass|flow|conditional>"
+      "kind": "<see valid kinds per family below>"
     }
   ],
   "groups": [
@@ -138,6 +150,14 @@ const SYSTEM_PROMPT = `You are a diagram-structure extractor. Given a plain-Engl
   ]
 }
 
+Valid node kinds:
+- knowledge-graph family: ${kgNodeKinds}
+- workflow family: ${wfNodeKinds}
+
+Valid edge kinds:
+- knowledge-graph family: ${kgEdgeKinds}
+- workflow family: ${wfEdgeKinds}
+
 Rules:
 - "family" is "workflow" for process/step/sequence diagrams, "knowledge-graph" for entity/relation/schema diagrams.
 - Every "from"/"to" in edges must exactly match an "id" in nodes.
@@ -146,6 +166,9 @@ Rules:
 - For workflow: always include one "start" node (id "start") and one "end" node (id "end").
 - "groups" may be an empty array when not needed.
 - Output only the JSON object — no explanation, no code fences.`;
+}
+
+const SYSTEM_PROMPT = buildSystemPrompt();
 
 /**
  * Attempts LLM extraction of nodes/edges/groups from a need string.
