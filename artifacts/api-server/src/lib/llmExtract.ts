@@ -20,15 +20,22 @@ import type {
   StructuredGroup,
   StructuredNode,
 } from "@workspace/wireframe-librarian";
+import {
+  KG_NODE_COMPONENT,
+  KG_EDGE_COMPONENT,
+  WF_NODE_COMPONENT,
+  WF_EDGE_COMPONENT,
+} from "@workspace/wireframe-librarian";
 
 // ---------------------------------------------------------------------------
-// Allowed kind vocabularies — must stay in sync with librarian.ts tables.
+// Allowed kind vocabularies — derived from the librarian's component-selection
+// tables so they stay in sync automatically when new kinds are added.
 // ---------------------------------------------------------------------------
 
-const KG_NODE_KINDS: Set<string> = new Set(["entity", "class", "literal"]);
-const WF_NODE_KINDS: Set<string> = new Set(["task", "start", "end", "decision", "parallel", "data"]);
-const KG_EDGE_KINDS: Set<string> = new Set(["relation", "property", "subclass"]);
-const WF_EDGE_KINDS: Set<string> = new Set(["flow", "conditional"]);
+const KG_NODE_KINDS: Set<string> = new Set(Object.keys(KG_NODE_COMPONENT));
+const WF_NODE_KINDS: Set<string> = new Set(Object.keys(WF_NODE_COMPONENT));
+const KG_EDGE_KINDS: Set<string> = new Set(Object.keys(KG_EDGE_COMPONENT));
+const WF_EDGE_KINDS: Set<string> = new Set(Object.keys(WF_EDGE_COMPONENT));
 
 /**
  * Coerce a node kind string to a value the librarian's component-selection

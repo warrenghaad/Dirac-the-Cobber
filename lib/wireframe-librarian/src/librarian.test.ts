@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { buildPlan, classifyFamily } from "./librarian";
+import { buildPlan, classifyFamily, KG_NODE_COMPONENT, KG_EDGE_COMPONENT, WF_NODE_COMPONENT, WF_EDGE_COMPONENT } from "./librarian";
 import { validatePlan } from "./validate";
-import type { Manifest, DiagramPlan, Placement, PlanRequest } from "./types";
+import type { Manifest, DiagramPlan, Placement, PlanRequest, StructuredNode, StructuredEdge } from "./types";
 
 // ---------------------------------------------------------------------------
 // Minimal but complete manifest derived from docs/wireframe-library/manifest.json
@@ -744,6 +744,86 @@ describe("round-trip: buildPlan → validatePlan", () => {
       const plan   = build(request);
       const report = validatePlan(plan, MANIFEST);
       expect(report.valid, JSON.stringify(report.issues)).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Component table coverage: every key in each table must be accepted without
+// coercion by buildPlan (i.e. no "unrecognised kind" note for valid kinds).
+// This ensures llmExtract.ts's derived kind sets stay in sync automatically.
+// ---------------------------------------------------------------------------
+
+describe("component table coverage – KG_NODE_COMPONENT keys are all valid", () => {
+  for (const kind of Object.keys(KG_NODE_COMPONENT)) {
+    it(`kind "${kind}" is accepted without a coercion note`, () => {
+      const plan = build({
+        need: `test kg node kind ${kind}`,
+        family: "knowledge-graph",
+        nodes: [{ id: "n1", label: "N", className: "X", kind: kind as StructuredNode["kind"] }],
+        edges: [],
+      });
+      const coercionNote = plan.notes.find(
+        (note) => note.includes('"n1"') && note.includes(`"${kind}"`),
+      );
+      expect(coercionNote, `Expected no coercion note for kind "${kind}"`).toBeUndefined();
+    });
+  }
+});
+
+describe("component table coverage – KG_EDGE_COMPONENT keys are all valid", () => {
+  for (const kind of Object.keys(KG_EDGE_COMPONENT)) {
+    it(`kind "${kind}" is accepted without a coercion note`, () => {
+      const plan = build({
+        need: `test kg edge kind ${kind}`,
+        family: "knowledge-graph",
+        nodes: [
+          { id: "a", label: "A", className: "X", kind: "entity" },
+          { id: "b", label: "B", className: "X", kind: "entity" },
+        ],
+        edges: [{ id: "e1", from: "a", to: "b", kind: kind as StructuredEdge["kind"] }],
+      });
+      const coercionNote = plan.notes.find(
+        (note) => note.includes('"e1"') && note.includes(`"${kind}"`),
+      );
+      expect(coercionNote, `Expected no coercion note for kind "${kind}"`).toBeUndefined();
+    });
+  }
+});
+
+describe("component table coverage – WF_NODE_COMPONENT keys are all valid", () => {
+  for (const kind of Object.keys(WF_NODE_COMPONENT)) {
+    it(`kind "${kind}" is accepted without a coercion note`, () => {
+      const plan = build({
+        need: `test wf node kind ${kind}`,
+        family: "workflow",
+        nodes: [{ id: "n1", label: "N", className: "X", kind: kind as StructuredNode["kind"] }],
+        edges: [],
+      });
+      const coercionNote = plan.notes.find(
+        (note) => note.includes('"n1"') && note.includes(`"${kind}"`),
+      );
+      expect(coercionNote, `Expected no coercion note for kind "${kind}"`).toBeUndefined();
+    });
+  }
+});
+
+describe("component table coverage – WF_EDGE_COMPONENT keys are all valid", () => {
+  for (const kind of Object.keys(WF_EDGE_COMPONENT)) {
+    it(`kind "${kind}" is accepted without a coercion note`, () => {
+      const plan = build({
+        need: `test wf edge kind ${kind}`,
+        family: "workflow",
+        nodes: [
+          { id: "start", label: "Start", className: "terminator", kind: "start" },
+          { id: "end",   label: "End",   className: "terminator", kind: "end" },
+        ],
+        edges: [{ id: "e1", from: "start", to: "end", kind: kind as StructuredEdge["kind"] }],
+      });
+      const coercionNote = plan.notes.find(
+        (note) => note.includes('"e1"') && note.includes(`"${kind}"`),
+      );
+      expect(coercionNote, `Expected no coercion note for kind "${kind}"`).toBeUndefined();
     });
   }
 });
