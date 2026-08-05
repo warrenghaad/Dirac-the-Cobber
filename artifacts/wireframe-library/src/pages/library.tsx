@@ -10,9 +10,9 @@ import {
   MANIFEST, FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
   AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
 } from "@/lib/library";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
-import { Download, RotateCcw, ExternalLink } from "lucide-react";
+import { Download, RotateCcw, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 
 const AXIS_META: Record<string, { name: string; meaning: string }> = {
   a1: { name: "Shape semantics", meaning: "silhouette encodes category" },
@@ -180,6 +180,11 @@ function LibrarianRules() {
 }
 
 export default function LibraryPage() {
+  const search = useSearch();
+  const urlParams = new URLSearchParams(search);
+  const initialTab = urlParams.get("tab") ?? "library";
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedId, setSelectedId] = useState(MANIFEST.components[0].id);
   const selected = MANIFEST.components.find((c) => c.id === selectedId)!;
 
@@ -211,10 +216,11 @@ export default function LibraryPage() {
         </p>
       </header>
 
-      <Tabs defaultValue="library">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="library" data-testid="tab-library">Library</TabsTrigger>
           <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
+          <TabsTrigger value="templates" data-testid="tab-templates">Templates</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
           <TabsTrigger value="explorer" data-testid="tab-explorer">Librarian Explorer</TabsTrigger>
@@ -222,6 +228,10 @@ export default function LibraryPage() {
 
         <TabsContent value="compositions" className="space-y-6">
           <CompositionsGallery />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <TemplatesBrowser />
         </TabsContent>
 
         <TabsContent value="library" className="space-y-8">
@@ -255,6 +265,114 @@ export default function LibraryPage() {
     </div>
   );
 }
+
+// ─── Templates Browser ────────────────────────────────────────────────────────
+
+const TEMPLATES_LEVELS = ["molecule", "organism", "template"] as const;
+const TEMPLATES_LEVEL_LABELS: Record<string, string> = {
+  molecule: "Molecules",
+  organism: "Organisms",
+  template: "Templates",
+};
+
+function TemplateCard({ composition }: { composition: Composition }) {
+  const levelLabel = TEMPLATES_LEVEL_LABELS[composition.atomicLevel] ?? composition.atomicLevel;
+  return (
+    <Link href={`/templates/${composition.id}`}>
+      <div
+        className="flex flex-col gap-3 rounded-lg border border-card-border bg-card p-4 hover-elevate transition-colors cursor-pointer group"
+        data-testid={`template-card-${composition.id}`}
+      >
+        {/* 160×120 thumbnail */}
+        <div className="flex h-[120px] items-center justify-center overflow-hidden rounded bg-muted/30">
+          <CompositionCanvas
+            composition={composition}
+            scale={0.35}
+            className="pointer-events-none"
+          />
+        </div>
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold group-hover:text-primary transition-colors">
+              {composition.label}
+            </span>
+            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="secondary"
+              className="text-[9px] bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-300"
+            >
+              {levelLabel}
+            </Badge>
+            <Badge variant="outline" className="font-mono text-[9px]">
+              {composition.family}
+            </Badge>
+          </div>
+          <p className="mt-1.5 text-[10px] text-muted-foreground line-clamp-2">
+            {composition.description}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function TemplatesBrowser() {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const toggle = (level: string) =>
+    setCollapsed((prev) => ({ ...prev, [level]: !prev[level] }));
+
+  const sections = TEMPLATES_LEVELS.map((level) => ({
+    level,
+    label: TEMPLATES_LEVEL_LABELS[level],
+    items: MANIFEST.compositions.filter((c) => c.atomicLevel === level),
+  })).filter((s) => s.items.length > 0);
+
+  return (
+    <div className="space-y-8">
+      <p className="text-sm text-muted-foreground">
+        Browse compositions by atomic design level. Click any card to open the interactive template
+        editor where you can adjust slot axes and export or send the result to the planner.
+      </p>
+      {sections.map(({ level, label, items }) => (
+        <section key={level}>
+          <button
+            onClick={() => toggle(level)}
+            className="mb-3 flex w-full items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+            data-testid={`section-toggle-${level}`}
+            aria-expanded={!collapsed[level]}
+          >
+            {collapsed[level] ? (
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            )}
+            {label}
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-normal normal-case tracking-normal">
+              {items.length}
+            </span>
+          </button>
+          {!collapsed[level] && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((c) => (
+                <TemplateCard key={c.id} composition={c} />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+      {sections.length === 0 && (
+        <p className="text-sm text-muted-foreground italic">
+          No compositions found at molecule, organism, or template level.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Compositions Gallery ─────────────────────────────────────────────────────
 
 function CompositionCard({ composition }: { composition: Composition }) {
   const levelLabel =
