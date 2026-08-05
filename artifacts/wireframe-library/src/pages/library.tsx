@@ -8,9 +8,11 @@ import { Glyph } from "@/components/Glyph";
 import { LibrarianExplorer } from "@/components/LibrarianExplorer";
 import {
   MANIFEST, FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
-  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent,
+  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
 } from "@/lib/library";
-import { Download, RotateCcw } from "lucide-react";
+import { Link } from "wouter";
+import { CompositionCanvas } from "@/components/CompositionCanvas";
+import { Download, RotateCcw, ExternalLink } from "lucide-react";
 
 const AXIS_META: Record<string, { name: string; meaning: string }> = {
   a1: { name: "Shape semantics", meaning: "silhouette encodes category" },
@@ -144,6 +146,7 @@ function Playground({ component }: { component: LibraryComponent }) {
   );
 }
 
+const ATOMIC_LEVEL_ORDER = ["atom", "molecule", "organism", "template", "page"];
 function LibrarianRules() {
   const r = MANIFEST.librarianRules;
   return (
@@ -211,10 +214,15 @@ export default function LibraryPage() {
       <Tabs defaultValue="library">
         <TabsList className="mb-6">
           <TabsTrigger value="library" data-testid="tab-library">Library</TabsTrigger>
+          <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
           <TabsTrigger value="explorer" data-testid="tab-explorer">Librarian Explorer</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="compositions" className="space-y-6">
+          <CompositionsGallery />
+        </TabsContent>
 
         <TabsContent value="library" className="space-y-8">
           {FAMILIES.map((f) => (
@@ -244,6 +252,64 @@ export default function LibraryPage() {
           <LibrarianExplorer />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function CompositionCard({ composition }: { composition: Composition }) {
+  const levelLabel =
+    ({ atom: "Atom", molecule: "Molecule", organism: "Organism", template: "Template", page: "Page" } as Record<string, string>)[
+      composition.atomicLevel
+    ] ?? composition.atomicLevel;
+
+  return (
+    <Link href={`/composition/${composition.id}`}>
+      <div className="flex flex-col gap-3 rounded-lg border border-card-border bg-card p-4 hover-elevate transition-colors cursor-pointer group">
+        <div className="flex h-40 items-center justify-center overflow-hidden rounded bg-muted/30">
+          <CompositionCanvas
+            composition={composition}
+            scale={0.38}
+            className="pointer-events-none"
+          />
+        </div>
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold group-hover:text-primary transition-colors">{composition.label}</span>
+            <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="mt-1 flex items-center gap-2">
+            <Badge variant="secondary" className="text-[9px]">{levelLabel}</Badge>
+            <span className="font-mono text-[9px] text-muted-foreground">{composition.id}</span>
+          </div>
+          <p className="mt-1 text-[10px] text-muted-foreground line-clamp-2">{composition.description}</p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function CompositionsGallery() {
+  const byLevel = ATOMIC_LEVEL_ORDER.map((level) => ({
+    level,
+    label: { atom: "Atoms", molecule: "Molecules", organism: "Organisms", template: "Templates", page: "Pages" }[level] ?? level,
+    items: MANIFEST.compositions.filter((c) => c.atomicLevel === level),
+  })).filter((g) => g.items.length > 0);
+
+  return (
+    <div className="space-y-8">
+      <p className="text-sm text-muted-foreground">
+        Compositions combine primitives into molecules, organisms, and templates. Click any card to open the interactive preview.
+      </p>
+      {byLevel.map(({ level, label, items }) => (
+        <section key={level}>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{label}</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((c) => (
+              <CompositionCard key={c.id} composition={c} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

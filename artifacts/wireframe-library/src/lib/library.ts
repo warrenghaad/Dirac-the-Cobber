@@ -14,6 +14,22 @@ export type LibraryComponent = {
 
 export type Axis = { id: keyof AxisCoords; name: string; levels: string[] };
 
+export type CompositionSlot = {
+  componentId: string;
+  role: string;
+  position: { x: number; y: number };
+  axes?: Partial<AxisCoords>;
+};
+
+export type Composition = {
+  id: string;
+  atomicLevel: string;
+  label: string;
+  description: string;
+  family: string;
+  slots: CompositionSlot[];
+};
+
 export const MANIFEST = manifest as unknown as {
   name: string;
   version: string;
@@ -30,6 +46,7 @@ export const MANIFEST = manifest as unknown as {
   tiers: { tier: number; rule: string; profile?: Record<string, unknown> }[];
   librarianRules: { start: string; axisPriority: string[]; constraints: string[] };
   components: LibraryComponent[];
+  compositions: Composition[];
 };
 
 export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = MANIFEST.tokens;
