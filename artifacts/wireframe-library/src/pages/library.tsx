@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +11,10 @@ import {
 } from "@/lib/library";
 import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
-import { Download, RotateCcw, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
+import { Download, RotateCcw, ExternalLink, ChevronDown, ChevronRight, Loader2, Sparkles, ArrowRight } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { DiagramRenderer } from "@/components/DiagramRenderer";
+import type { PlanResult } from "@/lib/diagram-types";
 
 const AXIS_META: Record<string, { name: string; meaning: string }> = {
   a1: { name: "Shape semantics", meaning: "silhouette encodes category" },
@@ -146,6 +148,8 @@ function Playground({ component }: { component: LibraryComponent }) {
   );
 }
 
+type GeneratorResult = PlanResult;
+
 const ATOMIC_LEVEL_ORDER = ["atom", "molecule", "organism", "template", "page"];
 function LibrarianRules() {
   const r = MANIFEST.librarianRules;
@@ -221,18 +225,11 @@ export default function LibraryPage() {
           <TabsTrigger value="library" data-testid="tab-library">Library</TabsTrigger>
           <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
           <TabsTrigger value="templates" data-testid="tab-templates">Templates</TabsTrigger>
+          <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Generator</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
           <TabsTrigger value="explorer" data-testid="tab-explorer">Librarian Explorer</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="compositions" className="space-y-6">
-          <CompositionsGallery />
-        </TabsContent>
-
-        <TabsContent value="templates" className="space-y-6">
-          <TemplatesBrowser />
-        </TabsContent>
 
         <TabsContent value="library" className="space-y-8">
           {FAMILIES.map((f) => (
@@ -250,6 +247,18 @@ export default function LibraryPage() {
           </p>
         </TabsContent>
 
+        <TabsContent value="compositions" className="space-y-6">
+          <CompositionsGallery />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <TemplatesBrowser />
+        </TabsContent>
+
+        <TabsContent value="diagram">
+          <DiagramGeneratorTab />
+        </TabsContent>
+
         <TabsContent value="playground">
           <Playground component={selected} />
         </TabsContent>
@@ -262,6 +271,25 @@ export default function LibraryPage() {
           <LibrarianExplorer />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function ErrorBanner({ error, onDismiss }: { error: FetchError; onDismiss: () => void }) {
+  return (
+    <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
+      <p className="font-semibold text-destructive mb-1">
+        {error.llmError ? "AI generation failed" : "Could not reach the API"}
+      </p>
+      <p className="text-destructive/80 whitespace-pre-wrap">{error.message}</p>
+      {!error.llmError && (
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Is the API Server workflow running?
+        </p>
+      )}
+      <Button variant="outline" size="sm" className="mt-3" onClick={onDismiss}>
+        Dismiss
+      </Button>
     </div>
   );
 }
@@ -430,4 +458,218 @@ function CompositionsGallery() {
       ))}
     </div>
   );
+}
+
+interface FetchError {
+  message: string;
+  llmError: boolean;
+}
+
+function NotesList({ notes }: { notes: string[] }) {
+  if (notes.length === 0) return null;
+  return (
+    <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
+      {notes.map((n, i) => (
+        <li key={i} className="font-mono leading-relaxed">
+          {n}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DiagramGeneratorTab() {
+  // --- initial generation ---
+  const [need, setNeed] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<FetchError | null>(null);
+  const [result, setResult] = useState<GeneratorResult | null>(null);
+
+  // --- refinement ---
+  const [refinement, setRefinement] = useState("");
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<FetchError | null>(null);
+
+  const refinementInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleGenerate = async () => {
+    if (!need.trim()) return;
+    setGenerating(true);
+    setGenError(null);
+    setResult(null);
+    setRefineError(null);
+    try {
+      const data = await postJson("/api/librarian/plan", { need: need.trim() });
+      setResult(data);
+    } catch (e) {
+      const fe = e as Partial<FetchError>;
+      setGenError({ message: fe.message ?? String(e), llmError: fe.llmError === true });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (!refinement.trim() || !result) return;
+    setRefining(true);
+    setRefineError(null);
+    try {
+      const data = await postJson("/api/librarian/refine", {
+        refinement: refinement.trim(),
+        currentPlan: result.plan,
+      });
+      setResult(data);
+      setRefinement("");
+    } catch (e) {
+      const fe = e as Partial<FetchError>;
+      setRefineError({ message: fe.message ?? String(e), llmError: fe.llmError === true });
+    } finally {
+      setRefining(false);
+    }
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setGenError(null);
+    setRefineError(null);
+    setRefinement("");
+    setNeed("");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Need input */}
+      <Card className="p-6 space-y-4">
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-1.5">
+            Describe your diagram need
+          </label>
+          <div className="flex gap-2">
+            <textarea
+              value={need}
+              onChange={(e) => setNeed(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
+              }}
+              disabled={generating}
+              placeholder="e.g. show the order fulfilment workflow, or map who works where"
+              className="flex-1 min-h-[72px] resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              data-testid="input-diagram-need"
+            />
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Tip: ⌘↵ / Ctrl↵ to generate
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleGenerate}
+            disabled={generating || !need.trim()}
+            data-testid="button-generate-diagram"
+          >
+            {generating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
+            ) : (
+              <><Sparkles className="mr-2 h-4 w-4" />Generate diagram</>
+            )}
+          </Button>
+          {result && (
+            <Button variant="outline" onClick={handleReset} data-testid="button-reset-diagram">
+              <RotateCcw className="mr-2 h-3.5 w-3.5" />Start over
+            </Button>
+          )}
+        </div>
+        {genError && <ErrorBanner error={genError} onDismiss={() => setGenError(null)} />}
+      </Card>
+
+      {/* Diagram result */}
+      {result && (
+        <>
+          <Card className="p-4 space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">{result.plan.title}</h3>
+              <Badge variant="secondary" className="text-[10px] capitalize">
+                {result.plan.family}
+              </Badge>
+            </div>
+            <DiagramRenderer plan={result.plan} />
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <span>
+                {result.validation.valid
+                  ? "✓ satisfies all library constraints"
+                  : `✗ ${result.validation.issues.length} issue(s)`}
+              </span>
+            </div>
+            {result.validation.issues.length > 0 && (
+              <ul className="text-[11px] text-destructive space-y-0.5">
+                {result.validation.issues.map((i) => (
+                  <li key={i.rule + (i.placementId ?? "")}>
+                    [{i.severity}] {i.rule}: {i.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <NotesList notes={result.plan.notes} />
+          </Card>
+
+          {/* Refinement input */}
+          <Card className="p-6 space-y-4">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-1.5">
+                Refine this diagram
+              </label>
+              <div className="flex gap-2">
+                <textarea
+                  ref={refinementInputRef}
+                  value={refinement}
+                  onChange={(e) => setRefinement(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleRefine();
+                  }}
+                  disabled={refining}
+                  placeholder='e.g. "also show the returns flow" or "remove the warehouse step"'
+                  className="flex-1 min-h-[60px] resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                  data-testid="input-diagram-refinement"
+                />
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                The AI will update the diagram while preserving everything you haven't asked to change.
+              </p>
+            </div>
+            <Button
+              onClick={handleRefine}
+              disabled={refining || !refinement.trim()}
+              data-testid="button-refine-diagram"
+            >
+              {refining ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Refining…</>
+              ) : (
+                <><ArrowRight className="mr-2 h-4 w-4" />Apply refinement</>
+              )}
+            </Button>
+            {refineError && (
+              <ErrorBanner error={refineError} onDismiss={() => setRefineError(null)} />
+            )}
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+async function postJson(url: string, body: unknown): Promise<GeneratorResult> {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const b = await r.json().catch(() => ({}));
+    const err: Partial<FetchError> & { llmError?: boolean } = {
+      message: (b as { message?: string }).message ?? `API ${r.status}`,
+      llmError: (b as { llmError?: boolean }).llmError === true,
+    };
+    throw err;
+  }
+  return r.json() as Promise<GeneratorResult>;
 }

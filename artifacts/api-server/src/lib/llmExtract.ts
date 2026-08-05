@@ -268,3 +268,240 @@ export async function extractWithLLM(
     ],
   };
 }
+
+/** Map of componentId prefixes back to node kinds. */
+const COMPONENT_NODE_KIND: Record<string, StructuredNode["kind"]> = {
+  "kg.class": "class",
+  "kg.entity": "entity",
+  "kg.literal": "literal",
+  "wf.task": "task",
+  "wf.decision": "decision",
+  "wf.parallel": "parallel",
+  "wf.data": "data",
+};
+
+/**
+ * Refine an existing DiagramPlan using a follow-up instruction.
+ * Returns null when no LLM is configured (caller should respond with an error
+ * since refinement is meaningless without LLM support).
+ */
+export async function refineWithLLM(
+  currentPlan: {
+    need: string;
+    family: string;
+    placements: Array<{
+      id: string;
+      componentId: string;
+      content: {
+        label?: string;
+        role?: string;
+        from?: string;
+        to?: string;
+        focal?: boolean;
+        properties?: string[];
+      };
+    }>;
+    notes: string[];
+  },
+  refinement: string,
+): Promise<LLMExtractionResult | null> {
+  const config = getLLMConfig();
+  if (!config) {
+    return null;
+  }
+
+  const { default: OpenAI } = await import("openai");
+  const clientOptions =
+    config.kind === "replit"
+      ? { apiKey: config.apiKey, baseURL: config.baseURL }
+      : { apiKey: config.apiKey };
+  const client = new OpenAI(clientOptions);
+
+  const { nodes: currentNodes, edges: currentEdges } =
+    planToStructured(currentPlan);
+
+  const userContent = [
+    `Original need: "${currentPlan.need}"`,
+    `Diagram family: ${currentPlan.family}`,
+    ``,
+    `Current structure:`,
+    JSON.stringify({ nodes: currentNodes, edges: currentEdges }, null, 2),
+    ``,
+    `Refinement instruction: "${refinement}"`,
+  ].join("\n");
+
+  const response = await client.chat.completions.create({
+    model: config.model,
+    max_completion_tokens: 2048,
+    messages: [
+      { role: "system", content: REFINEMENT_SYSTEM_PROMPT },
+      { role: "user", content: userContent },
+    ],
+  });
+
+  const raw = response.choices[0]?.message?.content?.trim() ?? "";
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`LLM returned non-JSON response: ${raw.slice(0, 200)}`);
+  }
+
+  const result = parsed as Record<string, unknown>;
+
+  if (
+    typeof result !== "object" ||
+    !Array.isArray(result.nodes) ||
+    !Array.isArray(result.edges)
+  ) {
+    throw new Error("LLM refinement response missing required nodes/edges arrays");
+  }
+
+  const family: DiagramFamily =
+    result.family === "workflow" ? "workflow" : "knowledge-graph";
+
+  const coercionWarnings: string[] = [];
+
+  const nodes = (result.nodes as Record<string, unknown>[]).map((raw) => {
+    const [kind, coerced] = coerceNodeKind(raw.kind, family);
+    if (coerced) {
+      coercionWarnings.push(
+        `Node "${raw.id ?? "?"}" had unknown kind "${raw.kind}" — coerced to "${kind}".`,
+      );
+    }
+    return { ...raw, kind } as StructuredNode;
+  });
+
+  const edges = (result.edges as Record<string, unknown>[]).map((raw) => {
+    const [kind, coerced] = coerceEdgeKind(raw.kind, family);
+    if (coerced) {
+      coercionWarnings.push(
+        `Edge "${raw.id ?? raw.from + "→" + raw.to}" had unknown kind "${raw.kind}" — coerced to "${kind}".`,
+      );
+    }
+    return { ...raw, kind } as StructuredEdge;
+  });
+
+  return {
+    family,
+    nodes,
+    edges,
+    groups: Array.isArray(result.groups)
+      ? (result.groups as StructuredGroup[])
+      : [],
+    notes: [
+      `Refined by LLM (${config.model}): "${refinement.slice(0, 80)}${refinement.length > 80 ? "…" : ""}".`,
+      ...coercionWarnings,
+    ],
+  };
+}
+
+const REFINEMENT_SYSTEM_PROMPT = `You are a diagram-structure editor. You will receive an existing diagram as JSON and a refinement instruction. Output an updated JSON object (no markdown fences) with this exact shape:
+
+{
+  "family": "knowledge-graph" | "workflow",
+  "nodes": [
+    {
+      "id": "<slug>",
+      "label": "<display label>",
+      "className": "<role/type name>",
+      "kind": "<entity|class|task|start|end|decision|parallel|data>",
+      "focal": <true for the single most important node, omit otherwise>,
+      "properties": ["<key prop>", ...] // omit when none
+    }
+  ],
+  "edges": [
+    {
+      "id": "<slug>",         // optional
+      "from": "<node id>",
+      "to": "<node id>",
+      "label": "<relation label>",
+      "kind": "<relation|property|subclass|flow|conditional>"
+    }
+  ],
+  "groups": []
+}
+
+Rules:
+- Preserve ALL existing nodes and edges that the refinement does not explicitly change or remove.
+- Add, remove, or modify nodes/edges as the refinement instruction requires.
+- Every "from"/"to" in edges must exactly match an "id" in nodes.
+- Node ids must be URL-safe slugs (lowercase, hyphens only).
+- For workflow diagrams always keep exactly one "start" node and one "end" node.
+- Output only the JSON object — no explanation, no code fences.`;
+
+/**
+ * Reconstruct StructuredNode/StructuredEdge arrays from a DiagramPlan so the
+ * LLM can see the current diagram in the same schema it was built from.
+ */
+function planToStructured(plan: {
+  family: string;
+  placements: Array<{
+    id: string;
+    componentId: string;
+    content: {
+      label?: string;
+      role?: string;
+      from?: string;
+      to?: string;
+      focal?: boolean;
+      properties?: string[];
+    };
+  }>;
+}): { nodes: StructuredNode[]; edges: StructuredEdge[] } {
+  const nodes: StructuredNode[] = [];
+  const edges: StructuredEdge[] = [];
+
+  for (const p of plan.placements) {
+    const edgeKind = COMPONENT_EDGE_KIND[p.componentId];
+    if (edgeKind !== undefined) {
+      edges.push({
+        id: p.id,
+        from: p.content.from ?? "",
+        to: p.content.to ?? "",
+        label: p.content.label,
+        kind: edgeKind,
+      });
+      continue;
+    }
+
+    // wf.start-end maps to "start" or "end" depending on the id.
+    if (p.componentId === "wf.start-end") {
+      const kind: StructuredNode["kind"] =
+        p.id === "start" || p.content.label?.toLowerCase() === "start"
+          ? "start"
+          : "end";
+      nodes.push({
+        id: p.id,
+        label: p.content.label ?? p.id,
+        className: kind === "start" ? "terminator" : "terminator",
+        kind,
+      });
+      continue;
+    }
+
+    const nodeKind = COMPONENT_NODE_KIND[p.componentId];
+    if (nodeKind !== undefined) {
+      nodes.push({
+        id: p.id,
+        label: p.content.label ?? p.id,
+        className: p.content.role ?? p.id,
+        kind: nodeKind,
+        focal: p.content.focal,
+        properties: p.content.properties,
+      });
+    }
+  }
+
+  return { nodes, edges };
+}
+
+/** Map of edge componentIds back to edge kinds. */
+const COMPONENT_EDGE_KIND: Record<string, StructuredEdge["kind"]> = {
+  "kg.relation-edge": "relation",
+  "kg.property-edge": "property",
+  "kg.subclass-edge": "subclass",
+  "wf.flow-edge": "flow",
+  "wf.cond-edge": "conditional",
+};
