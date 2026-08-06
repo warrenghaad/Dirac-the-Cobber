@@ -48,7 +48,7 @@ type TierSummaryProps = {
   axesOverrides: AxesOverrideMap;
 };
 
-function TierSummary({ composition, axesOverrides }: TierSummaryProps) {
+export function TierSummary({ composition, axesOverrides }: TierSummaryProps) {
   const tierCounts = useMemo(() => {
     const counts: Record<number, number> = {};
     composition.slots.forEach((slot, i) => {

@@ -827,3 +827,78 @@ describe("component table coverage – WF_EDGE_COMPONENT keys are all valid", ()
     });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Manifest integrity tests – run against the actual wireframe-library manifest
+// ─────────────────────────────────────────────────────────────────────────────
+
+import actualManifest from "../../../artifacts/wireframe-library/src/lib/manifest.json";
+
+const VALID_ATOMIC_LEVELS = new Set([
+  "atom",
+  "molecule",
+  "organism",
+  "template",
+  "page",
+]);
+
+describe("manifest integrity – composition atomicLevel", () => {
+  const compositions = (actualManifest as { compositions?: Array<{ id: string; atomicLevel: string }> })
+    .compositions ?? [];
+
+  it("manifest has at least one composition", () => {
+    expect(compositions.length).toBeGreaterThan(0);
+  });
+
+  for (const comp of compositions) {
+    it(`composition "${comp.id}" has a valid atomicLevel`, () => {
+      expect(
+        VALID_ATOMIC_LEVELS.has(comp.atomicLevel),
+        `"${comp.atomicLevel}" is not one of ${[...VALID_ATOMIC_LEVELS].join(", ")}`
+      ).toBe(true);
+    });
+  }
+});
+
+describe("manifest integrity – composition slot componentId references", () => {
+  const componentIds = new Set(
+    actualManifest.components.map((c: { id: string }) => c.id)
+  );
+  const compositions = (actualManifest as {
+    compositions?: Array<{
+      id: string;
+      slots: Array<{ componentId: string; role: string }>;
+    }>;
+  }).compositions ?? [];
+
+  it("every slot componentId resolves to a real component", () => {
+    const unresolved: { compositionId: string; slotRole: string; componentId: string }[] = [];
+    for (const comp of compositions) {
+      for (const slot of comp.slots) {
+        if (!componentIds.has(slot.componentId)) {
+          unresolved.push({
+            compositionId: comp.id,
+            slotRole: slot.role,
+            componentId: slot.componentId,
+          });
+        }
+      }
+    }
+    expect(unresolved).toEqual([]);
+  });
+
+  for (const comp of compositions) {
+    it(`composition "${comp.id}" has at least one slot`, () => {
+      expect(comp.slots.length).toBeGreaterThan(0);
+    });
+
+    for (const slot of comp.slots) {
+      it(`composition "${comp.id}" slot "${slot.role}" → componentId "${slot.componentId}" resolves`, () => {
+        expect(
+          componentIds.has(slot.componentId),
+          `componentId "${slot.componentId}" does not exist in the manifest components`
+        ).toBe(true);
+      });
+    }
+  }
+});

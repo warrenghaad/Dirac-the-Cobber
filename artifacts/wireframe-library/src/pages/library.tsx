@@ -303,7 +303,7 @@ const TEMPLATES_LEVEL_LABELS: Record<string, string> = {
   template: "Templates",
 };
 
-function TemplateCard({ composition }: { composition: Composition }) {
+export function TemplateCard({ composition }: { composition: Composition }) {
   const levelLabel = TEMPLATES_LEVEL_LABELS[composition.atomicLevel] ?? composition.atomicLevel;
   return (
     <Link href={`/templates/${composition.id}`}>
