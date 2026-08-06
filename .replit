@@ -28,6 +28,10 @@ args = "librarian-tests"
 task = "workflow.run"
 args = "api-server-tests"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "lib-watch"
+
 [[workflows.workflow]]
 name = "manifest"
 author = "agent"
@@ -57,6 +61,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm --filter @workspace/api-server run test"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "lib-watch"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run dev:libs"
 
 [workflows.workflow.metadata]
 outputType = "console"
