@@ -15,7 +15,7 @@ import {
   AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp,
   Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
 import { useCreateDiagramPlan } from "@workspace/api-client-react";
@@ -190,12 +190,39 @@ function LibrarianRules() {
 export default function LibraryPage() {
   const { manifest } = useManifest();
   const search = useSearch();
-  const urlParams = new URLSearchParams(search);
-  const initialTab = urlParams.get("tab") ?? "library";
+
+  // Capture the handoff parameters before cleaning the address bar. Wouter
+  // observes history updates, so a ref keeps the values available after
+  // replaceState triggers a re-render.
+  const initialParamsRef = useRef<URLSearchParams | null>(null);
+  if (initialParamsRef.current === null) {
+    initialParamsRef.current = new URLSearchParams(search);
+  }
+  const initialParams = initialParamsRef.current;
+  const hintParam = initialParams.get("hint") ?? "";
+  const familyParam = initialParams.get("family") ?? "";
+  const templateIdParam = initialParams.get("templateId") ?? "";
+
+  const initialTab = hintParam
+    ? "diagram"
+    : (new URLSearchParams(search).get("tab") ?? "library");
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedId, setSelectedId] = useState(manifest.components[0]?.id ?? "");
   const selected = manifest.components.find((c) => c.id === selectedId) ?? manifest.components[0];
+
+  useEffect(() => {
+    if (!hintParam) return;
+
+    const cleanParams = new URLSearchParams(window.location.search);
+    cleanParams.delete("hint");
+    cleanParams.delete("family");
+    cleanParams.delete("templateId");
+    const nextUrl = cleanParams.toString()
+      ? `${window.location.pathname}?${cleanParams.toString()}`
+      : window.location.pathname;
+    window.history.replaceState(null, "", nextUrl);
+  }, [hintParam]);
 
   const downloadManifest = () => {
     const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json" });
@@ -260,7 +287,11 @@ export default function LibraryPage() {
         </TabsContent>
 
         <TabsContent value="diagram">
-          <DiagramGeneratorTab />
+          <DiagramGeneratorTab
+            initialHint={hintParam}
+            initialFamily={familyParam}
+            initialTemplateId={templateIdParam}
+          />
         </TabsContent>
 
         <TabsContent value="playground">
@@ -684,8 +715,20 @@ function AxisMeaningsPanel({ axisMeanings }: { axisMeanings: DiagramPlan["axisMe
 
 // ─── Merged Diagram Planner tab ────────────────────────────────────────────────
 
-function DiagramGeneratorTab() {
-  const [need, setNeed] = useState("");
+type DiagramGeneratorTabProps = {
+  initialHint?: string;
+  initialFamily?: string;
+  initialTemplateId?: string;
+};
+
+function DiagramGeneratorTab({
+  initialHint = "",
+  initialFamily = "",
+  initialTemplateId = "",
+}: DiagramGeneratorTabProps) {
+  const { manifest } = useManifest();
+  const [need, setNeed] = useState(initialHint);
+  const [hintBannerDismissed, setHintBannerDismissed] = useState(false);
   const [family, setFamily] = useState<Family>("auto");
   const [view, setView] = useState<View>("overview");
   const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
@@ -740,8 +783,41 @@ function DiagramGeneratorTab() {
     setNeed("");
   };
 
+  const templateComposition = initialTemplateId
+    ? manifest.compositions.find((composition) => composition.id === initialTemplateId)
+    : undefined;
+
   return (
     <div className="space-y-6">
+      {initialHint && !hintBannerDismissed && (
+        <div
+          className="flex items-start justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-4 py-3"
+          data-testid="hint-banner"
+          role="note"
+        >
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-primary">
+              {templateComposition
+                ? `Template: ${templateComposition.label}`
+                : "Template context loaded"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {initialFamily && <span className="mr-2 font-mono">{initialFamily}</span>}
+              The description has been pre-filled below. Edit it or generate right away.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setHintBannerDismissed(true)}
+            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Dismiss template context"
+            data-testid="hint-banner-dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Input form */}
       <Card className="p-5">
         <form onSubmit={handleGenerate} className="space-y-4">
