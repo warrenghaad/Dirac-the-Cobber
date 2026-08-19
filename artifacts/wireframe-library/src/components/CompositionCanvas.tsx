@@ -10,6 +10,7 @@ import {
   type CompositionSlot,
   type LibraryComponent,
 } from "@/lib/library";
+import { useManifest } from "@/lib/manifest-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,10 +49,11 @@ function isContainer(slot: CompositionSlot): boolean {
 export function layoutSlots(
   composition: Composition,
   viewport: { w: number; h: number },
-  axesOverrides: AxesOverrideMap = {}
+  axesOverrides: AxesOverrideMap = {},
+  components: LibraryComponent[] = MANIFEST.components
 ): LayoutRecord[] {
   return composition.slots.map((slot, index) => {
-    const component = MANIFEST.components.find((c) => c.id === slot.componentId) ?? null;
+    const component = components.find((c) => c.id === slot.componentId) ?? null;
     const base: AxisCoords = component?.axes ?? FALLBACK_AXES;
     const maxAxes: AxisCoords = component?.maxAxes ?? FALLBACK_MAX;
     const merged: AxisCoords = {
@@ -337,9 +339,10 @@ export function CompositionCanvas({
 }: CompositionCanvasProps) {
   const internalRef = useRef<SVGSVGElement>(null);
   const ref = (svgRef ?? internalRef) as React.RefObject<SVGSVGElement>;
+  const { manifest } = useManifest();
 
   const viewport = { w: BASE_W, h: BASE_H };
-  const records = layoutSlots(composition, viewport, axesOverrides);
+  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
 
   const containerRecords = records.filter((r) => isContainer(r.slot));
   const edgeRecords = records.filter((r) => isEdge(r.slot));

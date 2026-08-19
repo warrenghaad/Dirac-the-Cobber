@@ -6,7 +6,6 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { CompositionCanvas, downloadSVG, layoutSlots, type AxesOverrideMap } from "@/components/CompositionCanvas";
 import {
-  MANIFEST,
   AXIS_IDS,
   clampAxes,
   type AxisCoords,
@@ -14,6 +13,7 @@ import {
   type CompositionSlot,
   type LibraryComponent,
 } from "@/lib/library";
+import { useManifest } from "@/lib/manifest-context";
 import { Download, ArrowLeft } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -104,8 +104,9 @@ function SlotPanel({ index, slot, axes, component, onAxesChange }: SlotPanelProp
 export default function CompositionPage() {
   const { id } = useParams<{ id: string }>();
   const svgRef = useRef<SVGSVGElement>(null);
+  const { manifest } = useManifest();
 
-  const composition: Composition | undefined = MANIFEST.compositions.find(
+  const composition: Composition | undefined = manifest.compositions.find(
     (c) => c.id === id
   );
 
@@ -129,7 +130,7 @@ export default function CompositionPage() {
 
   // Resolve effective axes for each slot (for the slider UI)
   const viewport = { w: 640, h: 480 };
-  const records = layoutSlots(composition, viewport, axesOverrides);
+  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
 
   const handleAxesChange = (slotIndex: number, newAxes: AxisCoords) => {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));

@@ -6,7 +6,6 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { CompositionCanvas, downloadSVG, layoutSlots, type AxesOverrideMap } from "@/components/CompositionCanvas";
 import {
-  MANIFEST,
   AXIS_IDS,
   clampAxes,
   effectiveTier,
@@ -15,6 +14,7 @@ import {
   type CompositionSlot,
   type LibraryComponent,
 } from "@/lib/library";
+import { useManifest } from "@/lib/manifest-context";
 import { Download, ArrowLeft, RotateCcw, ExternalLink, AlertTriangle } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -49,10 +49,11 @@ type TierSummaryProps = {
 };
 
 export function TierSummary({ composition, axesOverrides }: TierSummaryProps) {
+  const { manifest } = useManifest();
   const tierCounts = useMemo(() => {
     const counts: Record<number, number> = {};
     composition.slots.forEach((slot, i) => {
-      const component = MANIFEST.components.find((c) => c.id === slot.componentId) ?? null;
+      const component = manifest.components.find((c) => c.id === slot.componentId) ?? null;
       const base = resolveSlotAxes(slot, component);
       const partial = axesOverrides[i];
       const resolved: AxisCoords = partial
@@ -68,7 +69,7 @@ export function TierSummary({ composition, axesOverrides }: TierSummaryProps) {
       counts[t] = (counts[t] ?? 0) + 1;
     });
     return counts;
-  }, [composition.slots, axesOverrides]);
+  }, [composition.slots, axesOverrides, manifest.components]);
 
   const tier4Count = tierCounts[4] ?? 0;
 
@@ -189,8 +190,9 @@ export default function TemplateEditorPage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const svgRef = useRef<SVGSVGElement>(null);
+  const { manifest } = useManifest();
 
-  const composition: Composition | undefined = MANIFEST.compositions.find(
+  const composition: Composition | undefined = manifest.compositions.find(
     (c) => c.id === id
   );
 
@@ -212,7 +214,7 @@ export default function TemplateEditorPage() {
   }
 
   const viewport = { w: 640, h: 480 };
-  const records = layoutSlots(composition, viewport, axesOverrides);
+  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
 
   const handleAxesChange = (slotIndex: number, newAxes: AxisCoords) => {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));

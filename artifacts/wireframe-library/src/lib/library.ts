@@ -30,7 +30,8 @@ export type Composition = {
   slots: CompositionSlot[];
 };
 
-export const MANIFEST = manifest as unknown as {
+/** Full shape of the wireframe-library manifest. */
+export type ManifestData = {
   name: string;
   version: string;
   tokens: {
@@ -48,6 +49,14 @@ export const MANIFEST = manifest as unknown as {
   components: LibraryComponent[];
   compositions: Composition[];
 };
+
+/**
+ * Bundled static copy of the manifest — used as initial/fallback data and for
+ * pure token utilities (INK, PAPER, sizeOf, tint, …) that are evaluated at
+ * module load time.  For live data prefer the `useManifest()` hook which
+ * fetches from GET /api/librarian/manifest.
+ */
+export const MANIFEST = manifest as unknown as ManifestData;
 
 export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = MANIFEST.tokens;
 export const SIZE_WIDTHS = MANIFEST.tokens.sizeScale.widths;
@@ -88,6 +97,6 @@ export const FAMILIES = [
   { key: "workflow", label: "Workflow" },
 ];
 
-export function componentsByFamily(family: string) {
-  return MANIFEST.components.filter((c) => c.family === family);
+export function componentsByFamily(components: LibraryComponent[], family: string) {
+  return components.filter((c) => c.family === family);
 }

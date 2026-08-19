@@ -6,9 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Glyph } from "@/components/Glyph";
 import { LibrarianExplorer } from "@/components/LibrarianExplorer";
 import {
-  MANIFEST, FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
+  FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
   AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
 } from "@/lib/library";
+import { useManifest } from "@/lib/manifest-context";
 import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
 import { Download, RotateCcw, ExternalLink, ChevronDown, ChevronRight, Loader2, Sparkles, ArrowRight } from "lucide-react";
@@ -58,6 +59,7 @@ function ComponentCard({ c, selected, onSelect }: { c: LibraryComponent; selecte
 }
 
 function Playground({ component }: { component: LibraryComponent }) {
+  const { manifest } = useManifest();
   const [axes, setAxes] = useState<AxisCoords>(component.axes);
   const [hueIndex, setHueIndex] = useState(0);
   const [prevId, setPrevId] = useState(component.id);
@@ -91,7 +93,7 @@ function Playground({ component }: { component: LibraryComponent }) {
 
       <Card className="space-y-5 p-5">
         {AXIS_IDS.map((k) => {
-          const axis = MANIFEST.axes.find((a) => a.id === k)!;
+          const axis = manifest.axes.find((a) => a.id === k)!;
           const max = component.maxAxes[k];
           return (
             <div key={k}>
@@ -152,7 +154,8 @@ type GeneratorResult = PlanResult;
 
 const ATOMIC_LEVEL_ORDER = ["atom", "molecule", "organism", "template", "page"];
 function LibrarianRules() {
-  const r = MANIFEST.librarianRules;
+  const { manifest } = useManifest();
+  const r = manifest.librarianRules;
   return (
     <Card className="space-y-4 p-6 text-sm">
       <div>
@@ -174,7 +177,7 @@ function LibrarianRules() {
       <div>
         <h3 className="mb-1 font-semibold">Tiers</h3>
         <ul className="space-y-0.5 text-muted-foreground">
-          {MANIFEST.tiers.map((t) => (
+          {manifest.tiers.map((t) => (
             <li key={t.tier}><span className="font-medium text-foreground">Tier {t.tier}</span> — {t.rule}</li>
           ))}
         </ul>
@@ -184,16 +187,17 @@ function LibrarianRules() {
 }
 
 export default function LibraryPage() {
+  const { manifest } = useManifest();
   const search = useSearch();
   const urlParams = new URLSearchParams(search);
   const initialTab = urlParams.get("tab") ?? "library";
 
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [selectedId, setSelectedId] = useState(MANIFEST.components[0].id);
-  const selected = MANIFEST.components.find((c) => c.id === selectedId)!;
+  const [selectedId, setSelectedId] = useState(manifest.components[0]?.id ?? "");
+  const selected = manifest.components.find((c) => c.id === selectedId) ?? manifest.components[0];
 
   const downloadManifest = () => {
-    const blob = new Blob([JSON.stringify(MANIFEST, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -206,7 +210,7 @@ export default function LibraryPage() {
     <div className="mx-auto max-w-6xl px-6 py-8">
       <header className="mb-8">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          Tiered Wireframe Library · v{MANIFEST.version}
+          Tiered Wireframe Library · v{manifest.version}
         </div>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Component Library & Design Logic</h1>
@@ -236,7 +240,7 @@ export default function LibraryPage() {
             <section key={f.key}>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{f.label}</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {componentsByFamily(f.key).map((c) => (
+                {componentsByFamily(manifest.components, f.key).map((c) => (
                   <ComponentCard key={c.id} c={c} selected={c.id === selectedId} onSelect={() => setSelectedId(c.id)} />
                 ))}
               </div>
@@ -347,6 +351,7 @@ export function TemplateCard({ composition }: { composition: Composition }) {
 }
 
 function TemplatesBrowser() {
+  const { manifest } = useManifest();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const toggle = (level: string) =>
@@ -355,7 +360,7 @@ function TemplatesBrowser() {
   const sections = TEMPLATES_LEVELS.map((level) => ({
     level,
     label: TEMPLATES_LEVEL_LABELS[level],
-    items: MANIFEST.compositions.filter((c) => c.atomicLevel === level),
+    items: manifest.compositions.filter((c) => c.atomicLevel === level),
   })).filter((s) => s.items.length > 0);
 
   return (
@@ -435,10 +440,11 @@ function CompositionCard({ composition }: { composition: Composition }) {
 }
 
 function CompositionsGallery() {
+  const { manifest } = useManifest();
   const byLevel = ATOMIC_LEVEL_ORDER.map((level) => ({
     level,
     label: { atom: "Atoms", molecule: "Molecules", organism: "Organisms", template: "Templates", page: "Pages" }[level] ?? level,
-    items: MANIFEST.compositions.filter((c) => c.atomicLevel === level),
+    items: manifest.compositions.filter((c) => c.atomicLevel === level),
   })).filter((g) => g.items.length > 0);
 
   return (

@@ -30,9 +30,20 @@ vi.mock("@/components/CompositionCanvas", () => ({
   downloadSVG: () => {},
 }));
 
+// ─── Provide a static manifest so useManifest() works without a real API ───────
+import { MANIFEST } from "@/lib/library";
+vi.mock("@/lib/manifest-context", () => ({
+  useManifest: () => ({
+    manifest: MANIFEST,
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  ManifestProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 import { TemplateCard } from "@/pages/library";
 import { TierSummary } from "@/pages/template-editor";
-import { MANIFEST } from "@/lib/library";
 import type { Composition } from "@/lib/library";
 import type { AxesOverrideMap } from "@/components/CompositionCanvas";
 
