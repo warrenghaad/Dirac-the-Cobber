@@ -1,5 +1,5 @@
-import { useRef, useState, useMemo } from "react";
-import { useParams, useLocation, Link } from "wouter";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useParams, useLocation, useSearch, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -34,6 +34,65 @@ const LEVEL_LABEL: Record<string, string> = {
   template: "Template",
   page: "Page",
 };
+
+function encodeAxesParam(overrides: AxesOverrideMap): string {
+  const parts: string[] = [];
+  for (const [idxStr, partial] of Object.entries(overrides)) {
+    if (!partial) continue;
+    const a1 = partial.a1 ?? 0;
+    const a2 = partial.a2 ?? 0;
+    const a3 = partial.a3 ?? 0;
+    const a4 = partial.a4 ?? 0;
+    const a5 = partial.a5 ?? 0;
+    const vals = [a1, a2, a3, a4, a5];
+    // Skip any entry where values are not valid single digits in [0, 4].
+    if (vals.some((v) => !Number.isInteger(v) || v < 0 || v > 4)) continue;
+    parts.push(`${idxStr}:${a1}${a2}${a3}${a4}${a5}`);
+  }
+  return parts.sort((a, b) => Number(a.split(":")[0]) - Number(b.split(":")[0])).join(",");
+}
+
+/** Parse the compact ?axes= string into a raw map (no composition clamping). */
+function parseAxesParam(param: string): AxesOverrideMap {
+  const result: AxesOverrideMap = {};
+  if (!param) return result;
+  for (const part of param.split(",")) {
+    const colonIdx = part.indexOf(":");
+    if (colonIdx === -1) continue;
+    const idx = parseInt(part.slice(0, colonIdx), 10);
+    const encoded = part.slice(colonIdx + 1);
+    if (!Number.isFinite(idx) || idx < 0 || encoded.length !== 5) continue;
+    const digits = encoded.split("").map(Number);
+    if (digits.some((d) => isNaN(d) || d < 0 || d > 4)) continue;
+    result[idx] = { a1: digits[0], a2: digits[1], a3: digits[2], a4: digits[3], a5: digits[4] };
+  }
+  return result;
+}
+
+/**
+ * Validate + clamp raw URL-parsed overrides against the actual composition.
+ * Invalid slot indices (out of range) are dropped; axis values are clamped
+ * to each component's maxAxes so restored state is always legal.
+ */
+function normalizeAxesOverrides(raw: AxesOverrideMap, composition: Composition): AxesOverrideMap {
+  const clamped: AxesOverrideMap = {};
+  for (const [idxStr, partial] of Object.entries(raw)) {
+    const idx = Number(idxStr);
+    const slot = composition.slots[idx];
+    if (!slot) continue; // index out of range — discard
+    const component = MANIFEST.components.find((c) => c.id === slot.componentId) ?? null;
+    const base = resolveSlotAxes(slot, component);
+    const merged: AxisCoords = {
+      a1: partial?.a1 ?? base.a1,
+      a2: partial?.a2 ?? base.a2,
+      a3: partial?.a3 ?? base.a3,
+      a4: partial?.a4 ?? base.a4,
+      a5: partial?.a5 ?? base.a5,
+    };
+    clamped[idx] = component ? clampAxes(component, merged) : merged;
+  }
+  return clamped;
+}
 
 function resolveSlotAxes(slot: CompositionSlot, component: LibraryComponent | null): AxisCoords {
   const base: AxisCoords = component?.axes ?? { a1: 1, a2: 0, a3: 2, a4: 0, a5: 0 };
@@ -189,6 +248,7 @@ function SlotPanel({ index, slot, axes, component, onAxesChange }: SlotPanelProp
 export default function TemplateEditorPage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const search = useSearch();
   const svgRef = useRef<SVGSVGElement>(null);
   const { manifest } = useManifest();
 
@@ -196,7 +256,30 @@ export default function TemplateEditorPage() {
     (c) => c.id === id
   );
 
-  const [axesOverrides, setAxesOverrides] = useState<AxesOverrideMap>({});
+  // Initialise from URL on first render; subsequent syncs are handled by the effect below.
+  const [axesOverrides, setAxesOverrides] = useState<AxesOverrideMap>(() => {
+    const params = new URLSearchParams(search);
+    const raw = parseAxesParam(params.get("axes") ?? "");
+    // Clamp against the composition and its component maxAxes so restored state
+    // is always valid. If composition is undefined (unknown id) the not-found
+    // guard below renders before any slots are accessed.
+    if (!composition) return raw;
+    return normalizeAxesOverrides(raw, composition);
+  });
+
+  // Keep the URL in sync whenever overrides change (replaceState so Back still works).
+  useEffect(() => {
+    const encoded = encodeAxesParam(axesOverrides);
+    const params = new URLSearchParams(window.location.search);
+    if (encoded) {
+      params.set("axes", encoded);
+    } else {
+      params.delete("axes");
+    }
+    const qs = params.toString();
+    const next = window.location.pathname + (qs ? `?${qs}` : "");
+    window.history.replaceState(null, "", next);
+  }, [axesOverrides]);
 
   if (!composition) {
     return (
@@ -220,7 +303,10 @@ export default function TemplateEditorPage() {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));
   };
 
-  const handleReset = () => setAxesOverrides({});
+  const handleReset = () => {
+    setAxesOverrides({});
+    // The useEffect will fire and strip the ?axes param via replaceState.
+  };
 
   const handleDownload = () => {
     downloadSVG(svgRef, `${composition.id}.svg`);
