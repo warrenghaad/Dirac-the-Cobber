@@ -178,6 +178,14 @@
         }
       },
       "scannedAt": "2026-07-27"
+    },
+    {
+      "fileKey": "5JebW1QtNsfn9eQ9aPYPJD",
+      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect--Design-System--Component-Library-Community",
+      "kind": "design",
+      "label": "Dialect – Design System & Component Library (Community)",
+      "intakeStatus": "done — 0 component(s) matched",
+      "addedAt": "2026-08-19"
     }
   ],
   "librarianRules": {
@@ -198,36 +206,602 @@
     ]
   },
   "components": [
-    { "id": "prim.node.generic",       "family": "tier1", "tier": 1, "shape": "rounded-rect",  "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 0, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.sharp",         "family": "tier1", "tier": 1, "shape": "rectangle",     "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 0, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.round",         "family": "tier1", "tier": 1, "shape": "ellipse",       "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": "86:47", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "prim.node.pill",          "family": "tier1", "tier": 1, "shape": "pill",          "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.diamond",       "family": "tier1", "tier": 1, "shape": "diamond",       "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.hexagon",       "family": "tier1", "tier": 1, "shape": "hexagon",       "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.parallelogram", "family": "tier1", "tier": 1, "shape": "parallelogram", "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.node.cylinder",      "family": "tier1", "tier": 1, "shape": "cylinder",      "axes": { "a1": 1, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 4, "a3": 4, "a4": 4, "a5": 4 }, "figmaNodeId": null },
-    { "id": "prim.edge.plain",         "family": "tier1", "tier": 1, "shape": "line-arrow",    "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 2, "a2": 4, "a3": 2, "a4": 4, "a5": 2 }, "figmaNodeId": "49:549", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "prim.edge.undirected",    "family": "tier1", "tier": 1, "shape": "line-plain",    "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 0, "a2": 4, "a3": 2, "a4": 4, "a5": 2 }, "figmaNodeId": null },
-    { "id": "prim.edge.bidirectional", "family": "tier1", "tier": 1, "shape": "arrow-bidir",   "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 0, "a2": 4, "a3": 2, "a4": 4, "a5": 2 }, "figmaNodeId": null },
-    { "id": "prim.container.plain",    "family": "tier1", "tier": 1, "shape": "rect-outline",  "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 2, "a3": 4, "a4": 2, "a5": 2 }, "figmaNodeId": "523:3725", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "prim.anchor.point",       "family": "tier1", "tier": 1, "shape": "dot",           "axes": { "a1": 0, "a2": 0, "a3": 2, "a4": 0, "a5": 0 }, "maxAxes": { "a1": 1, "a2": 2, "a3": 2, "a4": 1, "a5": 1 }, "figmaNodeId": "38:37", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-
-    { "id": "kg.entity",        "family": "knowledge-graph", "tier": 2, "shape": "rounded-rect",  "axes": { "a1": 1, "a2": 2, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 3, "a2": 4, "a3": 4, "a4": 3, "a5": 4 }, "figmaNodeId": null },
-    { "id": "kg.class",         "family": "knowledge-graph", "tier": 2, "shape": "rectangle",     "axes": { "a1": 1, "a2": 2, "a3": 2, "a4": 2, "a5": 2 }, "maxAxes": { "a1": 3, "a2": 4, "a3": 4, "a4": 3, "a5": 4 }, "figmaNodeId": "31:77", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "kg.literal",       "family": "knowledge-graph", "tier": 2, "shape": "ellipse",       "axes": { "a1": 1, "a2": 0, "a3": 1, "a4": 0, "a5": 1 }, "maxAxes": { "a1": 1, "a2": 2, "a3": 2, "a4": 1, "a5": 2 }, "figmaNodeId": null },
-    { "id": "kg.property-edge", "family": "knowledge-graph", "tier": 2, "shape": "arrow-labeled", "axes": { "a1": 2, "a2": 0, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 3, "a3": 2, "a4": 3, "a5": 2 }, "figmaNodeId": null },
-    { "id": "kg.relation-edge", "family": "knowledge-graph", "tier": 2, "shape": "arrow",         "axes": { "a1": 2, "a2": 2, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 4, "a3": 2, "a4": 4, "a5": 2 }, "figmaNodeId": null },
-    { "id": "kg.subclass-edge", "family": "knowledge-graph", "tier": 2, "shape": "arrow-dashed",  "axes": { "a1": 2, "a2": 0, "a3": 2, "a4": 2, "a5": 0 }, "maxAxes": { "a1": 2, "a2": 2, "a3": 2, "a4": 3, "a5": 1 }, "figmaNodeId": null },
-    { "id": "kg.group",         "family": "knowledge-graph", "tier": 2, "shape": "container",     "axes": { "a1": 1, "a2": 1, "a3": 2, "a4": 0, "a5": 1 }, "maxAxes": { "a1": 1, "a2": 2, "a3": 4, "a4": 2, "a5": 2 }, "figmaNodeId": null },
-
-    { "id": "wf.start-end",  "family": "workflow", "tier": 2, "shape": "pill",             "axes": { "a1": 2, "a2": 1, "a3": 1, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 2, "a3": 2, "a4": 2, "a5": 1 }, "figmaNodeId": "516:2333", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "wf.task",       "family": "workflow", "tier": 2, "shape": "rounded-rect",     "axes": { "a1": 1, "a2": 2, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 3, "a2": 4, "a3": 4, "a4": 3, "a5": 4 }, "figmaNodeId": "120:1439", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "wf.decision",   "family": "workflow", "tier": 2, "shape": "diamond",          "axes": { "a1": 2, "a2": 1, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 3, "a3": 3, "a4": 3, "a5": 2 }, "figmaNodeId": null },
-    { "id": "wf.parallel",   "family": "workflow", "tier": 2, "shape": "hexagon",          "axes": { "a1": 2, "a2": 1, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 3, "a3": 3, "a4": 3, "a5": 2 }, "figmaNodeId": null },
-    { "id": "wf.data",       "family": "workflow", "tier": 2, "shape": "parallelogram",    "axes": { "a1": 2, "a2": 1, "a3": 1, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 3, "a3": 2, "a4": 2, "a5": 3 }, "figmaNodeId": "525:3811", "fileKey": "dpWgseUU58TAk7wAVl55yt" },
-    { "id": "wf.flow-edge",  "family": "workflow", "tier": 2, "shape": "arrow",            "axes": { "a1": 2, "a2": 0, "a3": 2, "a4": 1, "a5": 0 }, "maxAxes": { "a1": 2, "a2": 2, "a3": 2, "a4": 4, "a5": 1 }, "figmaNodeId": null },
-    { "id": "wf.cond-edge",  "family": "workflow", "tier": 2, "shape": "arrow-guarded",   "axes": { "a1": 2, "a2": 0, "a3": 2, "a4": 1, "a5": 1 }, "maxAxes": { "a1": 2, "a2": 2, "a3": 2, "a4": 3, "a5": 2 }, "figmaNodeId": null },
-    { "id": "wf.lane",       "family": "workflow", "tier": 2, "shape": "container-header", "axes": { "a1": 1, "a2": 1, "a3": 2, "a4": 0, "a5": 1 }, "maxAxes": { "a1": 1, "a2": 2, "a3": 4, "a4": 1, "a5": 2 }, "figmaNodeId": null }
+    {
+      "id": "prim.node.generic",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.sharp",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rectangle",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.round",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "ellipse",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": "86:47",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.node.pill",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "pill",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.diamond",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "diamond",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.hexagon",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "hexagon",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.parallelogram",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "parallelogram",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.cylinder",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "cylinder",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.edge.plain",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "line-arrow",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": "49:549",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.edge.undirected",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "line-plain",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.edge.bidirectional",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "arrow-bidir",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.container.plain",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rect-outline",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 2,
+        "a5": 2
+      },
+      "figmaNodeId": "523:3725",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.anchor.point",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "dot",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "figmaNodeId": "38:37",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "kg.entity",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.class",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "rectangle",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 2,
+        "a5": 2
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": "31:77",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "kg.literal",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "ellipse",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 1,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.property-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow-labeled",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 2,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.relation-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow",
+      "axes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.subclass-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow-dashed",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 2,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 3,
+        "a5": 1
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.group",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "container",
+      "axes": {
+        "a1": 1,
+        "a2": 1,
+        "a3": 2,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 2,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.start-end",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "pill",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 1,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 2,
+        "a5": 1
+      },
+      "figmaNodeId": "516:2333",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.task",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": "120:1439",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.decision",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "diamond",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 3,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.parallel",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "hexagon",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 3,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.data",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "parallelogram",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 1,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 2,
+        "a4": 2,
+        "a5": 3
+      },
+      "figmaNodeId": "525:3811",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.flow-edge",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "arrow",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 4,
+        "a5": 1
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.cond-edge",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "arrow-guarded",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.lane",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "container-header",
+      "axes": {
+        "a1": 1,
+        "a2": 1,
+        "a3": 2,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 1,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    }
   ],
   "compositions": [
     {
