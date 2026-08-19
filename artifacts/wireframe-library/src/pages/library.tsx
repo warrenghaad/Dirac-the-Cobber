@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Glyph } from "@/components/Glyph";
-import { LibrarianExplorer } from "@/components/LibrarianExplorer";
 import {
   FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
   AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
@@ -12,10 +11,14 @@ import {
 import { useManifest } from "@/lib/manifest-context";
 import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
-import { Download, RotateCcw, ExternalLink, ChevronDown, ChevronRight, Loader2, Sparkles, ArrowRight } from "lucide-react";
+import {
+  AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp,
+  Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
-import type { PlanResult } from "@/lib/diagram-types";
+import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
+import { useCreateDiagramPlan } from "@workspace/api-client-react";
 
 const AXIS_META: Record<string, { name: string; meaning: string }> = {
   a1: { name: "Shape semantics", meaning: "silhouette encodes category" },
@@ -150,8 +153,6 @@ function Playground({ component }: { component: LibraryComponent }) {
   );
 }
 
-type GeneratorResult = PlanResult;
-
 const ATOMIC_LEVEL_ORDER = ["atom", "molecule", "organism", "template", "page"];
 function LibrarianRules() {
   const { manifest } = useManifest();
@@ -229,10 +230,9 @@ export default function LibraryPage() {
           <TabsTrigger value="library" data-testid="tab-library">Library</TabsTrigger>
           <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
           <TabsTrigger value="templates" data-testid="tab-templates">Templates</TabsTrigger>
-          <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Generator</TabsTrigger>
+          <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Planner</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
-          <TabsTrigger value="explorer" data-testid="tab-explorer">Librarian Explorer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="space-y-8">
@@ -269,10 +269,6 @@ export default function LibraryPage() {
 
         <TabsContent value="rules">
           <LibrarianRules />
-        </TabsContent>
-
-        <TabsContent value="explorer">
-          <LibrarianExplorer />
         </TabsContent>
       </Tabs>
     </div>
@@ -466,53 +462,255 @@ function CompositionsGallery() {
   );
 }
 
+// ─── Diagram Planner sub-components ──────────────────────────────────────────
+
 interface FetchError {
   message: string;
   llmError: boolean;
 }
 
-function NotesList({ notes }: { notes: string[] }) {
-  if (notes.length === 0) return null;
+type Family = "auto" | "workflow" | "knowledge-graph";
+type View = "overview" | "detail";
+
+const FAMILY_OPTIONS: { value: Family; label: string; description: string }[] = [
+  { value: "auto", label: "Auto-detect", description: "Inferred from your need" },
+  { value: "workflow", label: "Workflow", description: "Process / sequence" },
+  { value: "knowledge-graph", label: "Knowledge Graph", description: "Entities & relations" },
+];
+
+const VIEW_OPTIONS: { value: View; label: string; description: string }[] = [
+  { value: "overview", label: "Overview", description: "Terse labels (A5 ≤ 2)" },
+  { value: "detail", label: "Detail", description: "Show key properties (A5 = 3)" },
+];
+
+const SAMPLE_NEEDS = [
+  "map who works where",
+  "show how an order flows from cart to delivery",
+  "model a library with books, authors, and genres",
+  "describe a user registration workflow with email verification",
+  "represent a company org chart with departments and roles",
+];
+
+function PlannerToggleGroup<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string; description: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
   return (
-    <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
-      {notes.map((n, i) => (
-        <li key={i} className="font-mono leading-relaxed">
-          {n}
-        </li>
-      ))}
-    </ul>
+    <div>
+      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`rounded-md border px-3 py-1.5 text-left transition-colors ${
+              value === opt.value
+                ? "border-primary bg-primary/5 text-primary"
+                : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            }`}
+          >
+            <span className="text-xs font-medium">{opt.label}</span>
+            <span className="ml-1 text-[10px] opacity-70">— {opt.description}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function DiagramGeneratorTab() {
-  // --- initial generation ---
-  const [need, setNeed] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState<FetchError | null>(null);
-  const [result, setResult] = useState<GeneratorResult | null>(null);
+function Tier1Draft({ draft }: { draft: DraftPlacement[] }) {
+  const nodes = draft.filter((d) => !d.from && !d.to);
+  const edges = draft.filter((d) => d.from && d.to);
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Equal-consequence Tier-1 structure checkpoint — all shapes identical, no emphasis applied.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Nodes ({nodes.length})
+          </div>
+          <div className="space-y-1">
+            {nodes.map((n) => (
+              <div
+                key={n.id}
+                className="flex items-center gap-2 rounded border border-border px-2.5 py-1.5 text-xs"
+              >
+                <span className="font-mono text-[10px] text-muted-foreground">{n.id}</span>
+                <Badge variant="outline" className="text-[9px]">{n.componentId}</Badge>
+                {n.label && <span className="truncate font-medium">{n.label}</span>}
+              </div>
+            ))}
+            {nodes.length === 0 && <p className="text-xs text-muted-foreground">No nodes</p>}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Edges ({edges.length})
+          </div>
+          <div className="space-y-1">
+            {edges.map((e) => (
+              <div
+                key={e.id ?? `${e.from}-${e.to}`}
+                className="flex items-center gap-2 rounded border border-border px-2.5 py-1.5 text-xs"
+              >
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {e.from} → {e.to}
+                </span>
+                {e.label && <span className="truncate text-muted-foreground italic">{e.label}</span>}
+              </div>
+            ))}
+            {edges.length === 0 && <p className="text-xs text-muted-foreground">No edges</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  // --- refinement ---
+function PlanValidationPanel({ report }: { report: ValidationReport }) {
+  const errors = report.issues.filter((i) => i.severity === "error");
+  const warnings = report.issues.filter((i) => i.severity === "warning");
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        {report.valid ? (
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+        ) : (
+          <AlertCircle className="h-4 w-4 text-destructive" />
+        )}
+        <span className={`text-sm font-semibold ${report.valid ? "text-green-700" : "text-destructive"}`}>
+          {report.valid ? "Plan is valid" : "Plan has errors"}
+        </span>
+        {errors.length > 0 && (
+          <Badge variant="destructive" className="text-[9px]">
+            {errors.length} error{errors.length !== 1 ? "s" : ""}
+          </Badge>
+        )}
+        {warnings.length > 0 && (
+          <Badge variant="secondary" className="text-[9px]">
+            {warnings.length} warning{warnings.length !== 1 ? "s" : ""}
+          </Badge>
+        )}
+      </div>
+      {report.issues.length > 0 && (
+        <div className="space-y-1.5">
+          {report.issues.map((issue, i) => (
+            <div
+              key={i}
+              className={`flex gap-2 rounded border px-3 py-2 text-xs ${
+                issue.severity === "error"
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-amber-300/40 bg-amber-50/60 text-amber-800"
+              }`}
+            >
+              {issue.severity === "error" ? (
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              )}
+              <div>
+                <span className="font-semibold">{issue.rule}</span>
+                {issue.placementId && (
+                  <span className="ml-1 font-mono text-[10px] opacity-70">({issue.placementId})</span>
+                )}
+                <p className="mt-0.5 opacity-90">{issue.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {report.issues.length === 0 && (
+        <p className="text-xs text-muted-foreground">No issues found.</p>
+      )}
+    </div>
+  );
+}
+
+function JsonCollapsible({ label, data }: { label: string; data: unknown }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg border border-border">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
+        {open ? (
+          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        )}
+      </button>
+      {open && (
+        <pre className="overflow-x-auto rounded-b-lg bg-muted/40 px-4 py-3 text-[11px] leading-relaxed">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+function AxisMeaningsPanel({ axisMeanings }: { axisMeanings: DiagramPlan["axisMeanings"] }) {
+  const entries = Object.entries(axisMeanings).filter(([, v]) => v);
+  if (entries.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {entries.map(([axis, meaning]) => (
+        <div
+          key={axis}
+          className="flex items-center gap-1.5 rounded border border-primary/20 bg-primary/5 px-2 py-1"
+        >
+          <span className="text-[10px] font-bold uppercase tracking-wide text-primary">{axis}</span>
+          <span className="text-[10px] text-muted-foreground">{meaning}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Merged Diagram Planner tab ────────────────────────────────────────────────
+
+function DiagramGeneratorTab() {
+  const [need, setNeed] = useState("");
+  const [family, setFamily] = useState<Family>("auto");
+  const [view, setView] = useState<View>("overview");
+  const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
+
+  // --- refinement (raw fetch; no generated hook for /refine) ---
   const [refinement, setRefinement] = useState("");
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState<FetchError | null>(null);
 
   const refinementInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleGenerate = async () => {
-    if (!need.trim()) return;
-    setGenerating(true);
-    setGenError(null);
+  const mutation = useCreateDiagramPlan({
+    mutation: {
+      onSuccess(data) {
+        setResult(data as { plan: DiagramPlan; validation: ValidationReport });
+        setRefineError(null);
+      },
+    },
+  });
+
+  const handleGenerate = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!need.trim() || mutation.isPending) return;
     setResult(null);
-    setRefineError(null);
-    try {
-      const data = await postJson("/api/librarian/plan", { need: need.trim() });
-      setResult(data);
-    } catch (e) {
-      const fe = e as Partial<FetchError>;
-      setGenError({ message: fe.message ?? String(e), llmError: fe.llmError === true });
-    } finally {
-      setGenerating(false);
-    }
+    mutation.mutate({ data: { need: need.trim(), ...(family !== "auto" ? { family } : {}), view } });
   };
 
   const handleRefine = async () => {
@@ -536,7 +734,7 @@ function DiagramGeneratorTab() {
 
   const handleReset = () => {
     setResult(null);
-    setGenError(null);
+    mutation.reset();
     setRefineError(null);
     setRefinement("");
     setNeed("");
@@ -544,126 +742,225 @@ function DiagramGeneratorTab() {
 
   return (
     <div className="space-y-6">
-      {/* Need input */}
-      <Card className="p-6 space-y-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-1.5">
-            Describe your diagram need
-          </label>
-          <div className="flex gap-2">
+      {/* Input form */}
+      <Card className="p-5">
+        <form onSubmit={handleGenerate} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Describe your diagram need
+            </label>
             <textarea
               value={need}
               onChange={(e) => setNeed(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
               }}
-              disabled={generating}
-              placeholder="e.g. show the order fulfilment workflow, or map who works where"
-              className="flex-1 min-h-[72px] resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              disabled={mutation.isPending}
+              placeholder='e.g. "map who works where" or "show how an order flows from cart to delivery"'
+              rows={2}
+              className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
               data-testid="input-diagram-need"
             />
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <span className="text-[10px] text-muted-foreground">Try:</span>
+              {SAMPLE_NEEDS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setNeed(s)}
+                  className="rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            Tip: ⌘↵ / Ctrl↵ to generate
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleGenerate}
-            disabled={generating || !need.trim()}
-            data-testid="button-generate-diagram"
-          >
-            {generating ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
-            ) : (
-              <><Sparkles className="mr-2 h-4 w-4" />Generate diagram</>
-            )}
-          </Button>
-          {result && (
-            <Button variant="outline" onClick={handleReset} data-testid="button-reset-diagram">
-              <RotateCcw className="mr-2 h-3.5 w-3.5" />Start over
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PlannerToggleGroup
+              label="Diagram family"
+              options={FAMILY_OPTIONS}
+              value={family}
+              onChange={(v) => setFamily(v as Family)}
+            />
+            <PlannerToggleGroup
+              label="Detail level"
+              options={VIEW_OPTIONS}
+              value={view}
+              onChange={(v) => setView(v as View)}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button
+              type="submit"
+              disabled={!need.trim() || mutation.isPending}
+              data-testid="button-generate-diagram"
+              className="gap-2"
+            >
+              {mutation.isPending ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" />Building plan…</>
+              ) : (
+                <><Sparkles className="h-3.5 w-3.5" />Generate diagram</>
+              )}
             </Button>
+            {result && !mutation.isPending && (
+              <Button variant="outline" onClick={handleReset} data-testid="button-reset-diagram" className="gap-1.5">
+                <RotateCcw className="h-3.5 w-3.5" />Start over
+              </Button>
+            )}
+            {result && !mutation.isPending && (
+              <span className="text-xs text-muted-foreground">
+                Last: <span className="italic">"{result.plan.need}"</span>
+              </span>
+            )}
+          </div>
+
+          {mutation.isError && (
+            <div className="flex items-center gap-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              {mutation.error instanceof Error
+                ? mutation.error.message
+                : "An unexpected error occurred. Please try again."}
+            </div>
           )}
-        </div>
-        {genError && <ErrorBanner error={genError} onDismiss={() => setGenError(null)} />}
+        </form>
       </Card>
 
-      {/* Diagram result */}
+      {/* Results */}
       {result && (
-        <>
-          <Card className="p-4 space-y-2">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">{result.plan.title}</h3>
-              <Badge variant="secondary" className="text-[10px] capitalize">
-                {result.plan.family}
-              </Badge>
+        <div className="space-y-4" data-testid="panel-results">
+          {/* Header: title, family badge, counts, axis encoding */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold">{result.plan.title}</h2>
+              <div className="mt-0.5 flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px] capitalize">
+                  {result.plan.family}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {result.plan.placements.filter((p) => p.content.from === undefined).length} nodes ·{" "}
+                  {result.plan.placements.filter((p) => p.content.from !== undefined).length} edges
+                </span>
+              </div>
             </div>
-            <DiagramRenderer plan={result.plan} />
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span>
-                {result.validation.valid
-                  ? "✓ satisfies all library constraints"
-                  : `✗ ${result.validation.issues.length} issue(s)`}
-              </span>
+            {Object.keys(result.plan.axisMeanings).length > 0 && (
+              <div className="text-right">
+                <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Axis encoding
+                </div>
+                <AxisMeaningsPanel axisMeanings={result.plan.axisMeanings} />
+              </div>
+            )}
+          </div>
+
+          {/* Tier-1 draft + emphasized diagram side-by-side */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Badge variant="default" className="text-[10px] tracking-wide">TIER 1 DRAFT</Badge>
+                <span className="text-xs text-muted-foreground">Equal-consequence structure</span>
+              </div>
+              <Tier1Draft draft={result.plan.tier1Draft} />
+            </Card>
+
+            <Card className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px] tracking-wide">EMPHASIZED DIAGRAM</Badge>
+                <span className="text-xs text-muted-foreground">Final plan with axis encoding</span>
+              </div>
+              <div className="overflow-auto rounded-lg border border-border">
+                <DiagramRenderer plan={result.plan} />
+              </div>
+            </Card>
+          </div>
+
+          {/* Validation report */}
+          <Card className="p-4">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Validation report
             </div>
-            {result.validation.issues.length > 0 && (
-              <ul className="text-[11px] text-destructive space-y-0.5">
-                {result.validation.issues.map((i) => (
-                  <li key={i.rule + (i.placementId ?? "")}>
-                    [{i.severity}] {i.rule}: {i.message}
+            <PlanValidationPanel report={result.validation} />
+          </Card>
+
+          {/* Plan notes */}
+          {result.plan.notes.length > 0 && (
+            <Card className="p-4">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Plan notes
+              </div>
+              <ul className="space-y-1.5">
+                {result.plan.notes.map((note, i) => (
+                  <li key={i} className="flex gap-2 text-xs text-muted-foreground">
+                    <span className="mt-0.5 text-primary">·</span>
+                    {note}
                   </li>
                 ))}
               </ul>
-            )}
-            <NotesList notes={result.plan.notes} />
-          </Card>
+            </Card>
+          )}
 
-          {/* Refinement input */}
-          <Card className="p-6 space-y-4">
+          {/* Raw JSON collapsible */}
+          <JsonCollapsible label="Plan JSON (full)" data={result.plan} />
+
+          {/* Refinement */}
+          <Card className="p-5 space-y-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-1.5">
                 Refine this diagram
               </label>
-              <div className="flex gap-2">
-                <textarea
-                  ref={refinementInputRef}
-                  value={refinement}
-                  onChange={(e) => setRefinement(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleRefine();
-                  }}
-                  disabled={refining}
-                  placeholder='e.g. "also show the returns flow" or "remove the warehouse step"'
-                  className="flex-1 min-h-[60px] resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                  data-testid="input-diagram-refinement"
-                />
-              </div>
+              <textarea
+                ref={refinementInputRef}
+                value={refinement}
+                onChange={(e) => setRefinement(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleRefine();
+                }}
+                disabled={refining}
+                placeholder='e.g. "also show the returns flow" or "remove the warehouse step"'
+                rows={2}
+                className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                data-testid="input-diagram-refinement"
+              />
               <p className="mt-1 text-[11px] text-muted-foreground">
-                The AI will update the diagram while preserving everything you haven't asked to change.
+                The AI will update the diagram while preserving everything you haven't asked to change. Tip: ⌘↵ / Ctrl↵
               </p>
             </div>
             <Button
               onClick={handleRefine}
               disabled={refining || !refinement.trim()}
               data-testid="button-refine-diagram"
+              className="gap-2"
             >
               {refining ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Refining…</>
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" />Refining…</>
               ) : (
-                <><ArrowRight className="mr-2 h-4 w-4" />Apply refinement</>
+                <><ArrowRight className="h-3.5 w-3.5" />Apply refinement</>
               )}
             </Button>
-            {refineError && (
-              <ErrorBanner error={refineError} onDismiss={() => setRefineError(null)} />
-            )}
+            {refineError && <ErrorBanner error={refineError} onDismiss={() => setRefineError(null)} />}
           </Card>
-        </>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!result && !mutation.isPending && (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
+          <div className="mb-3 rounded-full bg-primary/10 p-4">
+            <Play className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="mb-1 text-sm font-semibold">Enter a need to get started</h3>
+          <p className="max-w-sm text-xs text-muted-foreground">
+            Describe what you want to map or model — the librarian will build a Tier-1 draft, apply
+            emphasis, validate the plan, and render the diagram.
+          </p>
+        </div>
       )}
     </div>
   );
 }
 
-async function postJson(url: string, body: unknown): Promise<GeneratorResult> {
+async function postJson(url: string, body: unknown): Promise<{ plan: DiagramPlan; validation: ValidationReport }> {
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -677,5 +974,5 @@ async function postJson(url: string, body: unknown): Promise<GeneratorResult> {
     };
     throw err;
   }
-  return r.json() as Promise<GeneratorResult>;
+  return r.json();
 }
