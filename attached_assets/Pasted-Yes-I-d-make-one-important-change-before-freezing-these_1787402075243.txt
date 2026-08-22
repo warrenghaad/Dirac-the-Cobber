@@ -1,0 +1,2495 @@
+Yes. I’d make one important change before freezing these three deliverables:
+
+**The Librarian should not be specialized around “Figma templates.” Its domain should be visual grammars, with Figma as its first major source and output adapter.**
+
+That gives it enough breadth to learn a workflow template, an affinity map, UML, ZUI, database matrix, drawing system, or animation without forcing all of them through “screen design” logic. This fits the existing architecture, where Nash Room hosts multiple coordinated viewers and GraphNode, Matrix, Polytope, Workflow Composer, Preview, and Figma Bridge are different projections over shared semantic objects.  
+
+It also preserves the more important Polytope rule: **the visualization is a projection over underlying information, not the underlying truth itself.** 
+
+Here are the first three actual project artifacts.
+
+# Deliverable 1 — Figma Librarian Product Brief
+
+## Working Name
+
+**Prism Librarian**
+
+Alternative internal name:
+
+**Visual Grammar Librarian**
+
+The product may remain colloquially known as the Figma Librarian, but its architecture must not assume that Figma is the only source, representation, or output environment.
+
+---
+
+## 1. Product Purpose
+
+Prism Librarian is an agent-assisted visual intelligence system that:
+
+1. ingests templates, components, diagrams, visualizations, design systems, and examples;
+2. decomposes those examples into reusable visual grammar;
+3. stores components and template patterns as a governed library;
+4. translates semantic requests into visual structures;
+5. recommends or composes appropriate visual grammars;
+6. produces auditable visual build plans;
+7. exports approved plans to Figma and later other rendering environments;
+8. learns from human corrections without silently rewriting canonical design rules.
+
+The Librarian is **not** primarily a drawing tool.
+
+It is a:
+
+* library
+* pattern recognizer
+* design grammar extractor
+* visual translator
+* visual planning engine
+* component recommender
+* template composer
+* provenance system
+
+---
+
+# 2. Core Product Thesis
+
+A sufficiently structured visual artifact contains recoverable design logic.
+
+That logic can be represented as relationships among:
+
+* semantic purpose;
+* hierarchy;
+* layout;
+* visual encoding;
+* component anatomy;
+* navigation or interaction;
+* grouping;
+* sequence;
+* scale;
+* motion;
+* spatial organization;
+* data structure;
+* user action;
+* constraints.
+
+Therefore:
+
+> A template should not be stored only as a file. It should be converted into a reusable description of why its organization works, what structural problem it solves, and under what conditions its grammar should be reused.
+
+The Librarian's primary learning artifact is the **Template Logic Card**.
+
+---
+
+# 3. Governing Architecture
+
+```text
+Principal / User
+       ↓
+Translator
+       ↓
+Foreman
+       ↓
+Visual Request Contract
+       ↓
+Librarian Retrieval
+       ↓
+Template / Pattern Archaeology
+       ↓
+Visual Logic Compiler
+       ↓
+Visual Build Plan
+       ↓
+Independent Audit
+       ↓
+Human Gate where required
+       ↓
+Figma / React / SVG / Canvas / 3D / other output adapter
+```
+
+Agents may propose structures and rules.
+
+They may not silently promote inferred rules to canonical library knowledge.
+
+---
+
+# 4. Relationship to Nash Room and Prism
+
+The Librarian is a service and a collection of viewers inside the larger Engine 4 architecture.
+
+**Nash Room**
+
+* persistent operator shell;
+* windowing environment;
+* does not own Librarian knowledge.
+
+**Prism**
+
+* coordinates viewers and projections;
+* allows Librarian surfaces to coexist with GraphNode, Matrix, Polytope, Workflow Composer, Inspector, and Preview.
+
+**Prism Librarian**
+
+* maintains the visual grammar library;
+* retrieves templates and components;
+* analyzes design logic;
+* proposes compositions.
+
+**Figma Bridge**
+
+* translates an approved Visual Build Plan into Figma operations.
+
+The Librarian must remain distinct from the Figma Bridge.
+
+---
+
+# 5. Supported Visual Families
+
+Version 1 must model the following as explicit `visualization_family` values rather than treating them as generic diagrams.
+
+## Relational Mapping
+
+* node-link graph
+* knowledge graph
+* mycelial map
+* concept map
+* relationship map
+* dependency map
+* network map
+
+## Affinity and Classification
+
+* affinity map
+* cluster map
+* taxonomy
+* card sort
+* classification field
+* comparative grouping
+
+## Processes and Workflows
+
+* flowchart
+* workflow
+* pipeline
+* state machine
+* decision tree
+* swimlane
+* process map
+* dependency flow
+* agent orchestration map
+
+## Information Architecture
+
+* hierarchy tree
+* sitemap
+* navigation architecture
+* folder architecture
+* ontology view
+* content model
+
+## Formal Technical Models
+
+* UML class diagram
+* UML activity diagram
+* UML sequence diagram
+* entity relationship diagram
+* architecture diagram
+* system topology
+* state transition model
+
+## Spatial Interfaces
+
+* infinite canvas
+* ZUI / zoomable user interface
+* spatial workspace
+* nested spatial hierarchy
+* semantic zoom system
+
+## MUI
+
+MUI is retained as a user-specified visual/interface family.
+
+Its precise canonical definition should remain `unresolved` until the user establishes whether MUI refers to multi-user interfaces, multidimensional user interfaces, or another project-specific category.
+
+The Librarian must not silently choose an expansion.
+
+## Data Visualization
+
+* table
+* matrix
+* pivot
+* heatmap
+* scatter
+* timeline
+* multi-track timeline
+* parallel coordinates
+* Sankey
+* chord relationship view
+* graph
+* multidimensional projection
+* Polytope face
+* coordinated multiple views
+* database schema visualization
+* query-result visualization
+
+## Drawing and Illustration
+
+* explanatory drawing
+* technical drawing
+* visual decomposition
+* annotated artwork
+* geometric construction
+* illustrated process
+* iconographic study
+* storyboard
+
+## Motion and Animation
+
+* timeline animation
+* scene sequence
+* camera movement
+* morph
+* reveal
+* transformation sequence
+* kinetic diagram
+* animated data visualization
+* 3D explainer sequence
+
+---
+
+# 6. Special Requirement: Database Visualization
+
+Database visualization is a first-class problem, not a chart afterthought.
+
+The Librarian must eventually support requests such as:
+
+> Show where mathematical concepts, visual grammar, historical art, cognition, mechanics, mythology, artifacts, and invention converge on the same geometric structure.
+
+The underlying data may contain:
+
+```text
+ENTITY
+RELATION
+EVENT
+CLAIM
+SOURCE
+THROUGHLINE
+```
+
+The visual output may then be:
+
+* matrix;
+* graph;
+* timeline;
+* mycelial network;
+* Polytope;
+* coordinated cross-section;
+* comparative table;
+* layered spatial map.
+
+The Librarian must distinguish:
+
+```text
+CANONICAL DATA
+    ↓
+QUERY / ANALYTICAL REQUEST
+    ↓
+PROJECTION
+    ↓
+VISUAL GRAMMAR
+    ↓
+COMPONENT COMPOSITION
+    ↓
+RENDERED SURFACE
+```
+
+A visual arrangement must never become a new factual relationship merely because two objects were placed near one another.
+
+---
+
+# 7. First Dress Rehearsal: Folder Mycelium
+
+The first substantive benchmark should use the EUCLID folder system because it has externally observable structural relationships.
+
+Input:
+
+```text
+folder
+subfolder
+file
+path
+reference
+category
+workflow role
+```
+
+Candidate inferred relations:
+
+```text
+contains
+references
+produces
+depends_on
+implements
+duplicates
+adjacent_to
+supersedes
+supports
+```
+
+The system should:
+
+1. ingest a folder inventory;
+2. distinguish explicit containment from inferred semantic relations;
+3. propose conceptual clusters;
+4. recommend appropriate visualization families;
+5. generate a Visual Build Plan;
+6. render multiple projections from the same underlying folder graph;
+7. explain why each projection was selected.
+
+Required initial outputs:
+
+* hierarchy view;
+* mycelial graph;
+* dependency/workflow view;
+* information architecture view.
+
+This establishes whether the Librarian genuinely understands visual translation instead of merely drawing boxes.
+
+---
+
+# 8. Library Objects
+
+The first release recognizes the following library objects:
+
+```text
+SOURCE_ASSET
+TEMPLATE
+TEMPLATE_LOGIC_CARD
+PATTERN
+COMPONENT
+COMPONENT_SET
+TOKEN
+STYLE
+LAYOUT_RULE
+INTERACTION_RULE
+MOTION_RULE
+CONNECTOR_RULE
+VISUAL_ENCODING
+COMPOSITION_RECIPE
+VISUAL_BUILD_PLAN
+REVIEW_DECISION
+RUN_RECEIPT
+```
+
+Later additions may include:
+
+```text
+CAMERA_PATTERN
+ANIMATION_PATTERN
+DATA_PROJECTION_RECIPE
+ACCESSIBILITY_RULE
+DOMAIN_VISUAL_GRAMMAR
+```
+
+---
+
+# 9. Distinction Between Template, Pattern, and Component
+
+## Template
+
+A relatively complete visual arrangement designed to solve a recognizable class of problems.
+
+Example:
+
+`hierarchical_workflow_with_stage_clusters`
+
+## Pattern
+
+A reusable relationship or design rule extracted from one or more templates.
+
+Example:
+
+`primary_process_spine_with_secondary_evidence_clusters`
+
+## Component
+
+A reusable visual or interactive unit.
+
+Example:
+
+`StatusBadge`
+
+## Composition Recipe
+
+Instructions for assembling patterns and components for a particular visual problem.
+
+Example:
+
+```text
+ROOT NODE
+→ 4 DOMAIN CLUSTERS
+→ child document nodes
+→ cross-domain typed edges
+→ semantic zoom
+→ floating evidence inspector
+```
+
+This distinction is mandatory.
+
+Otherwise the library degenerates into a warehouse of pretty rectangles.
+
+---
+
+# 10. Core Intelligence Tasks
+
+The Librarian must eventually perform six distinct reasoning tasks.
+
+## A. Classification
+
+What kind of visual object is this?
+
+## B. Decomposition
+
+What structures, components, rules, and relationships compose it?
+
+## C. Grammar Induction
+
+Which observed patterns appear generalizable?
+
+## D. Retrieval
+
+Which existing grammars are relevant to this new request?
+
+## E. Composition
+
+How should compatible patterns and components be combined?
+
+## F. Critique
+
+Does the proposed output communicate the intended structure effectively?
+
+These should remain separately testable services.
+
+---
+
+# 11. Learning Model
+
+The initial system is not machine learning in the conventional model-training sense.
+
+Version 1 uses:
+
+* structured extraction;
+* heuristics;
+* embeddings/search where useful;
+* comparison across Template Logic Cards;
+* explicit rule accumulation;
+* human correction;
+* accepted/rejected recommendations;
+* pattern frequency;
+* contextual applicability.
+
+Learning records should resemble:
+
+```yaml
+rule:
+  statement: "Use semantic zoom when hierarchical node count exceeds the readable middle-view threshold."
+  origin:
+    type: human_correction
+    run_id: RUN-0182
+  applies_to:
+    - mycelial_map
+    - knowledge_graph
+    - information_architecture
+  confidence: 0.91
+  status: adopted
+```
+
+A future statistical or learned model may use this accumulated corpus.
+
+Version 1 should not pretend such training has already occurred.
+
+---
+
+# 12. Library Authority States
+
+Every inferred library rule must have an explicit status.
+
+```text
+observed
+inferred
+proposed
+tested
+approved
+canonical
+experimental
+deprecated
+rejected
+unresolved
+```
+
+Agents may autonomously create:
+
+```text
+observed
+inferred
+proposed
+experimental
+```
+
+Human or validated governance processes control promotion into:
+
+```text
+approved
+canonical
+```
+
+---
+
+# 13. Primary User Actions
+
+```text
+Import Template
+Analyze Template
+Compare Templates
+Extract Pattern
+Approve Pattern
+Reject Pattern
+Search Components
+Search Visual Grammar
+Describe Visualization
+Recommend Visual Family
+Generate Build Plan
+Compare Build Plans
+Preview Projection
+Compile to Figma
+Explain Design Decision
+Correct Librarian
+Save Correction
+```
+
+---
+
+# 14. Initial Librarian Viewers
+
+Inside Prism:
+
+## Library Browser
+
+Templates, components, patterns, tokens, examples.
+
+## Template Archaeologist
+
+Deep analysis of one template.
+
+## Grammar Compare
+
+Compare two or more Template Logic Cards.
+
+## Component Foundry
+
+Search, inspect, classify, and compose components.
+
+## Visual Request Translator
+
+Shows the structured interpretation of the user's request.
+
+## Build Plan Viewer
+
+Displays the proposed visual structure before execution.
+
+## Provenance Inspector
+
+Shows why a pattern/component/template was selected.
+
+## Figma Bridge
+
+Shows approved Figma target and compilation plan.
+
+---
+
+# 15. Primary Input Sources
+
+Initial:
+
+* Figma design files;
+* Figma components and component sets;
+* Figma variables and styles;
+* FigJam diagrams;
+* screenshots;
+* local SVG assets;
+* React components;
+* shadcn components;
+* local component repositories;
+* HTML/CSS prototypes;
+* folder structures;
+* JSON/YAML graph structures;
+* manually defined examples.
+
+Later:
+
+* Adobe assets;
+* animation project metadata;
+* design systems;
+* database schemas;
+* live web surfaces;
+* additional visualization libraries.
+
+---
+
+# 16. Output Targets
+
+Initial:
+
+* structured JSON;
+* Markdown reports;
+* Figma build plans;
+* FigJam build plans;
+* React component plans;
+* SVG;
+* Mermaid where appropriate.
+
+Later:
+
+* direct Figma construction;
+* React;
+* Canvas/SVG;
+* React Three Fiber;
+* animation timelines;
+* database visualizations;
+* presentation surfaces.
+
+---
+
+# 17. Non-Goals for Version 1
+
+Do not initially build:
+
+* autonomous canonical design mutation;
+* general-purpose AGI designer;
+* full 3D Polytope;
+* arbitrary Figma cloning;
+* automatic commercial-template reproduction;
+* full Adobe round-trip automation;
+* machine learning model training;
+* universal ontology of visual design;
+* every visualization family renderer.
+
+Version 1 proves the **grammar pipeline**.
+
+---
+
+# 18. First Version Success Criteria
+
+The first Librarian is successful when it can:
+
+1. ingest at least 10 structurally different templates;
+2. generate valid Template Logic Cards for them;
+3. identify repeated components across templates;
+4. distinguish components from layout patterns;
+5. distinguish layout patterns from complete templates;
+6. accept one structured folder graph;
+7. recommend at least three appropriate visual projections;
+8. justify each recommendation;
+9. produce a Visual Build Plan from a semantic request;
+10. identify required components from its Component Registry;
+11. state which components are missing;
+12. preserve provenance for every recommendation;
+13. accept user correction;
+14. use that correction during a later comparable request;
+15. produce the same visual plan deterministically when the same approved inputs and rules are used.
+
+---
+
+# 19. Governing Principle
+
+> **The Librarian stores visual intelligence, not merely visual assets.**
+
+Its deepest unit of value is not the frame, component, or template.
+
+It is the recoverable relationship between:
+
+**meaning → structure → visual encoding → interaction → reusable implementation.**
+
+The key addition above is the explicit **projection layer**. Your Polytope work already requires one semantic object to remain identifiable across matrix, graph, timeline, canvas, and multidimensional views, so the Librarian needs to learn not only “templates” but *which visual grammar is appropriate for which projection problem*. 
+
+# Deliverable 2 — Template Logic Card Schema v0.1
+
+## Purpose
+
+A `TemplateLogicCard` is the Librarian's canonical analysis object for a visual example.
+
+It records not merely what a template looks like, but:
+
+* what problem it solves;
+* what information structure it expects;
+* how it produces hierarchy;
+* which visual relationships carry meaning;
+* which components implement those relationships;
+* which interaction rules govern it;
+* when its grammar should and should not be reused.
+
+A Template Logic Card is an analytical record.
+
+It is **not** itself the Figma template.
+
+---
+
+# 1. Top-Level Schema
+
+```ts
+interface TemplateLogicCard {
+  id: string
+  schemaVersion: string
+
+  identity: TemplateIdentity
+  provenance: Provenance
+
+  classification: TemplateClassification
+  purpose: TemplatePurpose
+
+  inputModel: InputModel
+  semanticModel: SemanticModel
+
+  hierarchy: HierarchyModel
+  spatialGrammar: SpatialGrammar
+  visualEncoding: VisualEncodingModel
+  componentGrammar: ComponentGrammar
+  connectorGrammar?: ConnectorGrammar
+
+  interactionGrammar?: InteractionGrammar
+  zoomGrammar?: ZoomGrammar
+  motionGrammar?: MotionGrammar
+  dataProjectionGrammar?: DataProjectionGrammar
+
+  compositionRules: CompositionRule[]
+  transformationRules: TransformationRule[]
+  reuseRules: ReuseRule[]
+  constraints: ConstraintRule[]
+  failureModes: FailureMode[]
+
+  examples: ExampleBinding[]
+
+  evaluation: TemplateEvaluation
+  governance: GovernanceState
+}
+```
+
+---
+
+# 2. Identity
+
+```ts
+interface TemplateIdentity {
+  name: string
+  description?: string
+
+  visualizationFamily:
+    | "relationship_map"
+    | "affinity_map"
+    | "concept_map"
+    | "knowledge_graph"
+    | "mycelial_map"
+    | "flowchart"
+    | "workflow"
+    | "pipeline"
+    | "state_machine"
+    | "decision_tree"
+    | "swimlane"
+    | "information_architecture"
+    | "hierarchy_tree"
+    | "sitemap"
+    | "uml_class"
+    | "uml_activity"
+    | "uml_sequence"
+    | "entity_relationship"
+    | "system_architecture"
+    | "matrix"
+    | "table"
+    | "timeline"
+    | "multitrack_timeline"
+    | "database_visualization"
+    | "coordinated_views"
+    | "polytope_projection"
+    | "drawing"
+    | "technical_drawing"
+    | "storyboard"
+    | "animation"
+    | "zui"
+    | "mui"
+    | "spatial_canvas"
+    | "other"
+
+  subtype?: string
+
+  sourceFormat:
+    | "figma"
+    | "figjam"
+    | "react"
+    | "html"
+    | "svg"
+    | "image"
+    | "json"
+    | "yaml"
+    | "manual"
+    | "other"
+}
+```
+
+`mui` remains deliberately uninterpreted until its project meaning is canonically resolved.
+
+---
+
+# 3. Provenance
+
+```ts
+interface Provenance {
+  sourceId: string
+  sourceURI?: string
+  sourceFile?: string
+
+  figma?: {
+    fileKey?: string
+    pageId?: string
+    nodeId?: string
+    componentKeys?: string[]
+  }
+
+  creator?: string
+  license?: string
+  reuseStatus?:
+    | "unknown"
+    | "reference_only"
+    | "internal_reuse"
+    | "commercial_reuse_allowed"
+    | "restricted"
+
+  importedAt: string
+  analyzedAt?: string
+
+  analysisAgent?: string
+  analysisRunId?: string
+  sourceHash?: string
+}
+```
+
+---
+
+# 4. Classification
+
+```ts
+interface TemplateClassification {
+  abstractionLevel:
+    | "complete_template"
+    | "layout_system"
+    | "composition_pattern"
+    | "component_pattern"
+    | "decorative_reference"
+
+  dimensionality:
+    | "1d"
+    | "2d"
+    | "2_5d"
+    | "3d"
+    | "temporal"
+    | "multidimensional"
+
+  topology:
+    | "linear"
+    | "hierarchical"
+    | "radial"
+    | "network"
+    | "matrix"
+    | "layered"
+    | "nested"
+    | "spatial"
+    | "temporal"
+    | "hybrid"
+
+  readingDirection?:
+    | "left_to_right"
+    | "right_to_left"
+    | "top_to_bottom"
+    | "bottom_to_top"
+    | "radial_out"
+    | "radial_in"
+    | "free_spatial"
+    | "multiple"
+
+  informationDensity:
+    | "low"
+    | "medium"
+    | "high"
+    | "adaptive"
+}
+```
+
+---
+
+# 5. Purpose
+
+```ts
+interface TemplatePurpose {
+  primaryJob: string
+  secondaryJobs?: string[]
+
+  goodFor: string[]
+  poorFor: string[]
+
+  intendedAudience?: string[]
+
+  canonicalQuestions?: string[]
+
+  example:
+    "What dependencies exist between parts of this system?"
+}
+```
+
+Example `canonicalQuestions`:
+
+```text
+What depends on what?
+What belongs together?
+What changes through time?
+What is the hierarchy?
+Where are the bottlenecks?
+Where do disciplines converge?
+How does one object change under different projections?
+```
+
+---
+
+# 6. Input Model
+
+The Librarian must know the shape of information a template expects.
+
+```ts
+interface InputModel {
+  expectedEntityTypes?: string[]
+  expectedRelationTypes?: string[]
+
+  minimumEntities?: number
+  recommendedMaximumEntities?: number
+
+  supportsUnknownEntityCount?: boolean
+
+  requiresHierarchy?: boolean
+  supportsCrossLinks?: boolean
+  supportsCycles?: boolean
+
+  requiresSequence?: boolean
+  requiresTime?: boolean
+
+  supportsWeights?: boolean
+  supportsConfidence?: boolean
+  supportsProvenance?: boolean
+
+  requiredFields?: string[]
+  optionalFields?: string[]
+}
+```
+
+---
+
+# 7. Semantic Model
+
+```ts
+interface SemanticModel {
+  semanticRoles: SemanticRole[]
+
+  explicitRelationships: string[]
+
+  inferredVisualRelationships?: string[]
+
+  visualProximityMeaning:
+    | "none"
+    | "weak_similarity"
+    | "group_membership"
+    | "semantic_relation"
+    | "domain_specific"
+
+  orderingMeaning?:
+    | "none"
+    | "sequence"
+    | "importance"
+    | "chronology"
+    | "hierarchy"
+    | "custom"
+
+  sizeMeaning?: string
+  colorMeaning?: string
+  depthMeaning?: string
+  motionMeaning?: string
+}
+
+interface SemanticRole {
+  role: string
+  description: string
+  visualRealization?: string[]
+}
+```
+
+Example:
+
+```json
+{
+  "role": "decision_gate",
+  "description": "A point at which flow branches based on a condition.",
+  "visualRealization": [
+    "diamond node",
+    "split connector",
+    "branch labels"
+  ]
+}
+```
+
+---
+
+# 8. Hierarchy Model
+
+```ts
+interface HierarchyModel {
+  levels: HierarchyLevel[]
+
+  primaryAnchor?: string
+  secondaryAnchors?: string[]
+
+  hierarchyEncodedBy: Array<
+    | "size"
+    | "position"
+    | "containment"
+    | "color"
+    | "typography"
+    | "depth"
+    | "line_weight"
+    | "motion"
+    | "progressive_disclosure"
+  >
+
+  stableAnchorRequired?: boolean
+}
+
+interface HierarchyLevel {
+  level: number
+  semanticRole: string
+  typicalComponents: string[]
+}
+```
+
+---
+
+# 9. Spatial Grammar
+
+```ts
+interface SpatialGrammar {
+  layoutModel:
+    | "auto_layout"
+    | "grid"
+    | "free_canvas"
+    | "radial"
+    | "force_directed"
+    | "timeline"
+    | "matrix"
+    | "tree"
+    | "swimlane"
+    | "layered_dag"
+    | "3d_scene"
+    | "hybrid"
+
+  primaryAxis?: "x" | "y" | "z" | "time" | "none"
+
+  groupingRules: string[]
+
+  alignmentRules?: string[]
+  spacingRules?: string[]
+
+  nestingSupported: boolean
+  maxRecommendedNestingDepth?: number
+
+  overlapAllowed?: boolean
+
+  responsiveBehavior?: string[]
+
+  overflowStrategy?:
+    | "scroll"
+    | "zoom"
+    | "paginate"
+    | "collapse"
+    | "cluster"
+    | "semantic_zoom"
+    | "virtualize"
+}
+```
+
+---
+
+# 10. Visual Encoding Model
+
+```ts
+interface VisualEncodingModel {
+  colorChannels?: EncodingChannel[]
+  sizeChannels?: EncodingChannel[]
+  shapeChannels?: EncodingChannel[]
+  lineChannels?: EncodingChannel[]
+  typographyChannels?: EncodingChannel[]
+  opacityChannels?: EncodingChannel[]
+  depthChannels?: EncodingChannel[]
+  motionChannels?: EncodingChannel[]
+
+  legendRequired?: boolean
+
+  semanticColorLimit?: number
+}
+
+interface EncodingChannel {
+  variable: string
+  meaning: string
+  permittedValues?: string[]
+}
+```
+
+---
+
+# 11. Component Grammar
+
+```ts
+interface ComponentGrammar {
+  requiredComponentRoles: string[]
+  optionalComponentRoles?: string[]
+
+  compositionTree?: ComponentCompositionNode[]
+
+  repeatedStructures?: RepeatedStructure[]
+
+  instanceSwapRoles?: string[]
+
+  componentDependencies?: ComponentDependency[]
+}
+
+interface ComponentCompositionNode {
+  role: string
+  children?: ComponentCompositionNode[]
+}
+
+interface RepeatedStructure {
+  role: string
+  repetitionRule: string
+}
+
+interface ComponentDependency {
+  componentRole: string
+  dependsOn: string[]
+}
+```
+
+---
+
+# 12. Connector Grammar
+
+Applicable to graphs, workflows, UML, architecture views, and relational maps.
+
+```ts
+interface ConnectorGrammar {
+  connectorTypes: ConnectorType[]
+
+  routing:
+    | "straight"
+    | "orthogonal"
+    | "curved"
+    | "bezier"
+    | "mixed"
+
+  crossingPolicy:
+    | "avoid"
+    | "minimize"
+    | "allowed"
+    | "semantic"
+
+  directionalityVisible: boolean
+}
+
+interface ConnectorType {
+  semanticPredicate: string
+
+  visualEncoding: {
+    lineStyle?: string
+    thickness?: string
+    arrowhead?: string
+    colorRole?: string
+    labelRequired?: boolean
+  }
+}
+```
+
+---
+
+# 13. Interaction Grammar
+
+```ts
+interface InteractionGrammar {
+  selectable?: boolean
+  draggable?: boolean
+  editable?: boolean
+
+  hoverReveal?: string[]
+  clickReveal?: string[]
+
+  supportsFiltering?: boolean
+  supportsSearch?: boolean
+
+  supportsSelectionSync?: boolean
+  supportsCrossHighlighting?: boolean
+
+  supportsPinning?: boolean
+  supportsComparison?: boolean
+
+  directManipulationRules?: string[]
+}
+```
+
+---
+
+# 14. Zoom Grammar
+
+Important for large graphs, mycelial systems, ZUIs, and Polytope work.
+
+```ts
+interface ZoomGrammar {
+  semanticZoom: boolean
+
+  levels?: ZoomLevel[]
+
+  cameraModel?:
+    | "2d_pan_zoom"
+    | "3d_orbit"
+    | "3d_fly"
+    | "fixed"
+}
+
+interface ZoomLevel {
+  levelName: string
+  minScale?: number
+  maxScale?: number
+
+  visibleRoles: string[]
+  hiddenRoles?: string[]
+
+  aggregation?: string
+}
+```
+
+Example:
+
+```text
+far:
+  civilization clusters
+
+middle:
+  concept families
+
+near:
+  artifacts + claims + provenance
+```
+
+---
+
+# 15. Motion Grammar
+
+```ts
+interface MotionGrammar {
+  temporal: boolean
+
+  motionPurpose: Array<
+    | "transition"
+    | "causality"
+    | "sequence"
+    | "transformation"
+    | "attention"
+    | "comparison"
+    | "narrative"
+    | "navigation"
+  >
+
+  allowedPatterns?: string[]
+
+  anchorRules?: string[]
+
+  teacherControlRequired?: boolean
+
+  interruptible?: boolean
+  reversible?: boolean
+  scrubbable?: boolean
+}
+```
+
+This allows the same grammar system eventually to serve teacher-controlled 3D explainers.
+
+---
+
+# 16. Data Projection Grammar
+
+This is required for database and interdisciplinary visualization.
+
+```ts
+interface DataProjectionGrammar {
+  projectionType:
+    | "graph"
+    | "matrix"
+    | "timeline"
+    | "table"
+    | "hierarchy"
+    | "spatial"
+    | "polytope"
+    | "coordinated_multi_view"
+
+  subjectDimension?: string
+  rowDimension?: string
+  columnDimension?: string
+  depthDimension?: string
+  timeDimension?: string
+
+  allowedFilters?: string[]
+
+  aggregationRules?: string[]
+
+  missingnessEncoding?: string
+
+  provenanceInspectable: boolean
+
+  crossSelectionSupported?: boolean
+}
+```
+
+---
+
+# 17. Composition Rules
+
+```ts
+interface CompositionRule {
+  id: string
+
+  condition: string
+  action: string
+
+  rationale?: string
+
+  status:
+    | "observed"
+    | "inferred"
+    | "proposed"
+    | "approved"
+    | "canonical"
+
+  confidence: number
+}
+```
+
+Example:
+
+```json
+{
+  "id": "CR-017",
+  "condition": "node_count > 40 AND hierarchy_depth > 3",
+  "action": "enable semantic zoom and cluster collapse",
+  "rationale": "Prevent simultaneous label overload.",
+  "status": "proposed",
+  "confidence": 0.81
+}
+```
+
+---
+
+# 18. Transformation Rules
+
+Transformation rules describe how a template may be safely adapted.
+
+```ts
+interface TransformationRule {
+  target: string
+
+  transform:
+    | "add"
+    | "remove"
+    | "replace"
+    | "reorder"
+    | "collapse"
+    | "expand"
+    | "transpose"
+    | "rotate"
+    | "recluster"
+    | "restyle"
+    | "rebind"
+
+  preconditions?: string[]
+  constraints?: string[]
+
+  preservesSemanticRole: boolean
+}
+```
+
+---
+
+# 19. Reuse Rules
+
+```ts
+interface ReuseRule {
+  appliesWhen: string[]
+  avoidWhen?: string[]
+
+  preferredDomains?: string[]
+
+  scaleRange?: {
+    minimum?: number
+    maximum?: number
+  }
+}
+```
+
+---
+
+# 20. Failure Modes
+
+```ts
+interface FailureMode {
+  name: string
+  trigger: string
+  symptom: string
+  mitigation?: string
+}
+```
+
+Examples:
+
+```text
+Connector spaghetti
+Hierarchy collapse
+Color-role overload
+Label collision
+Meaning inferred from accidental proximity
+Untrackable 3D camera movement
+Too many simultaneous encodings
+Nested-frame recursion
+```
+
+---
+
+# 21. Evaluation
+
+```ts
+interface TemplateEvaluation {
+  clarity: number
+  scalability: number
+  adaptability: number
+  accessibility: number
+  automationReadiness: number
+  semanticExplicitness: number
+
+  confidence: number
+
+  evaluatorNotes?: string[]
+}
+```
+
+Values:
+
+```text
+0.0 → 1.0
+```
+
+---
+
+# 22. Governance
+
+```ts
+interface GovernanceState {
+  status:
+    | "candidate"
+    | "analyzed"
+    | "proposed"
+    | "approved"
+    | "canonical"
+    | "experimental"
+    | "deprecated"
+    | "rejected"
+
+  reviewedBy?: string
+  reviewedAt?: string
+
+  supersedes?: string[]
+  supersededBy?: string[]
+
+  correctionHistory?: CorrectionRecord[]
+}
+
+interface CorrectionRecord {
+  runId: string
+  correction: string
+  appliedBy: string
+  date: string
+}
+```
+
+---
+
+# 23. Minimal Template Logic Card
+
+During early ingestion, the Librarian may use a smaller record:
+
+```json
+{
+  "id": "TLC-001",
+  "name": "Clustered Workflow",
+  "visualizationFamily": "workflow",
+  "primaryJob": "Show staged work with dependencies",
+  "topology": "layered",
+  "semanticRoles": [
+    "stage",
+    "task",
+    "dependency",
+    "decision",
+    "status"
+  ],
+  "layoutModel": "layered_dag",
+  "requiredComponentRoles": [
+    "stage_frame",
+    "node",
+    "connector",
+    "status_marker"
+  ],
+  "goodFor": [
+    "agent workflows",
+    "production pipelines"
+  ],
+  "poorFor": [
+    "dense many-to-many conceptual networks"
+  ],
+  "status": "candidate"
+}
+```
+
+The full card should be produced only after deeper analysis.
+
+---
+
+# Governing Rule
+
+> **A Template Logic Card describes the grammar that generated a surface, not merely the surface itself.**
+
+That schema is intentionally capable of describing your folder mycelium and, much later, the Polytope. The latter needs matrix, graph, timeline, cross-selection, overlap, fold/unfold, and dimensional projection behaviors rather than merely a 3D renderer. 
+
+# Deliverable 3 — Component Registry Schema v0.1
+
+## Purpose
+
+The Component Registry is the Librarian's reusable inventory of visual and interactive building blocks.
+
+It must answer five different questions:
+
+1. **What is this component?**
+2. **What semantic job can it perform?**
+3. **How does it behave visually and interactively?**
+4. **Where can it be sourced or implemented?**
+5. **Which templates and patterns can safely use it?**
+
+A component is not defined merely by its appearance or source library.
+
+For example:
+
+```text
+shadcn Card
+```
+
+is a source implementation.
+
+```text
+EvidenceCard
+```
+
+is a semantic component role.
+
+The registry must distinguish them.
+
+---
+
+# 1. Top-Level Schema
+
+```ts
+interface ComponentRegistryEntry {
+  id: string
+  schemaVersion: string
+
+  identity: ComponentIdentity
+  semantics: ComponentSemantics
+  anatomy: ComponentAnatomy
+
+  visualBehavior: VisualBehavior
+  layoutBehavior: LayoutBehavior
+  interactionBehavior?: InteractionBehavior
+  motionBehavior?: MotionBehavior
+
+  dataContract?: DataContract
+  projectionCompatibility?: ProjectionCompatibility
+
+  sourceBindings: SourceBinding[]
+  implementationBindings?: ImplementationBinding[]
+  figmaBindings?: FigmaBinding[]
+
+  compatibleTemplateFamilies: string[]
+  compatiblePatterns?: string[]
+
+  dependencies?: RegistryDependency[]
+  compositionRules?: RegistryCompositionRule[]
+
+  accessibility?: AccessibilityContract
+  responsiveness?: ResponsiveContract
+
+  provenance: ComponentProvenance
+  governance: ComponentGovernance
+
+  quality: ComponentQuality
+}
+```
+
+---
+
+# 2. Identity
+
+```ts
+interface ComponentIdentity {
+  canonicalName: string
+
+  aliases?: string[]
+
+  componentClass:
+    | "primitive"
+    | "composite"
+    | "domain_component"
+    | "container"
+    | "viewer"
+    | "connector"
+    | "annotation"
+    | "control"
+    | "data_visualization"
+    | "motion_component"
+    | "3d_component"
+    | "layout_system"
+
+  category: string
+  description: string
+}
+```
+
+Examples:
+
+```text
+Button
+StatusBadge
+EvidenceCard
+WorkflowNode
+TypedConnector
+ClusterFrame
+MatrixCell
+TimelineMarker
+GraphNode
+ViewerWindow
+GeometryOverlay
+CameraRig
+ArtifactInspector
+```
+
+---
+
+# 3. Semantic Role
+
+```ts
+interface ComponentSemantics {
+  primaryRole: string
+  secondaryRoles?: string[]
+
+  supportedEntityTypes?: string[]
+  supportedRelationTypes?: string[]
+
+  userJobs?: string[]
+
+  informationFunction:
+    | "identify"
+    | "group"
+    | "compare"
+    | "navigate"
+    | "inspect"
+    | "control"
+    | "annotate"
+    | "connect"
+    | "sequence"
+    | "measure"
+    | "filter"
+    | "edit"
+    | "explain"
+    | "signal"
+    | "render"
+    | "other"
+
+  semanticCriticality:
+    | "decorative"
+    | "supporting"
+    | "meaning_bearing"
+    | "structural"
+}
+```
+
+---
+
+# 4. Anatomy
+
+```ts
+interface ComponentAnatomy {
+  slots: ComponentSlot[]
+
+  requiredSlots: string[]
+  optionalSlots?: string[]
+
+  nestedComponents?: string[]
+
+  allowedContentTypes?: string[]
+}
+
+interface ComponentSlot {
+  name: string
+  role: string
+
+  contentType:
+    | "text"
+    | "icon"
+    | "image"
+    | "video"
+    | "data"
+    | "component"
+    | "3d"
+    | "mixed"
+
+  required: boolean
+}
+```
+
+Example:
+
+```json
+{
+  "canonicalName": "ArtifactPreviewCard",
+  "slots": [
+    {
+      "name": "image",
+      "role": "visual anchor",
+      "contentType": "image",
+      "required": true
+    },
+    {
+      "name": "title",
+      "role": "artifact identity",
+      "contentType": "text",
+      "required": true
+    },
+    {
+      "name": "source",
+      "role": "provenance",
+      "contentType": "text",
+      "required": true
+    }
+  ]
+}
+```
+
+---
+
+# 5. Visual Behavior
+
+```ts
+interface VisualBehavior {
+  hierarchyLevel?: number
+
+  densityModes?: Array<
+    "compact" |
+    "standard" |
+    "expanded"
+  >
+
+  visualStates?: string[]
+
+  semanticColorRoles?: string[]
+  allowedShapeRoles?: string[]
+
+  elevationRole?: string
+
+  typographyRoles?: string[]
+
+  styleTokenIds?: string[]
+}
+```
+
+---
+
+# 6. Layout Behavior
+
+```ts
+interface LayoutBehavior {
+  sizing:
+    | "fixed"
+    | "hug"
+    | "fill"
+    | "adaptive"
+    | "canvas_positioned"
+
+  orientation?:
+    | "horizontal"
+    | "vertical"
+    | "radial"
+    | "free"
+
+  autoLayout?: boolean
+
+  minimumWidth?: number
+  maximumWidth?: number
+
+  minimumHeight?: number
+  maximumHeight?: number
+
+  supportsNesting?: boolean
+
+  positionalMeaning?: boolean
+
+  allowedParentRoles?: string[]
+  allowedChildRoles?: string[]
+}
+```
+
+---
+
+# 7. Interaction Behavior
+
+```ts
+interface InteractionBehavior {
+  selectable?: boolean
+  draggable?: boolean
+  editable?: boolean
+  focusable?: boolean
+
+  hoverable?: boolean
+  clickable?: boolean
+
+  supportsContextMenu?: boolean
+  supportsKeyboard?: boolean
+
+  emitsEvents?: string[]
+
+  consumesCommands?: string[]
+
+  selectionSync?: boolean
+}
+```
+
+---
+
+# 8. Motion Behavior
+
+```ts
+interface MotionBehavior {
+  animatable: boolean
+
+  properties?: Array<
+    | "position"
+    | "rotation"
+    | "scale"
+    | "opacity"
+    | "color"
+    | "shape"
+    | "camera"
+    | "visibility"
+    | "custom"
+  >
+
+  motionRoles?: Array<
+    | "transition"
+    | "attention"
+    | "transformation"
+    | "causality"
+    | "sequence"
+    | "navigation"
+    | "explanation"
+  >
+
+  interruptible?: boolean
+  reversible?: boolean
+  teacherControllable?: boolean
+  scrubbable?: boolean
+}
+```
+
+---
+
+# 9. Data Contract
+
+```ts
+interface DataContract {
+  requiredProps: RegistryProp[]
+  optionalProps?: RegistryProp[]
+
+  acceptsEntityTypes?: string[]
+  acceptsRelationTypes?: string[]
+
+  supportsProvenance?: boolean
+  supportsConfidence?: boolean
+  supportsCanonStatus?: boolean
+}
+
+interface RegistryProp {
+  name: string
+  type: string
+  description?: string
+}
+```
+
+---
+
+# 10. Projection Compatibility
+
+Components must identify the representations in which they make sense.
+
+```ts
+interface ProjectionCompatibility {
+  supportedViews: Array<
+    | "canvas"
+    | "graph"
+    | "matrix"
+    | "timeline"
+    | "table"
+    | "outline"
+    | "zui"
+    | "mui"
+    | "polytope"
+    | "drawing"
+    | "animation"
+    | "3d_scene"
+    | "editor"
+  >
+
+  recommendedViews?: string[]
+  prohibitedViews?: string[]
+}
+```
+
+---
+
+# 11. Source Bindings
+
+This is where the Librarian knows where a component came from.
+
+```ts
+interface SourceBinding {
+  sourceType:
+    | "figma"
+    | "shadcn"
+    | "radix"
+    | "react"
+    | "adobe"
+    | "custom"
+    | "local"
+    | "github"
+    | "other"
+
+  library?: string
+  name?: string
+  version?: string
+
+  sourceLocation?: string
+
+  license?: string
+  commercialReuse?: boolean
+
+  importedAt?: string
+}
+```
+
+Examples:
+
+```json
+{
+  "sourceType": "shadcn",
+  "library": "shadcn/ui",
+  "name": "HoverCard"
+}
+```
+
+```json
+{
+  "sourceType": "figma",
+  "library": "EUCLID Design System",
+  "name": "Artifact Candidate Card"
+}
+```
+
+---
+
+# 12. Implementation Binding
+
+```ts
+interface ImplementationBinding {
+  framework:
+    | "react"
+    | "web_component"
+    | "html"
+    | "svg"
+    | "canvas"
+    | "react_three_fiber"
+    | "other"
+
+  package?: string
+
+  componentName?: string
+  importPath?: string
+
+  localPath?: string
+
+  codeConnectMapped?: boolean
+}
+```
+
+---
+
+# 13. Figma Binding
+
+```ts
+interface FigmaBinding {
+  fileKey: string
+  nodeId?: string
+
+  componentKey?: string
+  componentSetKey?: string
+
+  page?: string
+
+  published: boolean
+
+  variantProperties?: FigmaVariantProperty[]
+
+  instanceSwapProperties?: string[]
+
+  variableBindings?: string[]
+
+  codeConnect?: {
+    enabled: boolean
+    source?: string
+    componentName?: string
+  }
+}
+
+interface FigmaVariantProperty {
+  property: string
+  values: string[]
+}
+```
+
+---
+
+# 14. Dependencies
+
+```ts
+interface RegistryDependency {
+  registryComponentId: string
+
+  dependencyType:
+    | "contains"
+    | "wraps"
+    | "requires"
+    | "enhances"
+    | "renders"
+}
+```
+
+Example:
+
+```text
+TermHoverCard
+  requires HoverCardPrimitive
+  contains ArtifactThumbnail
+  contains SourceBadge
+```
+
+---
+
+# 15. Composition Rules
+
+```ts
+interface RegistryCompositionRule {
+  condition: string
+
+  relationship:
+    | "inside"
+    | "adjacent"
+    | "overlay"
+    | "connect"
+    | "replace"
+    | "repeat"
+    | "synchronize"
+
+  targetComponentRole: string
+
+  rationale?: string
+}
+```
+
+---
+
+# 16. Template Compatibility
+
+Every component should map into visual grammars.
+
+Example:
+
+```json
+{
+  "canonicalName": "TypedConnector",
+  "compatibleTemplateFamilies": [
+    "workflow",
+    "flowchart",
+    "uml_activity",
+    "system_architecture",
+    "mycelial_map"
+  ]
+}
+```
+
+A `TimelineMarker` should not automatically be recommended for a UML class diagram simply because both contain labels.
+
+---
+
+# 17. Accessibility Contract
+
+```ts
+interface AccessibilityContract {
+  keyboardRequired?: boolean
+
+  accessibleNameRequired?: boolean
+
+  contrastRequirement?: string
+
+  motionReductionBehavior?: string
+
+  screenReaderBehavior?: string
+
+  focusBehavior?: string
+}
+```
+
+---
+
+# 18. Responsiveness
+
+```ts
+interface ResponsiveContract {
+  behaviors: string[]
+
+  minimumViewport?: string
+
+  collapseStrategy?:
+    | "stack"
+    | "hide_secondary"
+    | "drawer"
+    | "semantic_zoom"
+    | "virtualize"
+    | "not_applicable"
+}
+```
+
+---
+
+# 19. Provenance
+
+```ts
+interface ComponentProvenance {
+  firstObservedIn?: string[]
+
+  derivedFrom?: string[]
+
+  extractedBy?: string
+  extractionRunId?: string
+
+  rationale?: string
+
+  sourceEvidence?: string[]
+
+  userCorrections?: string[]
+}
+```
+
+---
+
+# 20. Governance
+
+```ts
+interface ComponentGovernance {
+  status:
+    | "candidate"
+    | "approved"
+    | "canonical"
+    | "experimental"
+    | "deprecated"
+    | "rejected"
+
+  maturity:
+    | "identified"
+    | "specified"
+    | "figma_ready"
+    | "code_ready"
+    | "implemented"
+    | "tested"
+    | "production"
+
+  reviewedBy?: string
+  reviewedAt?: string
+
+  supersedes?: string[]
+}
+```
+
+---
+
+# 21. Quality Record
+
+```ts
+interface ComponentQuality {
+  reusability: number
+  accessibility: number
+  automationReadiness: number
+  semanticExplicitness: number
+  implementationStability: number
+
+  confidence: number
+
+  knownIssues?: string[]
+}
+```
+
+All scores:
+
+```text
+0.0 → 1.0
+```
+
+---
+
+# 22. Example Registry Entry
+
+```json
+{
+  "id": "CMP-EUCLID-TERM-HOVER-001",
+  "schemaVersion": "0.1",
+
+  "identity": {
+    "canonicalName": "TermHoverCard",
+    "componentClass": "domain_component",
+    "category": "context",
+    "description": "Provides immediate visual and textual context for a semantically tagged term."
+  },
+
+  "semantics": {
+    "primaryRole": "contextual explanation",
+    "secondaryRoles": [
+      "visual evidence",
+      "provenance access"
+    ],
+    "informationFunction": "explain",
+    "semanticCriticality": "meaning_bearing"
+  },
+
+  "compatibleTemplateFamilies": [
+    "lesson",
+    "knowledge_graph",
+    "timeline",
+    "database_visualization",
+    "information_architecture"
+  ],
+
+  "projectionCompatibility": {
+    "supportedViews": [
+      "editor",
+      "canvas",
+      "timeline",
+      "graph",
+      "matrix"
+    ]
+  },
+
+  "sourceBindings": [
+    {
+      "sourceType": "shadcn",
+      "library": "shadcn/ui",
+      "name": "HoverCard"
+    }
+  ],
+
+  "implementationBindings": [
+    {
+      "framework": "react",
+      "componentName": "TermHoverCard",
+      "localPath": "components/euclid/context/TermHoverCard.tsx"
+    }
+  ],
+
+  "governance": {
+    "status": "candidate",
+    "maturity": "specified"
+  },
+
+  "quality": {
+    "reusability": 0.91,
+    "accessibility": 0.8,
+    "automationReadiness": 0.95,
+    "semanticExplicitness": 0.95,
+    "implementationStability": 0.6,
+    "confidence": 0.82
+  }
+}
+```
+
+---
+
+# 23. Crucial Separation: Semantic Component vs Implementation
+
+The registry must support this relation:
+
+```text
+SEMANTIC COMPONENT
+    ArtifactCard
+        ↓ may be implemented by
+IMPLEMENTATION
+    shadcn Card
+        +
+    AspectRatio
+        +
+    Badge
+        +
+    Button
+```
+
+Likewise:
+
+```text
+SEMANTIC COMPONENT
+    MycelialCluster
+        ↓ may be implemented by
+IMPLEMENTATION
+    React Flow custom node
+```
+
+or:
+
+```text
+SEMANTIC COMPONENT
+    PolytopeFace
+        ↓ may be implemented by
+IMPLEMENTATION
+    React Three Fiber mesh
+        +
+    Perspective data grid
+```
+
+This prevents the Librarian from confusing vendor libraries with the actual visual language of EUCLID.
+
+---
+
+# 24. Component Families to Seed First
+
+## Shell
+
+```text
+ViewerWindow
+ViewerTitleBar
+PrismDockItem
+Command
+Inspector
+ContextMenu
+StatusBadge
+```
+
+## Diagram
+
+```text
+Node
+TypedPort
+TypedConnector
+ClusterFrame
+Swimlane
+DecisionGate
+Annotation
+Legend
+```
+
+## Mapping
+
+```text
+EntityNode
+ConceptNode
+FolderNode
+RelationshipEdge
+Cluster
+SemanticZoomLabel
+```
+
+## Data
+
+```text
+Matrix
+MatrixCell
+AxisHeader
+FilterChip
+EvidenceIndicator
+ConfidenceIndicator
+TimelineMarker
+CrossHighlight
+```
+
+## Research
+
+```text
+EvidenceCard
+SourceBadge
+ArtifactCard
+ClaimCard
+ProvenanceTrail
+```
+
+## Motion
+
+```text
+SceneBeat
+MotionPath
+CameraPreset
+RevealControl
+LayerToggle
+TransportControl
+```
+
+---
+
+# Governing Rule
+
+> **The Component Registry catalogs reusable visual behavior and semantic roles; source libraries merely provide implementations.**
+
+That is what will let the Librarian choose intelligently between a Figma component, shadcn primitive, React component, Adobe asset, custom diagram primitive, or 3D object without mistaking any particular vendor for the architecture itself.
+
+### What I would do in **Phase 2**
+
+These three artifacts now give us three different layers:
+
+```text
+Product Brief
+    ↓ defines WHY + boundaries
+
+Template Logic Card
+    ↓ defines WHAT THE LIBRARIAN LEARNS
+
+Component Registry
+    ↓ defines WHAT IT CAN BUILD WITH
+```
+
+The next logical deliverables are **4A: Visual Request Contract** and **4B: Visual Build Plan schema**. Those two form the compiler boundary between your Translator/Foreman and the Librarian. After that, I would make the **Folder Mycelium benchmark dataset** rather than doing more abstract architecture.
+
+There is also a valuable constraint already embedded in your broader system: exploration should remain reversible, while promotion into canon is deliberate and provenance-bearing. That rule should govern Librarian learning just as strongly as it governs your Polytope and curriculum data. 

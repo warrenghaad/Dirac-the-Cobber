@@ -7,7 +7,8 @@
     "hello": "tsx ./src/hello.ts",
     "validate:manifest": "tsx ./src/validate-manifest.ts",
     "generate:tokens": "tsx ./src/generate-tokens.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:figma-intake": "node --test ./tests/figma-intake.test.js"
   },
   "devDependencies": {
     "@types/node": "catalog:",

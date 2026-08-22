@@ -16,6 +16,7 @@ export interface DiagramPlan {
   family: DiagramPlanFamily;
   axisMeanings: DiagramPlanAxisMeanings;
   tier1Draft: DraftPlacement[];
+  /** @minItems 1 */
   placements: Placement[];
   notes: string[];
 }

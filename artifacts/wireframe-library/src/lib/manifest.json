@@ -146,6 +146,15 @@
       "addedAt": "2026-08-04"
     },
     {
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD",
+      "url": "https://www.figma.com/board/nOEamjKEXw6oXF9Clp8PGD/Visual-Logic-Primitives",
+      "kind": "figjam",
+      "intakeMode": "semantic-primitives",
+      "label": "Visual Logic Primitives",
+      "intakeStatus": "done — 20 primitive(s) matched",
+      "addedAt": "2026-08-19"
+    },
+    {
       "fileKey": "fxyEtWUCgZrA2MsraKSjKe",
       "url": "https://www.figma.com/design/fxyEtWUCgZrA2MsraKSjKe/Figma-Draw-Playground--Community-",
       "kind": "design",
@@ -162,6 +171,14 @@
         }
       },
       "scannedAt": "2026-07-27"
+    },
+    {
+      "fileKey": "CSXebcFtI1JyEq07xCJ3ko",
+      "url": "https://www.figma.com/board/CSXebcFtI1JyEq07xCJ3ko/Design-Foundry-Orchestration-Map",
+      "kind": "figjam",
+      "label": "Design Foundry Orchestration Map",
+      "intakeStatus": "done — 0 component(s) matched",
+      "addedAt": "2026-08-19"
     },
     {
       "fileKey": "jVY2CNS79i0bsdrVgC5Bfs",
@@ -181,8 +198,9 @@
     },
     {
       "fileKey": "5JebW1QtNsfn9eQ9aPYPJD",
-      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect--Design-System--Component-Library-Community",
+      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect-%E2%80%93-Design-System---Component-Library--Free---Community-?m=dev&ready-for-dev=1&node-id=1-14",
       "kind": "design",
+      "nodeId": "1:14",
       "label": "Dialect – Design System & Component Library (Community)",
       "intakeStatus": "done — 0 component(s) matched",
       "addedAt": "2026-08-19"
@@ -225,7 +243,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:13",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.sharp",
@@ -246,7 +265,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:16",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.round",
@@ -289,7 +309,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:19",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.diamond",
@@ -310,7 +331,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:3",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.hexagon",
@@ -331,7 +353,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:9",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.parallelogram",
@@ -352,7 +375,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:22",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.cylinder",
@@ -373,7 +397,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:25",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.edge.plain",
@@ -416,7 +441,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:43",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.edge.bidirectional",
@@ -437,7 +463,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:47",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.container.plain",
@@ -502,7 +529,8 @@
         "a4": 3,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:30",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.class",
@@ -545,7 +573,8 @@
         "a4": 1,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:33",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.property-edge",
@@ -566,7 +595,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:51",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.relation-edge",
@@ -587,7 +617,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:55",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.subclass-edge",
@@ -608,7 +639,8 @@
         "a4": 3,
         "a5": 1
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:59",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.group",
@@ -629,7 +661,8 @@
         "a4": 2,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:36",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.start-end",
@@ -694,7 +727,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:3",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.parallel",
@@ -715,7 +749,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:9",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.data",
@@ -758,7 +793,8 @@
         "a4": 4,
         "a5": 1
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:63",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.cond-edge",
@@ -779,7 +815,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:67",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.lane",
@@ -800,7 +837,8 @@
         "a4": 1,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:12",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     }
   ],
   "compositions": [
