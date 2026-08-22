@@ -32,7 +32,7 @@ const ARTIFACT_COPY = resolve(__dirname, "../artifacts/wireframe-library/src/lib
 // component names (case-insensitive substring match).
 // ---------------------------------------------------------------------------
 const SHAPE_HINTS = {
-  "prim.node.generic":   ["rounded rect", "rounded-rect", "generic node", "rectangle node"],
+  "prim.node.generic":   ["rounded rect", "rounded-rect", "generic node", "rectangle node", "_rectangle"],
   "prim.node.round":     ["ellipse", "circle", "round node", "oval"],
   "prim.edge.plain":     ["arrow", "edge", "connector", "flow", "plain edge"],
   "prim.container.plain":["container", "frame container", "group container", "plain container"],
@@ -43,8 +43,8 @@ const SHAPE_HINTS = {
   "kg.literal":          ["literal", "value node"],
   "kg.property-edge":    ["property edge", "property arrow", "labeled arrow"],
   "kg.relation-edge":    ["relation", "relation edge", "relation arrow"],
-  "kg.subclass-edge":    ["subclass", "instance", "dashed arrow", "taxonomy"],
-  "kg.group":            ["group", "namespace", "subgraph"],
+  "kg.subclass-edge":    ["subclass", "instance", "dashed arrow", "_line / dashed", "taxonomy"],
+  "kg.group":            ["group", "namespace", "subgraph", "artboard", "frame"],
 
   "wf.start-end":        ["start", "end", "terminator", "pill"],
   "wf.task":             ["task", "activity", "step"],
@@ -137,7 +137,7 @@ async function run() {
       continue;
     }
 
-    let matchCount = 0;
+    let newMatchCount = 0;
     for (const fc of figmaComponents) {
       const manifestId = matchManifestId(fc.name);
       if (!manifestId) {
@@ -154,12 +154,17 @@ async function run() {
         entry.figmaNodeId = fc.id;
         entry.fileKey = source.fileKey;
         matchLog.push({ manifestId, figmaName: fc.name, nodeId: fc.id, fileKey: source.fileKey });
-        matchCount++;
+        newMatchCount++;
       }
     }
 
-    source.intakeStatus = `done — ${matchCount} component(s) matched`;
-    console.log(`   ✅  ${matchCount} match(es) recorded.`);
+    const sourceMatchCount = manifest.components.filter(
+      (component) => component.figmaNodeId !== null && component.fileKey === source.fileKey
+    ).length;
+    source.intakeStatus = `done — ${sourceMatchCount} component(s) matched`;
+    console.log(
+      `   ✅  ${sourceMatchCount} component(s) linked to this source (${newMatchCount} newly recorded).`
+    );
   }
 
   // Write updated manifest to both locations

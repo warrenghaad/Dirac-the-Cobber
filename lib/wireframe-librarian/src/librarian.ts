@@ -156,19 +156,21 @@ function titleCase(s: string): string {
 
 // ---------------------------------------------------------------------------
 // Component selection tables (SPEC §5)
+// Exported so consumers (e.g. llmExtract.ts) can derive their allowed-kind
+// sets directly from these tables instead of maintaining hand-copied lists.
 // ---------------------------------------------------------------------------
 
-const KG_NODE_COMPONENT: Record<string, string> = {
+export const KG_NODE_COMPONENT: Record<string, string> = {
   entity: "kg.entity",
   class: "kg.class",
   literal: "kg.literal",
 };
-const KG_EDGE_COMPONENT: Record<string, string> = {
+export const KG_EDGE_COMPONENT: Record<string, string> = {
   relation: "kg.relation-edge",
   property: "kg.property-edge",
   subclass: "kg.subclass-edge",
 };
-const WF_NODE_COMPONENT: Record<string, string> = {
+export const WF_NODE_COMPONENT: Record<string, string> = {
   task: "wf.task",
   start: "wf.start-end",
   end: "wf.start-end",
@@ -176,7 +178,7 @@ const WF_NODE_COMPONENT: Record<string, string> = {
   parallel: "wf.parallel",
   data: "wf.data",
 };
-const WF_EDGE_COMPONENT: Record<string, string> = {
+export const WF_EDGE_COMPONENT: Record<string, string> = {
   flow: "wf.flow-edge",
   conditional: "wf.cond-edge",
 };
