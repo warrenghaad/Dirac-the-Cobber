@@ -47,9 +47,22 @@ interface Component {
   tier: number;
   axes: Record<AxisId, number>;
   maxAxes: Record<AxisId, number>;
+  figmaNodeId: string | null;
+  fileKey?: string | null;
 }
 
 const components: Component[] = manifest.components ?? [];
+const sourceKeys = new Set((manifest.figmaSources ?? []).map((source: { fileKey: string }) => source.fileKey));
+
+for (const c of components) {
+  const hasNode = c.figmaNodeId !== null && c.figmaNodeId !== undefined;
+  const hasFile = c.fileKey !== null && c.fileKey !== undefined;
+  if (hasNode !== hasFile) {
+    fail(`figma-reference: ${c.id} must provide figmaNodeId and fileKey together`);
+  } else if (hasFile && !sourceKeys.has(c.fileKey as string)) {
+    fail(`figma-reference: ${c.id} references unknown figmaSources fileKey ${c.fileKey}`);
+  }
+}
 
 for (const c of components) {
   // max(axes) <= tier: a tier-T component may not currently sit above level T on any axis
