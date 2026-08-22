@@ -18,7 +18,12 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
-import { useCreateDiagramPlan } from "@workspace/api-client-react";
+import {
+  useCreateDiagramPlan,
+  usePromoteDiagramPlan,
+  type PromoteDiagramPlanRequest,
+  type PromoteDiagramPlanResult,
+} from "@workspace/api-client-react";
 
 const AXIS_META: Record<string, { name: string; meaning: string }> = {
   a1: { name: "Shape semantics", meaning: "silhouette encodes category" },
@@ -502,6 +507,8 @@ interface FetchError {
 
 type Family = "auto" | "workflow" | "knowledge-graph";
 type View = "overview" | "detail";
+type PromotionFamily = "tier1" | "knowledge-graph" | "workflow" | "cross-family";
+type PromotionLevel = "molecule" | "organism" | "template";
 
 const FAMILY_OPTIONS: { value: Family; label: string; description: string }[] = [
   { value: "auto", label: "Auto-detect", description: "Inferred from your need" },
@@ -521,6 +528,16 @@ const SAMPLE_NEEDS = [
   "describe a user registration workflow with email verification",
   "represent a company org chart with departments and roles",
 ];
+
+const COMPOSITION_ID_PATTERN = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/;
+
+function suggestedTemplateId(plan: DiagramPlan) {
+  const slug = plan.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "diagram";
+  return `tpl.${slug}`;
+}
 
 function PlannerToggleGroup<T extends string>({
   label,
@@ -726,12 +743,19 @@ function DiagramGeneratorTab({
   initialFamily = "",
   initialTemplateId = "",
 }: DiagramGeneratorTabProps) {
-  const { manifest } = useManifest();
+  const { manifest, refetch: refetchManifest } = useManifest();
   const [need, setNeed] = useState(initialHint);
   const [hintBannerDismissed, setHintBannerDismissed] = useState(false);
   const [family, setFamily] = useState<Family>("auto");
   const [view, setView] = useState<View>("overview");
   const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
+  const [promotionOpen, setPromotionOpen] = useState(false);
+  const [promotionId, setPromotionId] = useState("");
+  const [promotionLabel, setPromotionLabel] = useState("");
+  const [promotionDescription, setPromotionDescription] = useState("");
+  const [promotionFamily, setPromotionFamily] = useState<PromotionFamily>("workflow");
+  const [promotionLevel, setPromotionLevel] = useState<PromotionLevel>("template");
+  const [promotionSuccess, setPromotionSuccess] = useState<PromoteDiagramPlanResult | null>(null);
 
   // --- refinement (raw fetch; no generated hook for /refine) ---
   const [refinement, setRefinement] = useState("");
@@ -745,6 +769,16 @@ function DiagramGeneratorTab({
       onSuccess(data) {
         setResult(data as { plan: DiagramPlan; validation: ValidationReport });
         setRefineError(null);
+      },
+    },
+  });
+
+  const promotion = usePromoteDiagramPlan({
+    mutation: {
+      onSuccess(data) {
+        setPromotionSuccess(data);
+        setPromotionOpen(false);
+        void refetchManifest();
       },
     },
   });
@@ -781,7 +815,40 @@ function DiagramGeneratorTab({
     setRefineError(null);
     setRefinement("");
     setNeed("");
+    setPromotionOpen(false);
+    setPromotionSuccess(null);
+    promotion.reset();
   };
+
+  const openPromotion = () => {
+    if (!result) return;
+    setPromotionId(suggestedTemplateId(result.plan));
+    setPromotionLabel(result.plan.title);
+    setPromotionDescription(`Reusable pattern for: ${result.plan.need}`);
+    setPromotionFamily(result.plan.family);
+    setPromotionLevel("template");
+    setPromotionSuccess(null);
+    promotion.reset();
+    setPromotionOpen(true);
+  };
+
+  const handlePromotion = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!result || !result.validation.valid || promotion.isPending) return;
+    promotion.mutate({
+      data: {
+        plan: result.plan as PromoteDiagramPlanRequest["plan"],
+        id: promotionId.trim(),
+        label: promotionLabel.trim(),
+        ...(promotionDescription.trim() ? { description: promotionDescription.trim() } : {}),
+        family: promotionFamily,
+        atomicLevel: promotionLevel,
+      },
+    });
+  };
+
+  const promotionMetadataValid =
+    COMPOSITION_ID_PATTERN.test(promotionId.trim()) && promotionLabel.trim().length > 0;
 
   const templateComposition = initialTemplateId
     ? manifest.compositions.find((composition) => composition.id === initialTemplateId)
@@ -958,6 +1025,145 @@ function DiagramGeneratorTab({
             </div>
             <PlanValidationPanel report={result.validation} />
           </Card>
+
+          {/* Promotion */}
+          {result.validation.valid && (
+            <Card className="space-y-4 border-primary/25 p-5" data-testid="panel-promote-template">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <h3 className="text-sm font-semibold">Reusable template</h3>
+                  </div>
+                  <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                    This valid diagram can become a composition in the shared manifest. The development
+                    workspace writes it atomically after validating the complete manifest; published
+                    deployments remain read-only.
+                  </p>
+                </div>
+                {!promotionOpen && !promotionSuccess && (
+                  <Button onClick={openPromotion} data-testid="button-save-as-template">
+                    Save as template
+                  </Button>
+                )}
+              </div>
+
+              {promotionOpen && (
+                <form onSubmit={handlePromotion} className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="promotion-id" className="mb-1 block text-xs font-semibold">
+                      Template ID
+                    </label>
+                    <input
+                      id="promotion-id"
+                      value={promotionId}
+                      onChange={(event) => setPromotionId(event.target.value)}
+                      placeholder="tpl.order-fulfillment"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+                      data-testid="input-template-id"
+                    />
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Use lowercase dotted segments, e.g. <span className="font-mono">tpl.order-flow</span>.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="promotion-label" className="mb-1 block text-xs font-semibold">
+                      Display label
+                    </label>
+                    <input
+                      id="promotion-label"
+                      value={promotionLabel}
+                      onChange={(event) => setPromotionLabel(event.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      data-testid="input-template-label"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="promotion-family" className="mb-1 block text-xs font-semibold">
+                      Family
+                    </label>
+                    <select
+                      id="promotion-family"
+                      value={promotionFamily}
+                      onChange={(event) => setPromotionFamily(event.target.value as PromotionFamily)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      data-testid="select-template-family"
+                    >
+                      <option value="workflow">Workflow</option>
+                      <option value="knowledge-graph">Knowledge graph</option>
+                      <option value="tier1">Tier 1</option>
+                      <option value="cross-family">Cross-family</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="promotion-level" className="mb-1 block text-xs font-semibold">
+                      Atomic level
+                    </label>
+                    <select
+                      id="promotion-level"
+                      value={promotionLevel}
+                      onChange={(event) => setPromotionLevel(event.target.value as PromotionLevel)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      data-testid="select-template-level"
+                    >
+                      <option value="molecule">Molecule</option>
+                      <option value="organism">Organism</option>
+                      <option value="template">Template</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="promotion-description" className="mb-1 block text-xs font-semibold">
+                      Description <span className="font-normal text-muted-foreground">(optional)</span>
+                    </label>
+                    <textarea
+                      id="promotion-description"
+                      value={promotionDescription}
+                      onChange={(event) => setPromotionDescription(event.target.value)}
+                      rows={2}
+                      maxLength={500}
+                      className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      data-testid="input-template-description"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 sm:col-span-2">
+                    <Button
+                      type="submit"
+                      disabled={!promotionMetadataValid || promotion.isPending}
+                      data-testid="button-confirm-save-template"
+                    >
+                      {promotion.isPending ? (
+                        <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Saving…</>
+                      ) : (
+                        "Save to manifest"
+                      )}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>
+                      Cancel
+                    </Button>
+                    {!promotionMetadataValid && (
+                      <span className="text-xs text-destructive">
+                        Enter a label and a valid dotted template ID.
+                      </span>
+                    )}
+                  </div>
+                  {promotion.isError && (
+                    <div className="sm:col-span-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                      {promotion.error instanceof Error
+                        ? promotion.error.message
+                        : "Could not save this template. Please try again."}
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {promotionSuccess && (
+                <div className="rounded border border-green-300/60 bg-green-50/60 px-3 py-2 text-xs text-green-800">
+                  Saved <span className="font-mono">{promotionSuccess.composition.id}</span> to the manifest.
+                  It is now available in the Compositions and Templates tabs.
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* Plan notes */}
           {result.plan.notes.length > 0 && (

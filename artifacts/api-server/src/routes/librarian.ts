@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import {
   AtomicLevel,
   CompositionsResponse,
+  PromoteDiagramPlanBody,
+  PromoteDiagramPlanResponse,
   CreateDiagramPlanBody,
   CreateDiagramPlanResponse,
   ValidateDiagramPlanBody,
@@ -16,8 +18,23 @@ import {
 } from "@workspace/wireframe-librarian";
 import { loadManifest } from "../lib/manifest";
 import { extractWithLLM, isLLMConfigured, refineWithLLM } from "../lib/llmExtract";
+import {
+  appendPromotedComposition,
+  assertManifestWriteAllowed,
+  ManifestWriteDisabledError,
+  planToComposition,
+} from "../lib/promotion";
 
 const router: IRouter = Router();
+
+function isSameWorkspaceOrigin(origin: string | undefined, host: string | undefined) {
+  if (!origin || !host) return false;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
 
 router.get("/librarian/manifest", (_req, res) => {
   res.json(loadManifest());
@@ -41,6 +58,54 @@ router.get("/librarian/compositions", (req, res) => {
     : compositions;
 
   res.json(CompositionsResponse.parse({ compositions: filtered }));
+});
+
+router.post("/librarian/compositions/promote", async (req, res) => {
+  const origin = req.get("origin");
+  const host = req.get("host");
+  if (!isSameWorkspaceOrigin(origin, host)) {
+    res.status(403).json({ message: "Template promotion requests must come from this workspace." });
+    return;
+  }
+  try {
+    assertManifestWriteAllowed();
+  } catch (err) {
+    res.status(403).json({ message: err instanceof Error ? err.message : "Template promotion is disabled." });
+    return;
+  }
+
+  const parsed = PromoteDiagramPlanBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.message });
+    return;
+  }
+
+  const manifest = loadManifest();
+  const validation = validatePlan(parsed.data.plan as DiagramPlan, manifest);
+  if (!validation.valid) {
+    res.status(400).json({
+      message: "Only valid diagram plans can be promoted.",
+      validation,
+    });
+    return;
+  }
+
+  const { plan, ...metadata } = parsed.data;
+  const composition = planToComposition(plan as DiagramPlan, metadata, manifest);
+
+  try {
+    await appendPromotedComposition(composition);
+    res.status(201).json(PromoteDiagramPlanResponse.parse({ composition }));
+  } catch (err) {
+    if (err instanceof ManifestWriteDisabledError) {
+      res.status(403).json({ message: err.message });
+      return;
+    }
+    const message = err instanceof Error ? err.message : "Unable to save the composition.";
+    const status = message.includes("already exists") ? 409 : 400;
+    req.log.warn({ err }, "composition promotion failed");
+    res.status(status).json({ message });
+  }
 });
 
 router.post("/librarian/plan", async (req, res) => {
