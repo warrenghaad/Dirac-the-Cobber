@@ -170,6 +170,19 @@ const SHAPE_TERMS = {
   ENG_DATABASE: "cylinder database shape",
 };
 
+const LIVE_NODE_TYPES = {
+  design: new Set(["COMPONENT", "COMPONENT_SET"]),
+  semanticPrimitives: new Set(["SHAPE_WITH_TEXT", "CONNECTOR", "SECTION"]),
+};
+
+// A design-file name match can still be a UI control or icon. Keep an exact
+// audit record for every design-file node admitted as a manifest renderer
+// source. Semantic FigJam primitives are verified by their explicit shape and
+// role rules instead.
+const APPROVED_DESIGN_REFERENCES = new Map([
+  ["dpWgseUU58TAk7wAVl55yt:38:37", "prim.anchor.point"],
+]);
+
 /**
  * Collect explicitly named FigJam primitives from a source that has opted in
  * through `intakeMode: "semantic-primitives"`. Ordinary FigJam boards are not
@@ -234,6 +247,73 @@ export function verifyResolvedReferences(manifest, sourceCandidates) {
 
   if (errors.length) {
     throw new Error(`Figma reference verification failed:\n${errors.map((error) => `- ${error}`).join("\n")}`);
+  }
+}
+
+/**
+ * Confirm that every retained reference still resolves through Figma's node
+ * endpoint. Source catalogs can be stale or omit an unpublished node, so this
+ * is intentionally separate from the semantic-source index check above.
+ */
+export async function verifyLiveReferences(manifest, fetchFigma = figmaGet) {
+  const sourcesByKey = new Map((manifest.figmaSources ?? []).map((source) => [source.fileKey, source]));
+  const referencesByFile = new Map();
+  const errors = [];
+
+  for (const component of manifest.components ?? []) {
+    const hasNode = component.figmaNodeId !== null && component.figmaNodeId !== undefined;
+    const hasFile = component.fileKey !== null && component.fileKey !== undefined;
+    if (hasNode !== hasFile) {
+      errors.push(`${component.id} must provide figmaNodeId and fileKey together`);
+      continue;
+    }
+    if (!hasNode) continue;
+    if (!sourcesByKey.has(component.fileKey)) {
+      errors.push(`${component.id} references unregistered Figma source ${component.fileKey}`);
+      continue;
+    }
+    const references = referencesByFile.get(component.fileKey) ?? [];
+    references.push(component);
+    referencesByFile.set(component.fileKey, references);
+  }
+
+  for (const [fileKey, components] of referencesByFile) {
+    const source = sourcesByKey.get(fileKey);
+    const ids = components.map((component) => component.figmaNodeId).join(",");
+    let data;
+    try {
+      data = await fetchFigma(`/files/${fileKey}/nodes?ids=${encodeURIComponent(ids)}`);
+    } catch (error) {
+      errors.push(`could not query retained nodes in source ${fileKey}: ${error.message}`);
+      continue;
+    }
+
+    const allowedTypes =
+      source.intakeMode === "semantic-primitives"
+        ? LIVE_NODE_TYPES.semanticPrimitives
+        : LIVE_NODE_TYPES.design;
+
+    for (const component of components) {
+      const node = data.nodes?.[component.figmaNodeId]?.document;
+      if (!node) {
+        errors.push(`${component.id} references node ${component.figmaNodeId} that no longer resolves in source ${fileKey}`);
+      } else if (!allowedTypes.has(node.type)) {
+        errors.push(
+          `${component.id} references node ${component.figmaNodeId} with unsupported type ${node.type} in source ${fileKey}`,
+        );
+      } else if (
+        source.kind !== "figjam" &&
+        APPROVED_DESIGN_REFERENCES.get(`${fileKey}:${component.figmaNodeId}`) !== component.id
+      ) {
+        errors.push(
+          `${component.id} references design node ${component.figmaNodeId} without an approved semantic audit in source ${fileKey}`,
+        );
+      }
+    }
+  }
+
+  if (errors.length) {
+    throw new Error(`Figma live node verification failed:\n${errors.map((error) => `- ${error}`).join("\n")}`);
   }
 }
 
@@ -323,6 +403,18 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
           unmatchedFigma.push({ fileKey: source.fileKey, name: fc.name, nodeId: fc.id, note: "no manifest entry" });
           continue;
         }
+        if (
+          source.kind !== "figjam" &&
+          APPROVED_DESIGN_REFERENCES.get(`${source.fileKey}:${fc.id}`) !== manifestId
+        ) {
+          unmatchedFigma.push({
+            fileKey: source.fileKey,
+            name: fc.name,
+            nodeId: fc.id,
+            note: "design candidate requires semantic audit",
+          });
+          continue;
+        }
         // Only assign if not already claimed by a previous file (first-file-wins).
         if (entry.figmaNodeId === null) {
           entry.figmaNodeId = fc.id;
@@ -337,17 +429,19 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
   }
 
   // Do not update intake statuses or permit persistence until every existing
-  // reference has resolved against the fetched source candidates.
+  // reference has resolved against both the semantic source index and Figma's
+  // direct node endpoint.
   verifyResolvedReferences(manifest, sourceCandidates);
+  await verifyLiveReferences(manifest, fetchFigma);
 
   for (const { source, newMatchCount } of sourceStats) {
     const sourceMatchCount = manifest.components.filter(
       (component) => component.figmaNodeId !== null && component.fileKey === source.fileKey
     ).length;
     const sourceItemLabel = source.intakeMode === "semantic-primitives" ? "primitive" : "component";
-    source.intakeStatus = `done — ${sourceMatchCount} ${sourceItemLabel}(s) matched`;
+    source.intakeStatus = `audited — ${sourceMatchCount} ${sourceItemLabel}(s) verified`;
     logger.log(
-      `✅  ${source.label}: ${sourceMatchCount} ${sourceItemLabel}(s) linked (${newMatchCount} newly recorded).`
+      `✅  ${source.label}: ${sourceMatchCount} ${sourceItemLabel}(s) verified (${newMatchCount} newly recorded).`
     );
   }
 

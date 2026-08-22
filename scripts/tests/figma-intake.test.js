@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { run, verifyResolvedReferences } from "../figma-intake.js";
+import { run, verifyLiveReferences, verifyResolvedReferences } from "../figma-intake.js";
 
 const silentLogger = { log() {} };
 
@@ -25,6 +25,24 @@ test("rejects a manifest reference whose Figma node is absent from the fetched s
     () => verifyResolvedReferences(manifest, new Map([["source-file", new Map()]])),
     /node 9:9 that was not found/,
   );
+});
+
+test("rejects a retained reference when Figma's node endpoint no longer returns it", async () => {
+  const manifest = {
+    figmaSources: [source()],
+    components: [{ id: "prim.node.generic", figmaNodeId: "9:9", fileKey: "source-file" }],
+  };
+  const requestedPaths = [];
+
+  await assert.rejects(
+    verifyLiveReferences(manifest, async (path) => {
+      requestedPaths.push(path);
+      return { nodes: {} };
+    }),
+    /node 9:9 that no longer resolves/,
+  );
+
+  assert.deepEqual(requestedPaths, ["/files/source-file/nodes?ids=9%3A9"]);
 });
 
 test("rejects an incompatible semantic primitive reference", () => {

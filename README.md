@@ -67,7 +67,7 @@ There are three ways templates enter the picture, from "pick one off the shelf" 
 - The wireframe-library UI can browse compositions/templates and share template URLs with slot settings preserved.
 
 **Open questions.**
-- Does the Figma file referenced by each `figmaNodeId` still match the composition schema? An audit is needed — many entries are `null`, meaning the React reference render is the source of truth.
+- The [Figma manifest audit](docs/wireframe-library/FIGMA-AUDIT.md) confirms which references are usable. Entries at `figmaNodeId: null` intentionally use the React reference render as their source of truth.
 - Which compositions should surface as "starter templates" vs. advanced compositions?
 - Should template selection be guided automatically by the need statement, or remain a manual Librarian choice?
 
