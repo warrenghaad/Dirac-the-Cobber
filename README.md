@@ -1,9 +1,37 @@
 # Tiered Wireframe Library
 
+## Verify GitHub access before publishing
+
+Before publishing this workspace to GitHub, run the read-only preflight:
+
+```bash
+pnpm run preflight:github
+```
+
+The command selects the only configured GitHub remote automatically. If more
+than one GitHub remote is configured, select the publishing remote explicitly:
+
+```bash
+pnpm run preflight:github -- --remote origin --branch main
+```
+
+It verifies read access with `git ls-remote` and write access with
+`git push --dry-run`. Neither check changes remote history. A successful result
+labels the destination as an **empty repository** or an **existing repository**,
+so an empty destination is not confused with an authorization failure.
+
+If GitHub rejects the read or dry-run write check, the command reports
+`authentication-failure` and tells you to reconnect the GitHub account used by
+this workspace in its connected services, confirm access to the repository, and
+run the preflight again. A `history-conflict` is reported separately when the
+remote contains unrelated branch history; reconcile that history before
+publishing rather than force-pushing.
+
 A design-logic hub where a **Librarian** — human or AI — turns a plain-language need statement into a validated, shareable wireframe diagram. Instead of drawing by hand, diagrams are *composed* from a tiered catalog of primitives (the manifest) and rendered by rules, so every diagram is consistent, auditable, and reproducible.
 
 ## Table of Contents
 
+- [Verify GitHub access before publishing](#verify-github-access-before-publishing)
 - [Project Purpose](#project-purpose)
 - [Problems It Solves](#problems-it-solves)
 - [How It Solves Them](#how-it-solves-them)

@@ -8,7 +8,9 @@
     "validate:manifest": "tsx ./src/validate-manifest.ts",
     "generate:tokens": "tsx ./src/generate-tokens.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:figma-intake": "node --test ./tests/figma-intake.test.js"
+    "test:figma-intake": "node --test ./tests/figma-intake.test.js",
+    "preflight:github": "tsx ./src/github-preflight.ts",
+    "test:github-preflight": "tsx --test ./tests/github-preflight.test.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
