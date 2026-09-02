@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Glyph } from "@/components/Glyph";
 import {
   FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
-  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
+  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition, type SourceAsset, type SourceCatalog, type SourceCatalogEntry,
 } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
 import { Link, useSearch } from "wouter";
@@ -192,6 +192,197 @@ function LibrarianRules() {
   );
 }
 
+// ─── Source Catalog ──────────────────────────────────────────────────────────
+
+function sourceLocation(source: SourceCatalogEntry) {
+  const { fileKey, localPath, page, nodeId } = source.provenance;
+  return [fileKey ? `Figma ${fileKey}` : localPath, page, nodeId ? `node ${nodeId}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function SourceCard({
+  source,
+  assets,
+  assetCount,
+  templateCount,
+  isLoadingAssets,
+  onLoadAssets,
+}: {
+  source: SourceCatalogEntry;
+  assets: SourceAsset[];
+  assetCount: number;
+  templateCount: number;
+  isLoadingAssets: boolean;
+  onLoadAssets: (sourceId: string, offset: number) => void;
+}) {
+  const usableStatus = source.status === "accessible" || source.status === "local-only";
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  return (
+    <Card className="flex flex-col overflow-hidden border-card-border transition-colors hover-elevate" data-testid={`card-source-${source.id}`}>
+      <div className="border-b border-border bg-muted/20 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-foreground">{source.label}</h3>
+            <div className="mt-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="font-mono">{source.id}</span>
+              {sourceLocation(source) && <span className="normal-case tracking-normal">{sourceLocation(source)}</span>}
+            </div>
+          </div>
+          <Badge variant={usableStatus ? "default" : "secondary"} className="text-[10px] capitalize">
+            {source.status.replace("-", " ")}
+          </Badge>
+        </div>
+      </div>
+      <div className="space-y-4 p-4 text-sm">
+        {source.accessNote && <p className="rounded border border-amber-300/40 bg-amber-50/50 p-2.5 text-xs leading-relaxed text-amber-900">{source.accessNote}</p>}
+        <div className="flex flex-wrap gap-1.5">
+          {source.capabilityClasses.map((capability) => <Badge key={capability} variant="outline" className="text-[10px] font-normal">{capability.replaceAll("-", " ")}</Badge>)}
+        </div>
+        {source.visualLanguages && <p className="text-xs text-muted-foreground">{source.visualLanguages.join(" · ")}</p>}
+        {source.tokenModes && source.tokenModes.length > 0 && (
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Token modes ({source.tokenModes.length})</div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {source.tokenModes.slice(0, 8).map((mode) => <Badge key={mode} variant="secondary" className="text-[10px] font-normal">{mode}</Badge>)}
+              {source.tokenModes.length > 8 && <Badge variant="outline" className="text-[10px]">+{source.tokenModes.length - 8} modes</Badge>}
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.approved}</div><div className="text-[9px] uppercase text-muted-foreground">approved</div></div>
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.unmatched}</div><div className="text-[9px] uppercase text-muted-foreground">unmatched</div></div>
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.total}</div><div className="text-[9px] uppercase text-muted-foreground">total</div></div>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {source.inventory.components} components · {source.inventory.componentSets} sets · {source.inventory.variants} variants · {source.inventory.tokenBundles} bundles
+          {source.inventory.pages.length > 0 ? ` · ${source.inventory.pages.length} pages: ${source.inventory.pages.slice(0, 3).join(", ")}${source.inventory.pages.length > 3 ? "…" : ""}` : ""}
+        </p>
+        {(assetCount > 0 || templateCount > 0) && (
+          <details className="rounded border border-border bg-muted/10 p-2.5" onToggle={(event) => {
+            const isOpen = event.currentTarget.open;
+            setIsInventoryOpen(isOpen);
+            if (isOpen && assets.length === 0) onLoadAssets(source.id, 0);
+          }}>
+            <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Browse catalogued material · {assetCount.toLocaleString()} assets · {templateCount} template candidates
+            </summary>
+            {isInventoryOpen && isLoadingAssets && <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading source inventory…</div>}
+            {isInventoryOpen && assets.length > 0 && (
+              <ul className="mt-2 space-y-2">
+                {assets.map((asset) => (
+                  <li key={asset.id} className="border-t border-border pt-2 first:border-t-0 first:pt-0">
+                    <div className="text-xs font-medium text-foreground">{asset.label}</div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-2 text-[10px] text-muted-foreground">
+                      <span>{asset.assetType}</span>
+                      <span>{asset.mappingStatus}</span>
+                      {asset.tokenCount !== undefined && <span>{asset.tokenCount.toLocaleString()} tokens</span>}
+                      {asset.provenance.tokenMode && <span>{asset.provenance.tokenMode}</span>}
+                    </div>
+                    <div className="mt-0.5 break-all font-mono text-[9px] text-muted-foreground">
+                      {asset.provenance.fileKey ?? asset.provenance.localPath ?? asset.id}
+                      {asset.provenance.nodeId ? ` · node ${asset.provenance.nodeId}` : ""}
+                      {asset.provenance.page ? ` · ${asset.provenance.page}` : ""}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {isInventoryOpen && assets.length < assetCount && (
+              <Button variant="outline" size="sm" className="mt-3 w-full text-xs" disabled={isLoadingAssets} onClick={() => onLoadAssets(source.id, assets.length)}>
+                Show 100 more of {assetCount.toLocaleString()} assets
+              </Button>
+            )}
+          </details>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function SourcesBrowser() {
+  const [catalog, setCatalog] = useState<SourceCatalog | null>(null);
+  const [assetsBySource, setAssetsBySource] = useState<Record<string, SourceAsset[]>>({});
+  const [loadingSources, setLoadingSources] = useState<Set<string>>(new Set());
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`${import.meta.env.BASE_URL}api/librarian/catalog`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Catalog request failed (${response.status})`);
+        return response.json() as Promise<SourceCatalog>;
+      })
+      .then((nextCatalog) => { if (!cancelled) setCatalog(nextCatalog); })
+      .catch(async () => {
+        // API outages must not make the approved baseline disappear. This
+        // chunk is intentionally imported only after opening Sources.
+        try {
+          const { default: offlineCatalog } = await import("@/lib/source-catalog.json");
+          if (!cancelled) setCatalog(offlineCatalog as SourceCatalog);
+        } catch {
+          if (!cancelled) setCatalogError("The source catalog could not be loaded.");
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const loadAssets = (sourceId: string, offset: number) => {
+    if (loadingSources.has(sourceId)) return;
+    setLoadingSources((current) => new Set(current).add(sourceId));
+    const finish = () => setLoadingSources((current) => {
+      const next = new Set(current);
+      next.delete(sourceId);
+      return next;
+    });
+    void fetch(`${import.meta.env.BASE_URL}api/librarian/catalog/assets?sourceId=${encodeURIComponent(sourceId)}&offset=${offset}&limit=100`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Catalog asset request failed (${response.status})`);
+        return response.json() as Promise<{ items: SourceAsset[] }>;
+      })
+      .then(({ items }) => setAssetsBySource((current) => ({ ...current, [sourceId]: [...(current[sourceId] ?? []), ...items] })))
+      .catch(async () => {
+        try {
+          const { default: offlineCatalog } = await import("@/lib/source-catalog.json");
+          const items = (offlineCatalog as SourceCatalog).assets?.filter((asset) => asset.sourceId === sourceId).slice(offset, offset + 100) ?? [];
+          setAssetsBySource((current) => ({ ...current, [sourceId]: [...(current[sourceId] ?? []), ...items] }));
+        } catch {
+          // The catalog summary remains visible and the request can be retried.
+        }
+      })
+      .finally(finish);
+  };
+
+  if (!catalog) {
+    return <Card className="flex min-h-[200px] flex-col items-center justify-center border-dashed p-8 text-center text-sm text-muted-foreground">{catalogError ?? <><Loader2 className="mb-3 h-5 w-5 animate-spin" />Loading source catalog…</>}</Card>;
+  }
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+        <div>
+          <h2 className="text-lg font-semibold">Source-backed baseline</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Every source remains visible with access state, provenance, capability class, token modes, and coverage. Unmatched and blocked material is retained instead of being silently discarded.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.approved}</div><div className="text-muted-foreground">approved</div></div>
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.unmatched}</div><div className="text-muted-foreground">unmatched</div></div>
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.blocked}</div><div className="text-muted-foreground">blocked</div></div>
+        </div>
+      </div>
+      {catalog.intakeReport && catalog.intakeReport.accessFailures.length > 0 && <Card className="border-amber-300/40 bg-amber-50/40 p-4"><div className="text-xs font-semibold uppercase tracking-wide text-amber-900">Access and registration blockers</div><ul className="mt-2 space-y-1 text-xs text-amber-900">{catalog.intakeReport.accessFailures.map((failure) => <li key={failure}>{failure}</li>)}</ul></Card>}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {catalog.sources.map((source) => <SourceCard key={source.id} source={source} assets={assetsBySource[source.id] ?? []} assetCount={source.coverage.total} templateCount={catalog.templateCandidates.filter((candidate) => candidate.sourceId === source.id).length} isLoadingAssets={loadingSources.has(source.id)} onLoadAssets={loadAssets} />)}
+      </div>
+      <Card className="p-5">
+        <h3 className="font-semibold">Template candidates</h3>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {catalog.templateCandidates.map((candidate) => <div key={candidate.id} className="rounded border border-border bg-muted/10 p-3"><div className="text-xs font-semibold">{candidate.label}</div><div className="mt-1 font-mono text-[10px] text-muted-foreground">{candidate.sourceId}</div><div className="mt-2 text-[10px] text-muted-foreground">{candidate.mappingStatus.replace("-", " ")}</div></div>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function LibraryPage() {
   const { manifest } = useManifest();
   const search = useSearch();
@@ -265,6 +456,7 @@ export default function LibraryPage() {
           <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Planner</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
+          <TabsTrigger value="sources" data-testid="tab-sources">Sources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="space-y-8">
@@ -305,6 +497,10 @@ export default function LibraryPage() {
 
         <TabsContent value="rules">
           <LibrarianRules />
+        </TabsContent>
+
+        <TabsContent value="sources">
+          {activeTab === "sources" && <SourcesBrowser />}
         </TabsContent>
       </Tabs>
     </div>

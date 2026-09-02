@@ -1,6 +1,6 @@
 /**
  * Types for the Tiered Wireframe Library librarian.
- * Mirrors docs/wireframe-library/SPEC.md + manifest.json (v0.1.0).
+ * Mirrors docs/wireframe-library/SPEC.md + manifest.json (v0.2.0).
  */
 
 export interface AxisCoords {
@@ -22,6 +22,106 @@ export interface ManifestComponent {
   axes: AxisCoords;
   maxAxes: AxisCoords;
   figmaNodeId: string | null;
+  fileKey?: string | null;
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
+  mappingStatus?: "approved" | "reference-fallback" | "pending-review";
+}
+
+export interface SourceMetadata {
+  sourceId?: string;
+  fileKey?: string;
+  url?: string;
+  localPath?: string;
+  nodeId?: string;
+  page?: string;
+  variant?: string;
+  properties?: Record<string, string | number | boolean | null>;
+  tokenMode?: string;
+  previewRef?: string;
+}
+
+export type SourceCapability =
+  | "graph-primitive"
+  | "graph-template"
+  | "data-surface"
+  | "ui-building-block"
+  | "reference-only";
+
+export interface SourceCoverage {
+  total: number;
+  approved: number;
+  unmatched: number;
+  excluded: number;
+  blocked: number;
+}
+
+export interface SourceCatalogEntry {
+  id: string;
+  label: string;
+  kind: "figma-design" | "figjam" | "local-fig" | "token-export" | "reference";
+  status: "accessible" | "local-only" | "pending-registration" | "inaccessible" | "reference-only";
+  accessNote?: string;
+  provenance: SourceMetadata;
+  capabilityClasses: SourceCapability[];
+  visualLanguages?: string[];
+  tokenModes?: string[];
+  inventory: {
+    pages: string[];
+    components: number;
+    componentSets: number;
+    variants: number;
+    tokenBundles: number;
+  };
+  coverage: SourceCoverage;
+}
+
+export interface SourceAsset {
+  id: string;
+  sourceId: string;
+  label: string;
+  assetType: "page" | "node" | "component" | "component-set" | "variant" | "template" | "token-bundle" | "token-mode" | "reference";
+  capabilityClasses: SourceCapability[];
+  capabilityTags?: string[];
+  provenance: SourceMetadata;
+  mappingStatus: "approved" | "unmatched" | "excluded" | "blocked" | "reference-only";
+  previewRef?: string;
+  tokenCount?: number;
+}
+
+export interface SourceTemplateCandidate {
+  id: string;
+  label: string;
+  sourceId: string;
+  capabilityClasses: SourceCapability[];
+  capabilityTags?: string[];
+  mappingStatus: SourceAsset["mappingStatus"];
+  provenance: SourceMetadata;
+}
+
+export interface SourceMapping {
+  assetId: string;
+  targetType: "component" | "composition" | "token";
+  targetId: string;
+  status: "approved" | "reference-fallback" | "pending-review";
+  rationale: string;
+}
+
+export interface SourceCatalog {
+  catalogVersion: string;
+  capabilityClasses: SourceCapability[];
+  sources: SourceCatalogEntry[];
+  assets?: SourceAsset[];
+  templateCandidates: SourceTemplateCandidate[];
+  mappings?: SourceMapping[];
+  coverage: SourceCoverage;
+  intakeReport?: {
+    generatedAt: string;
+    sourcesInspected: number;
+    accessFailures: string[];
+    unmatchedAssetIds: string[];
+    excludedAssetIds: string[];
+  };
 }
 
 export interface ManifestTokens {
@@ -65,6 +165,8 @@ export interface Composition {
   description?: string;
   family: CompositionFamily;
   slots: CompositionSlot[];
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +178,8 @@ export interface Manifest {
   components: ManifestComponent[];
   /** Atomic Design compositions (Molecules, Organisms, Templates). */
   compositions?: Composition[];
+  /** Complete source inventory; broader than renderer-ready components. */
+  sourceCatalog?: SourceCatalog;
 }
 
 export type DiagramFamily = "knowledge-graph" | "workflow";

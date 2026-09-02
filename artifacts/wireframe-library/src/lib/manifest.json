@@ -1,7 +1,7 @@
 {
   "$schema": "./manifest.schema.json",
   "name": "tiered-wireframe-library",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "spec": "./SPEC.md",
   "tokens": {
     "ink": "#1A1D23",

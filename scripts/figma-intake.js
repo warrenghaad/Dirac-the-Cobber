@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * figma-intake.js — populate figmaNodeId + fileKey in manifest.json
+ * figma-intake.js — inspect Figma sources and preserve their full catalog
  *
  * Usage:
  *   FIGMA_ACCESS_TOKEN=<pat> node scripts/figma-intake.js
@@ -8,16 +8,16 @@
  * What it does:
  *   1. Reads docs/wireframe-library/manifest.json for figmaSources entries
  *   2. Fetches each file's component list from the Figma REST API
- *   3. Matches components, and opt-in semantic FigJam primitives, to manifest
- *      vocabulary by shape/name heuristics
- *   4. Writes figmaNodeId + fileKey back into manifest components
- *   5. Copies the updated manifest to artifacts/wireframe-library/src/lib/manifest.json
- *   6. Prints a gap report: unmatched manifest IDs still served by React reference set
+ *   3. Retains every discovered page/component/component-set as a sourceCatalog
+ *      asset, including unmatched candidates
+ *   4. Verifies only pre-approved exact source + node mappings; it never assigns
+ *      a renderer role from a name match
+ *   5. Updates source coverage and copies the canonical manifest to the artifact
+ *   6. Prints coverage, unmatched assets, and access failures for review
  *
- * Matching heuristic (extend MATCH_RULES below as needed):
- *   Each Figma source item's semantic name is normalised to lowercase and
- *   matched against the rules. First file wins; a reusable primitive may serve
- *   more than one compatible manifest role.
+ * MATCH_RULES are used solely to verify intentional semantic FigJam references.
+ * They are not an import mapper: new candidates stay unmatched until a reviewer
+ * records an explicit source + node mapping in the manifest.
  */
 
 import { readFileSync, writeFileSync } from "fs";
@@ -26,7 +26,9 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MANIFEST_PATH = resolve(__dirname, "../docs/wireframe-library/manifest.json");
+const CATALOG_PATH = resolve(__dirname, "../docs/wireframe-library/source-catalog.json");
 const ARTIFACT_COPY = resolve(__dirname, "../artifacts/wireframe-library/src/lib/manifest.json");
+const ARTIFACT_CATALOG_COPY = resolve(__dirname, "../artifacts/wireframe-library/src/lib/source-catalog.json");
 
 // ---------------------------------------------------------------------------
 // Shape/name heuristics — map manifest id → semantic patterns to look for in
@@ -119,12 +121,35 @@ async function figmaGet(path) {
   return res.json();
 }
 
-/** Recursively collect all COMPONENT nodes from the Figma tree. */
-function collectComponents(node, acc = []) {
+/** Recursively collect component provenance from the complete Figma tree. */
+function collectComponents(node, acc = [], context = { page: undefined, componentSet: undefined }) {
+  const nextContext = {
+    page: node.type === "CANVAS" ? node.name : context.page,
+    componentSet: node.type === "COMPONENT_SET" ? node.name : context.componentSet,
+  };
   if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
-    acc.push({ id: node.id, name: node.name, type: node.type });
+    acc.push({
+      id: node.id,
+      name: node.name,
+      type: node.type,
+      page: nextContext.page,
+      componentSet: context.componentSet,
+      variantProperties: Object.keys(node.componentPropertyDefinitions ?? {}),
+    });
   }
-  if (node.children) node.children.forEach((c) => collectComponents(c, acc));
+  if (node.children) node.children.forEach((c) => collectComponents(c, acc, nextContext));
+  return acc;
+}
+
+/** Retain pages and non-component document nodes that are not in Figma's component API. */
+function collectCatalogNodes(node, acc = [], context = { page: undefined }) {
+  const page = node.type === "CANVAS" ? node.name : context.page;
+  if (node.type === "CANVAS") {
+    acc.push({ id: node.id, name: node.name, type: "PAGE", page });
+  } else if (!["DOCUMENT", "COMPONENT", "COMPONENT_SET"].includes(node.type)) {
+    acc.push({ id: node.id, name: node.name, type: node.type, page });
+  }
+  if (node.children) node.children.forEach((child) => collectCatalogNodes(child, acc, { page }));
   return acc;
 }
 
@@ -153,6 +178,9 @@ function collectFigJamComponents(data) {
     name: component.name,
     type: "COMPONENT",
     published: false,
+    page: undefined,
+    componentSet: undefined,
+    variantProperties: [],
   }));
   const documentComponents = collectComponents(data.document).map((component) => ({
     ...component,
@@ -194,7 +222,7 @@ function collectFigJamSemanticPrimitives(node, acc = []) {
     const text = [node.name, node.characters, SHAPE_TERMS[node.shapeType]]
       .filter(Boolean)
       .join(" ");
-    acc.push({ id: node.id, name: text, type: node.type, published: false });
+    acc.push({ id: node.id, name: text, type: node.type, published: false, page: undefined, componentSet: undefined, variantProperties: [] });
   }
   if (node.children) node.children.forEach((child) => collectFigJamSemanticPrimitives(child, acc));
   return acc;
@@ -203,6 +231,135 @@ function collectFigJamSemanticPrimitives(node, acc = []) {
 /** Find every semantic manifest role that a source item can safely serve. */
 function matchManifestIds(componentName) {
   return MATCH_RULES.filter((rule) => matchesRule(componentName, rule)).map((rule) => rule.manifestId);
+}
+
+function sourceCatalogEntry(manifest, fileKey) {
+  return (manifest.sourceCatalog?.sources ?? []).find((source) => source.provenance?.fileKey === fileKey);
+}
+
+function capabilityClassesFor(source, component) {
+  const sourceClasses = source?.capabilityClasses ?? ["reference-only"];
+  // A reviewed mapping is always graph-capable; otherwise retain the source's
+  // declared baseline classification without guessing semantic meaning by name.
+  return component.approvedManifestIds?.length
+    ? [...new Set(["graph-primitive", ...sourceClasses])]
+    : sourceClasses;
+}
+
+function catalogAssetId(fileKey, nodeId) {
+  return `asset.figma.${fileKey}.${String(nodeId).replaceAll(":", "-")}`;
+}
+
+function updateSourceCatalog(manifest, source, figmaComponents, catalogNodes = []) {
+  const catalogSource = sourceCatalogEntry(manifest, source.fileKey);
+  if (!catalogSource) {
+    throw new Error(`Figma source ${source.fileKey} is not registered in sourceCatalog`);
+  }
+
+  const approvedByNode = new Map();
+  for (const component of manifest.components ?? []) {
+    if (component.fileKey !== source.fileKey || !component.figmaNodeId) continue;
+    const ids = approvedByNode.get(component.figmaNodeId) ?? [];
+    ids.push(component.id);
+    approvedByNode.set(component.figmaNodeId, ids);
+  }
+
+  const componentAssets = figmaComponents.map((component) => {
+    const approvedManifestIds = approvedByNode.get(component.id) ?? [];
+    const mappingStatus = approvedManifestIds.length ? "approved" : "unmatched";
+    return {
+      id: catalogAssetId(source.fileKey, component.id),
+      sourceId: catalogSource.id,
+      label: component.name || component.id,
+      assetType: component.type === "COMPONENT_SET" ? "component-set" : "component",
+      capabilityClasses: capabilityClassesFor(catalogSource, { approvedManifestIds }),
+      capabilityTags: [
+        ...(component.componentSet ? [`set:${component.componentSet}`] : []),
+        ...(component.variantProperties?.map((property) => `property:${property}`) ?? []),
+        ...(approvedManifestIds.length ? approvedManifestIds.map((id) => `approved:${id}`) : []),
+      ],
+      provenance: {
+        sourceId: catalogSource.id,
+        fileKey: source.fileKey,
+        nodeId: component.id,
+        ...(component.page ? { page: component.page } : {}),
+        ...(component.componentSet ? { variant: component.componentSet } : {}),
+        ...(component.variantProperties?.length ? { properties: Object.fromEntries(component.variantProperties.map((property) => [property, null])) } : {}),
+      },
+      mappingStatus,
+    };
+  });
+  const componentNodeIds = new Set(figmaComponents.map((component) => component.id));
+  const nodeAssets = catalogNodes.filter((node) => !componentNodeIds.has(node.id)).map((node) => ({
+    id: catalogAssetId(source.fileKey, node.id),
+    sourceId: catalogSource.id,
+    label: node.name || node.id,
+    assetType: node.type === "PAGE" ? "page" : "node",
+    capabilityClasses: catalogSource.capabilityClasses,
+    capabilityTags: [`figma:${String(node.type).toLowerCase()}`],
+    provenance: {
+      sourceId: catalogSource.id,
+      fileKey: source.fileKey,
+      nodeId: node.id,
+      ...(node.page ? { page: node.page } : {}),
+    },
+    mappingStatus: "unmatched",
+  }));
+  const generatedAssets = [...componentAssets, ...nodeAssets];
+
+  // Preserve manually curated reference assets, local assets, and other sources;
+  // replace only the deterministic generated inventory for this exact source.
+  manifest.sourceCatalog.assets = (manifest.sourceCatalog.assets ?? []).filter(
+    (asset) => !(asset.id.startsWith(`asset.figma.${source.fileKey}.`)),
+  );
+  manifest.sourceCatalog.assets.push(...generatedAssets);
+
+  const approved = generatedAssets.filter((asset) => asset.mappingStatus === "approved").length;
+  catalogSource.inventory = {
+    pages: [...new Set([
+      ...figmaComponents.map((component) => component.page),
+      ...catalogNodes.filter((node) => node.type === "PAGE").map((node) => node.name),
+    ].filter(Boolean))],
+    components: figmaComponents.filter((component) => component.type !== "COMPONENT_SET").length,
+    componentSets: figmaComponents.filter((component) => component.type === "COMPONENT_SET").length,
+    variants: figmaComponents.reduce((count, component) => count + (component.variantProperties?.length ?? 0), 0),
+    tokenBundles: catalogSource.inventory.tokenBundles,
+  };
+  catalogSource.coverage = {
+    total: generatedAssets.length,
+    approved,
+    unmatched: generatedAssets.length - approved,
+    excluded: 0,
+    blocked: 0,
+  };
+
+  return { approved, unmatched: generatedAssets.filter((asset) => asset.mappingStatus === "unmatched") };
+}
+
+function updateCatalogReport(manifest, unmatchedFigma, accessFailures = []) {
+  const catalog = manifest.sourceCatalog;
+  if (!catalog) return;
+  const sources = catalog.sources ?? [];
+  catalog.coverage = sources.reduce(
+    (total, source) => ({
+      total: total.total + source.coverage.total,
+      approved: total.approved + source.coverage.approved,
+      unmatched: total.unmatched + source.coverage.unmatched,
+      excluded: total.excluded + source.coverage.excluded,
+      blocked: total.blocked + source.coverage.blocked,
+    }),
+    { total: 0, approved: 0, unmatched: 0, excluded: 0, blocked: 0 },
+  );
+  catalog.intakeReport = {
+    generatedAt: new Date().toISOString().slice(0, 10),
+    sourcesInspected: sources.filter((source) => source.status === "accessible" || source.status === "local-only").length,
+    accessFailures,
+    unmatchedAssetIds: [
+      ...(catalog.assets ?? []).filter((asset) => asset.mappingStatus === "unmatched").map((asset) => asset.id),
+      ...(catalog.templateCandidates ?? []).filter((candidate) => candidate.mappingStatus === "unmatched").map((candidate) => candidate.id),
+    ],
+    excludedAssetIds: (catalog.assets ?? []).filter((asset) => asset.mappingStatus === "excluded").map((asset) => asset.id),
+  };
 }
 
 /**
@@ -336,11 +493,13 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
   const unmatchedFigma = [];
   const sourceCandidates = new Map();
   const sourceStats = [];
+  const accessFailures = manifest.sourceCatalog?.intakeReport?.accessFailures ?? [];
 
   for (const source of sources) {
     logger.log(`\n📂  Processing: ${source.label} (${source.fileKey})`);
 
     let figmaComponents = [];
+    let catalogNodes = [];
     try {
       if (source.kind === "figjam") {
         // FigJam files expose local components in file metadata rather than
@@ -351,6 +510,7 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
           source.intakeMode === "semantic-primitives"
             ? collectFigJamSemanticPrimitives(data.document)
             : collectFigJamComponents(data);
+        catalogNodes = collectCatalogNodes(data.document);
         const sourceItemLabel = source.intakeMode === "semantic-primitives" ? "named primitive" : "local component";
         logger.log(`   Found ${figmaComponents.length} ${sourceItemLabel}(s) in FigJam board.`);
       } else {
@@ -381,6 +541,7 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
         const byNodeId = new Map();
         [...documentComponents, ...publishedComponents].forEach((component) => byNodeId.set(component.id, component));
         figmaComponents = [...byNodeId.values()];
+        catalogNodes = collectCatalogNodes(fileData.document);
         logger.log(
           `   Found ${figmaComponents.length} component node(s) (${publishedComponents.length} published, full file inspected).`
         );
@@ -390,38 +551,18 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
     }
 
     sourceCandidates.set(source.fileKey, new Map(figmaComponents.map((component) => [component.id, component])));
-    let newMatchCount = 0;
+    const catalogResult = updateSourceCatalog(manifest, source, figmaComponents, catalogNodes);
+    unmatchedFigma.push(...catalogResult.unmatched);
+    const newMatchCount = catalogResult.approved;
     for (const fc of figmaComponents) {
-      const manifestIds = matchManifestIds(fc.name);
-      if (!manifestIds.length) {
-        unmatchedFigma.push({ fileKey: source.fileKey, name: fc.name, nodeId: fc.id });
-        continue;
-      }
-      for (const manifestId of manifestIds) {
-        const entry = byId[manifestId];
-        if (!entry) {
-          unmatchedFigma.push({ fileKey: source.fileKey, name: fc.name, nodeId: fc.id, note: "no manifest entry" });
-          continue;
-        }
-        if (
-          source.kind !== "figjam" &&
-          APPROVED_DESIGN_REFERENCES.get(`${source.fileKey}:${fc.id}`) !== manifestId
-        ) {
-          unmatchedFigma.push({
-            fileKey: source.fileKey,
-            name: fc.name,
-            nodeId: fc.id,
-            note: "design candidate requires semantic audit",
-          });
-          continue;
-        }
-        // Only assign if not already claimed by a previous file (first-file-wins).
-        if (entry.figmaNodeId === null) {
-          entry.figmaNodeId = fc.id;
-          entry.fileKey = source.fileKey;
-          matchLog.push({ manifestId, figmaName: fc.name, nodeId: fc.id, fileKey: source.fileKey });
-          newMatchCount++;
-        }
+      const verifiedIds = (byId[fc.id] ? [fc.id] : [])
+        .concat(
+          manifest.components
+            .filter((entry) => entry.fileKey === source.fileKey && entry.figmaNodeId === fc.id)
+            .map((entry) => entry.id),
+        );
+      for (const manifestId of [...new Set(verifiedIds)]) {
+        matchLog.push({ manifestId, figmaName: fc.name, nodeId: fc.id, fileKey: source.fileKey });
       }
     }
 
@@ -441,10 +582,11 @@ export async function buildIntake(manifest, { fetchFigma = figmaGet, logger = co
     const sourceItemLabel = source.intakeMode === "semantic-primitives" ? "primitive" : "component";
     source.intakeStatus = `audited — ${sourceMatchCount} ${sourceItemLabel}(s) verified`;
     logger.log(
-      `✅  ${source.label}: ${sourceMatchCount} ${sourceItemLabel}(s) verified (${newMatchCount} newly recorded).`
+      `✅  ${source.label}: ${sourceMatchCount} ${sourceItemLabel}(s) verified (${newMatchCount} approved source node(s) retained).`
     );
   }
 
+  updateCatalogReport(manifest, unmatchedFigma, accessFailures);
   return { manifest, matchLog, unmatchedFigma };
 }
 
@@ -454,19 +596,47 @@ export async function run({
   logger = console,
   writeFile = writeFileSync,
   manifestPath = MANIFEST_PATH,
+  catalogPath = CATALOG_PATH,
   artifactCopyPath = ARTIFACT_COPY,
+  catalogCopyPath = ARTIFACT_CATALOG_COPY,
 } = {}) {
   const inputManifest = manifest ?? JSON.parse(readFileSync(manifestPath, "utf-8"));
+  // Runtime manifests intentionally carry a catalog summary only. Rehydrate
+  // the full review inventory before a new intake so no unmatched material is
+  // discarded on the next generation.
+  if (inputManifest.sourceCatalog && !inputManifest.sourceCatalog.assets) {
+    inputManifest.sourceCatalog = JSON.parse(readFileSync(catalogPath, "utf-8"));
+  }
   const result = await buildIntake(inputManifest, { fetchFigma, logger });
 
   // The only persistence point: buildIntake has fetched and verified every
   // reference successfully before either mirror is touched.
-  const updated = JSON.stringify(result.manifest, null, 2) + "\n";
+  const fullCatalog = result.manifest.sourceCatalog;
+  const catalogSummary = {
+    ...fullCatalog,
+    assets: undefined,
+    intakeReport: fullCatalog?.intakeReport && {
+      ...fullCatalog.intakeReport,
+      unmatchedAssetIds: [],
+      excludedAssetIds: [],
+    },
+  };
+  delete catalogSummary.assets;
+  const runtimeManifest = { ...result.manifest, sourceCatalog: catalogSummary };
+  const updated = JSON.stringify(runtimeManifest, null, 2) + "\n";
+  // The normal manifest remains renderer-sized. The complete inventory is
+  // persisted separately and only read by catalog-specific API/UI paths.
+  const fallbackManifest = { ...runtimeManifest };
+  delete fallbackManifest.sourceCatalog;
   writeFile(manifestPath, updated);
-  writeFile(artifactCopyPath, updated);
+  writeFile(catalogPath, JSON.stringify(fullCatalog, null, 2) + "\n");
+  writeFile(artifactCopyPath, JSON.stringify(fallbackManifest, null, 2) + "\n");
+  writeFile(catalogCopyPath, JSON.stringify(fullCatalog, null, 2) + "\n");
   logger.log("\n✅  Manifest updated at:");
   logger.log("    docs/wireframe-library/manifest.json");
+  logger.log("    docs/wireframe-library/source-catalog.json");
   logger.log("    artifacts/wireframe-library/src/lib/manifest.json");
+  logger.log("    artifacts/wireframe-library/src/lib/source-catalog.json");
 
   // Gap report
   const gaps = result.manifest.components.filter((c) => c.figmaNodeId === null);
@@ -481,8 +651,8 @@ export async function run({
   }
 
   if (result.unmatchedFigma.length) {
-    logger.log(`\n⚠️   ${result.unmatchedFigma.length} Figma component(s) had no manifest match (ignored):`);
-    result.unmatchedFigma.slice(0, 20).forEach((u) => logger.log(`    • "${u.name}" (${u.fileKey})`));
+    logger.log(`\n⚠️   ${result.unmatchedFigma.length} Figma component(s) were retained as unmatched catalog assets:`);
+    result.unmatchedFigma.slice(0, 20).forEach((u) => logger.log(`    • "${u.label}" (${u.provenance.fileKey}:${u.provenance.nodeId})`));
   }
 }
 

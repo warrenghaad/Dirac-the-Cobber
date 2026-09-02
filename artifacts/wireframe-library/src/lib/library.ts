@@ -1,3 +1,6 @@
+// The fallback retains renderer-critical primitives only. The full catalog is
+// deliberately loaded from the canonical API so the browser does not bundle
+// tens of thousands of Figma nodes into its initial JavaScript payload.
 import manifest from "./manifest.json";
 
 export type AxisCoords = { a1: number; a2: number; a3: number; a4: number; a5: number };
@@ -10,6 +13,10 @@ export type LibraryComponent = {
   axes: AxisCoords;
   maxAxes: AxisCoords;
   figmaNodeId: string | null;
+  fileKey?: string | null;
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
+  mappingStatus?: "approved" | "reference-fallback" | "pending-review";
 };
 
 export type Axis = { id: keyof AxisCoords; name: string; levels: string[] };
@@ -28,6 +35,91 @@ export type Composition = {
   description: string;
   family: string;
   slots: CompositionSlot[];
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
+};
+
+export type SourceMetadata = {
+  sourceId?: string;
+  fileKey?: string;
+  url?: string;
+  localPath?: string;
+  nodeId?: string;
+  page?: string;
+  variant?: string;
+  properties?: Record<string, string | number | boolean | null>;
+  tokenMode?: string;
+  previewRef?: string;
+};
+
+export type SourceAsset = {
+  id: string;
+  sourceId: string;
+  label: string;
+  assetType: string;
+  capabilityClasses: string[];
+  capabilityTags?: string[];
+  mappingStatus: "approved" | "unmatched" | "excluded" | "blocked" | "reference-only";
+  tokenCount?: number;
+  previewRef?: string;
+  provenance: SourceMetadata;
+};
+
+export type SourceCoverage = {
+  total: number;
+  approved: number;
+  unmatched: number;
+  excluded: number;
+  blocked: number;
+};
+
+export type SourceCatalogEntry = {
+  id: string;
+  label: string;
+  kind: string;
+  status: "accessible" | "local-only" | "pending-registration" | "inaccessible" | "reference-only";
+  accessNote?: string;
+  provenance: SourceMetadata;
+  capabilityClasses: string[];
+  visualLanguages?: string[];
+  tokenModes?: string[];
+  inventory: { pages: string[]; components: number; componentSets: number; variants: number; tokenBundles: number };
+  coverage: SourceCoverage;
+};
+
+export type SourceTemplateCandidate = {
+  id: string;
+  label: string;
+  sourceId: string;
+  capabilityClasses: string[];
+  capabilityTags?: string[];
+  mappingStatus: SourceAsset["mappingStatus"];
+  provenance: SourceMetadata;
+};
+
+export type SourceMapping = {
+  assetId: string;
+  targetType: "component" | "composition" | "token";
+  targetId: string;
+  status: "approved" | "reference-fallback" | "pending-review";
+  rationale: string;
+};
+
+export type SourceCatalog = {
+  catalogVersion: string;
+  capabilityClasses: string[];
+  sources: SourceCatalogEntry[];
+  assets?: SourceAsset[];
+  templateCandidates: SourceTemplateCandidate[];
+  mappings?: SourceMapping[];
+  coverage: SourceCoverage;
+  intakeReport?: {
+    generatedAt: string;
+    sourcesInspected: number;
+    accessFailures: string[];
+    unmatchedAssetIds: string[];
+    excludedAssetIds: string[];
+  };
 };
 
 /** Full shape of the wireframe-library manifest. */
@@ -48,6 +140,7 @@ export type ManifestData = {
   librarianRules: { start: string; axisPriority: string[]; constraints: string[] };
   components: LibraryComponent[];
   compositions: Composition[];
+  sourceCatalog?: SourceCatalog;
 };
 
 /**

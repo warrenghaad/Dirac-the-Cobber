@@ -1,6 +1,6 @@
 # Tiered Wireframe Library — Design Logic Spec
 
-Version 0.1.0 · Machine-readable companion: `manifest.json` (same directory)
+Version 0.2.0 · Machine-readable companion: `manifest.json` (same directory)
 
 ## 1. Purpose
 
@@ -98,6 +98,29 @@ Every vocabulary item's default and maximum axis coordinates are declared in
 `figmaNodeId` is populated during Figma intake; `null` means the React reference
 render in the mockup sandbox is the source of truth.
 
+### 5.4 Source-backed baseline
+
+The complete approved baseline lives in `source-catalog.json`; the renderer
+`manifest.json` keeps the matching source summary, coverage, and access
+blockers so ordinary planning stays lightweight. The catalog records each
+Figma, FigJam, local `.fig`, and token export source with provenance, access
+state, capability classes, visual language, pages, component/component-set/
+variant inventory, token modes, and coverage. Its five capability classes are `graph-primitive`,
+`graph-template`, `data-surface`, `ui-building-block`, and `reference-only`.
+
+Catalog assets and template candidates retain Figma file/node/page/property
+details, local paths, token modes, preview references, and mapping state.
+`approved` mappings are deliberate source-and-node decisions; `unmatched`,
+`blocked`, and `excluded` items remain visible for review. The catalog can
+therefore be substantially broader than the renderer's `components` array.
+No planner or renderer may treat an inaccessible, pending-registration, or
+reference-only asset as a production component.
+
+Catalog summaries are loaded on the Sources view, and source assets are fetched
+in pages only when a user expands that source. The full artifact mirror is
+reserved for the same view's API-outage path and is validated against
+`source-catalog.json`.
+
 ## 6. Librarian selection rules (need → tier → axes)
 
 The librarian converts a user-need conversation into a **diagram plan** with this
@@ -139,8 +162,16 @@ For each component pulled from the user's Figma library: catalog it, screenshot
 it, assign its manifest id and axis coordinates, and record `figmaNodeId` +
 `fileKey`. A Figma component may only be admitted to Tier 1 if it can render in
 the locked equal-consequence profile; otherwise it enters at its measured tier.
-Gaps (ids with `figmaNodeId: null`) are served by the React reference set in
+Intake inventories the full source first, including unmatched components,
+component sets, variant/property metadata, and page provenance. A name or shape
+similarity can identify a review candidate but cannot create a mapping: only
+pre-approved exact file + node references may populate renderer roles. Gaps
+(ids with `figmaNodeId: null`) are served by the React reference set in
 `artifacts/mockup-sandbox/src/components/mockups/wireframe-library/`.
+
+Local token bundles are catalogued with their native modes and counts; they do
+not silently replace the renderer's canonical token layer. Unavailable sources
+must state their access blocker and remain excluded from planning and rendering.
 
 ## 8. Out of scope (this version)
 

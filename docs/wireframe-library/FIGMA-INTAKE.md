@@ -2,14 +2,18 @@
 
 ## What this does
 
-`scripts/figma-intake.js` reads every `figmaSources` entry in `manifest.json`,
-fetches the matching Figma file(s) via the REST API, matches components to
-manifest vocabulary entries by semantic name/shape heuristics, and writes
-`figmaNodeId` + `fileKey` back into both manifest copies.
+`scripts/figma-intake.js` reads every registered live `figmaSources` entry,
+fully inspects its component tree (and the published component index where
+available), and retains every discovered component or component set in
+`source-catalog.json`'s `sourceCatalog.assets` inventory. This happens before any source is considered for a
+renderer role.
 
-Components that cannot be matched stay at `figmaNodeId: null` and are served
-by the React reference set in
-`artifacts/mockup-sandbox/src/components/mockups/wireframe-library/`.
+The importer does **not** assign a renderer role from a name or shape match.
+Only an already-approved exact `fileKey` + `figmaNodeId` reference is treated
+as a mapping. All other discovered assets are written as `unmatched`, with
+page, component-set, and property/variant provenance where Figma provides it.
+Components that intentionally have no approved source reference remain on the
+React reference set.
 
 Before either manifest mirror is written, intake fetches every registered
 source, verifies every existing `figmaNodeId` against the source’s fresh
@@ -17,6 +21,11 @@ eligible-node index, and queries the Figma node endpoint for each retained
 reference. A missing node, missing source, invalid node-specific link,
 unsupported node type, incompatible semantic primitive, or source-fetch
 failure aborts the run without writing either manifest.
+
+The renderer-focused `manifest.json` receives a small source summary; the
+complete catalog is written separately to `source-catalog.json`. The API serves
+that summary to the Sources view and pages detailed assets by source, so normal
+library and planner requests never transfer the entire review inventory.
 
 ## Running the intake
 
@@ -26,7 +35,7 @@ failure aborts the run without writing either manifest.
 node scripts/figma-intake.js
 ```
 
-## Current state (as of 2026-08-19)
+## Current state (as of 2026-08-24)
 
 The intake script runs cleanly. **26 of 28 manifest roles now have a verified
 Figma node reference.** One role uses a published MUI component; the remaining
@@ -37,10 +46,9 @@ reference fallbacks while suitable Figma frames are sourced.
 Design files are fully inspected, not limited to the published-component
 endpoint. For example, the supplied Dialect [Components canvas](https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect-%E2%80%93-Design-System---Component-Library--Free---Community-?m=dev&ready-for-dev=1&node-id=1-14)
 is registered as node `1:14`; its link resolves to the `❖ Components` canvas,
-and intake scans all 2,712 component nodes in the file alongside its 2,592
-published-component records. It contributes no additional manifest references
-only because earlier sources already provide the same roles under
-first-file-wins.
+and intake scans all 2,712 component nodes in the file alongside its published
+component records. It contributes no renderer references because none has a
+reviewed exact mapping; its inventory is retained as unmatched source material.
 
 The source is a reusable, explicitly named visual vocabulary rather than a
 single diagram layout. It provides:
@@ -71,6 +79,19 @@ becomes unavailable.
 | `jVY2CNS79i0bsdrVgC5Bfs` | Mindmap (Community FigJam) | 0 — 16 local components, no additional semantic match |
 | `5JebW1QtNsfn9eQ9aPYPJD` | [Dialect Components canvas](https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect-%E2%80%93-Design-System---Component-Library--Free---Community-?m=dev&ready-for-dev=1&node-id=1-14) | 0 additional — 2,712 component nodes fully inspected; overlapping roles already claimed |
 
+## Approved baseline beyond live Figma
+
+The Source Catalog tab is the reviewable baseline for every approved source:
+
+| Source | Access state | How it is represented |
+| --- | --- | --- |
+| Graph Visualization UI Kit (Community) | Local-only | Local `.fig` export, thumbnail, and all seven bundled token exports. The catalog preserves 91 primitive, 8 shape, 45 type-scale, two 5-token font, two 273-token graph-variable, and 32×196-token M3 theme modes. |
+| Advanced Spreadsheet | Pending registration | Visible as a data-surface source; no file key/export has been supplied. |
+| Course-site | Pending registration | Visible as an application-layout source; no file key/export has been supplied. |
+| Component Properties Playground | Pending registration | Visible as a variant/property source; no file key/export has been supplied. |
+| Tailwind | Pending registration | Visible as a utility-first UI and data-surface source; no file key/export has been supplied. |
+| Untitled UI Pro Variables | Inaccessible | Explicitly blocked until the connected Figma account receives edit access; no asset or token is claimed from it. |
+
 ## Improving coverage
 
 Coverage grows by adding any readable Figma Design or FigJam source to
@@ -100,27 +121,25 @@ Add the file to `figmaSources` in `docs/wireframe-library/manifest.json`:
 
 Then re-run: `node scripts/figma-intake.js`
 
-## Tuning the matching heuristics
+## Reviewing deterministic mappings
 
-The script maps manifest IDs through source-neutral semantic rules
-(`MATCH_RULES` in `scripts/figma-intake.js`). Add a pattern only when the
-component or named primitive describes the same visual role; pair broad
-patterns with exclusions so an icon or UI control cannot claim a diagram role
-accidentally.
+Semantic rules (`MATCH_RULES` in `scripts/figma-intake.js`) remain as a guard
+for explicitly named FigJam primitives: they verify that a retained mapping
+still carries the role it claims. They are not an automatic import mapper.
 
 For a Design-file candidate, record the exact `fileKey:nodeId → manifestId`
-mapping in `APPROVED_DESIGN_REFERENCES` only after it passes a semantic audit.
-This prevents a similarly named UI control from becoming a renderer source.
-The dedicated FigJam semantic-primitives source is instead checked against its
-explicit named-shape rules.
+mapping only after it passes a semantic audit, then add the corresponding
+provenance and approved mapping record to the manifest. This prevents a
+similarly named UI control from becoming a renderer source. The dedicated
+FigJam semantic-primitives source is additionally checked against its explicit
+named-shape rules.
 
 Design files are scanned for both their published catalog and all component
 nodes in the full file tree. A source with a node-specific URL records that
 target node and fails intake if the link no longer resolves. FigJam boards are
 scanned for their local reusable components unless they explicitly opt into the
-semantic-primitive mode above. First-file-wins: if two source files both offer
-an appropriate component or primitive for the same manifest ID, the one listed
-first in `figmaSources` takes priority.
+semantic-primitive mode above. Competing candidates are all retained and
+flagged for review; source order never selects a renderer role.
 
 The manifest schema requires every source’s file key and source metadata.
 Each component must declare `figmaNodeId` and `fileKey` together; the manifest

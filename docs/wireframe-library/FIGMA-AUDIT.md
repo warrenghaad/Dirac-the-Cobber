@@ -23,6 +23,11 @@ are explicitly named primitives from the shared Visual Logic Primitives FigJam
 source. Two roles intentionally remain on the React reference set until they
 have dedicated Figma frames.
 
+This audit covers the renderer-ready mappings only. The broader, source-backed
+baseline—including unmatched Dialect, Figma Draw, Mindmap, local graph-kit
+tokens, pending sources, and the Untitled UI access blocker—is retained in
+`manifest.json` under `sourceCatalog` and surfaced in the Sources view.
+
 ## Verified matches
 
 | Source | Manifest components | Evidence |
