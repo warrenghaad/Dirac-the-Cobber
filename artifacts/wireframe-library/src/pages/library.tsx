@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
+import GraphWorkspace from "@/components/GraphWorkspace";
+import { graphDocumentFromPlan, type EditableGraphDocument } from "@/lib/graph-document";
 import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
 import {
   useCreateDiagramPlan,
@@ -404,6 +406,7 @@ export default function LibraryPage() {
     : (new URLSearchParams(search).get("tab") ?? "library");
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [workspaceSeed, setWorkspaceSeed] = useState<EditableGraphDocument | null>(null);
   const [selectedId, setSelectedId] = useState(manifest.components[0]?.id ?? "");
   const selected = manifest.components.find((c) => c.id === selectedId) ?? manifest.components[0];
 
@@ -454,6 +457,7 @@ export default function LibraryPage() {
           <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
           <TabsTrigger value="templates" data-testid="tab-templates">Templates</TabsTrigger>
           <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Planner</TabsTrigger>
+          <TabsTrigger value="workspace" data-testid="tab-workspace">Graph Workspace</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
           <TabsTrigger value="sources" data-testid="tab-sources">Sources</TabsTrigger>
@@ -488,7 +492,15 @@ export default function LibraryPage() {
             initialHint={hintParam}
             initialFamily={familyParam}
             initialTemplateId={templateIdParam}
+            onOpenWorkspace={(document) => {
+              setWorkspaceSeed(document);
+              setActiveTab("workspace");
+            }}
           />
+        </TabsContent>
+
+        <TabsContent value="workspace">
+          <GraphWorkspace seedDocument={workspaceSeed} />
         </TabsContent>
 
         <TabsContent value="playground">
@@ -932,12 +944,14 @@ type DiagramGeneratorTabProps = {
   initialHint?: string;
   initialFamily?: string;
   initialTemplateId?: string;
+  onOpenWorkspace: (document: EditableGraphDocument) => void;
 };
 
 function DiagramGeneratorTab({
   initialHint = "",
   initialFamily = "",
   initialTemplateId = "",
+  onOpenWorkspace,
 }: DiagramGeneratorTabProps) {
   const { manifest, refetch: refetchManifest } = useManifest();
   const [need, setNeed] = useState(initialHint);
@@ -1213,6 +1227,23 @@ function DiagramGeneratorTab({
               </div>
             </Card>
           </div>
+
+          <Card className="flex flex-wrap items-center justify-between gap-3 border-primary/25 bg-primary/[0.03] p-4" data-testid="panel-open-workspace">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold"><ArrowRight className="h-4 w-4 text-primary" />Continue editing in Graph Workspace</div>
+              <p className="mt-1 text-xs text-muted-foreground">Turn this valid plan into independent node, relationship, and layout data. Your selected family and template context are preserved.</p>
+            </div>
+            <Button onClick={() => onOpenWorkspace(graphDocumentFromPlan(result.plan, templateComposition ? {
+              id: templateComposition.id,
+              label: templateComposition.label,
+              family: result.plan.family,
+              sourceId: templateComposition.sourceMetadata?.sourceId ?? "figma.visual-logic-primitives",
+              visualLanguage: result.plan.family === "workflow" ? "workflow" : "knowledge graph",
+              mappingStatus: "approved",
+            } : undefined))} data-testid="button-open-graph-workspace">
+              Open editable graph
+            </Button>
+          </Card>
 
           {/* Validation report */}
           <Card className="p-4">
