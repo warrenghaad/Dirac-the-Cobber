@@ -145,6 +145,12 @@ export type ManifestData = {
     tintSteps: number[];
     sizeScale: { widths: number[]; aspect: number; ratio: number };
     strokeScale: number[];
+    dashVocabulary: {
+      solid: number[];
+      dashed: number[];
+      dotted: number[];
+      double: string;
+    };
   };
   axes: Axis[];
   tiers: { tier: number; rule: string; profile?: Record<string, unknown> }[];
@@ -157,22 +163,39 @@ export type ManifestData = {
 };
 
 /**
- * Bundled static copy of the manifest — used as initial/fallback data and for
- * pure token utilities (INK, PAPER, sizeOf, tint, …) that are evaluated at
- * module load time.  For live data prefer the `useManifest()` hook which
- * fetches from GET /api/librarian/manifest.
+ * Bundled static copy of the manifest — used as initial/fallback data.
+ * Components should pass `useManifest().manifest.tokens` to token-aware
+ * utilities so a refreshed API manifest is reflected without a rebuild.
  */
 export const MANIFEST = manifest as unknown as ManifestData;
 
-export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = MANIFEST.tokens;
-export const SIZE_WIDTHS = MANIFEST.tokens.sizeScale.widths;
-export const ASPECT = MANIFEST.tokens.sizeScale.aspect;
+export type DesignTokens = ManifestData["tokens"];
+
+/** Static token defaults retained for non-React callers and the loading state. */
+export const STATIC_TOKENS = MANIFEST.tokens;
+
+export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = STATIC_TOKENS;
+export const SIZE_WIDTHS = STATIC_TOKENS.sizeScale.widths;
+export const ASPECT = STATIC_TOKENS.sizeScale.aspect;
 
 export const AXIS_IDS = ["a1", "a2", "a3", "a4", "a5"] as const;
 
-export function sizeOf(level: number) {
-  const w = SIZE_WIDTHS[level] ?? SIZE_WIDTHS[2];
-  return { w, h: Math.round(w * ASPECT) };
+export function sizeOf(level: number, tokens: DesignTokens = STATIC_TOKENS) {
+  const widths = tokens.sizeScale.widths;
+  const w = widths[level] ?? widths[2];
+  return { w, h: Math.round(w * tokens.sizeScale.aspect) };
+}
+
+export function strokeOf(level: number, tokens: DesignTokens = STATIC_TOKENS) {
+  return tokens.strokeScale[level] ?? tokens.strokeScale.at(-1);
+}
+
+export function dashOf(
+  kind: "solid" | "dashed" | "dotted",
+  tokens: DesignTokens = STATIC_TOKENS,
+) {
+  const pattern = tokens.dashVocabulary[kind];
+  return pattern.length > 0 ? pattern.join(" ") : undefined;
 }
 
 export function tint(hex: string, alpha: number) {

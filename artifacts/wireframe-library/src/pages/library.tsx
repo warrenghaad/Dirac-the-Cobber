@@ -59,7 +59,7 @@ function ComponentCard({ c, selected, onSelect }: { c: LibraryComponent; selecte
       }`}
     >
       <div className="flex h-24 items-center justify-center">
-        <Glyph component={c} axes={c.axes} hueIndex={PALETTE.indexOf(PALETTE[0])} scale={0.85} />
+        <Glyph component={c} axes={c.axes} hueIndex={0} scale={0.85} />
       </div>
       <div className="text-xs font-semibold">{c.id}</div>
       <div className="flex items-center gap-2">
@@ -72,6 +72,7 @@ function ComponentCard({ c, selected, onSelect }: { c: LibraryComponent; selecte
 
 function Playground({ component }: { component: LibraryComponent }) {
   const { manifest } = useManifest();
+  const palette = manifest.tokens.palette;
   const [axes, setAxes] = useState<AxisCoords>(component.axes);
   const [hueIndex, setHueIndex] = useState(0);
   const [prevId, setPrevId] = useState(component.id);
@@ -134,7 +135,7 @@ function Playground({ component }: { component: LibraryComponent }) {
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-wide">Hue (class)</div>
             <div className="flex gap-1.5">
-              {PALETTE.map((c, i) => (
+              {palette.map((c, i) => (
                 <button
                   key={c}
                   data-testid={`button-hue-${i}`}

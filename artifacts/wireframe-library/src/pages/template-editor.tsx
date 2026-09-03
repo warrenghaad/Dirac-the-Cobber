@@ -301,7 +301,13 @@ export default function TemplateEditorPage() {
   }
 
   const viewport = { w: 640, h: 480 };
-  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
+  const records = layoutSlots(
+    composition,
+    viewport,
+    axesOverrides,
+    manifest.components,
+    manifest.tokens,
+  );
 
   const handleAxesChange = (slotIndex: number, newAxes: AxisCoords) => {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));
