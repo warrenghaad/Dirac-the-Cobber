@@ -14,13 +14,14 @@ import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
 import {
   AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp,
-  Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
+  Copy, Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import GraphWorkspace from "@/components/GraphWorkspace";
 import { graphDocumentFromPlan, type EditableGraphDocument } from "@/lib/graph-document";
-import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
+import type { DiagramPlan, DraftPlacement, PlanResult, ValidationReport } from "@/lib/diagram-types";
+import { decodeDiagramSnapshot, encodeDiagramSnapshot } from "@/lib/diagram-share";
 import {
   useCreateDiagramPlan,
   usePromoteDiagramPlan,
@@ -401,10 +402,16 @@ export default function LibraryPage() {
   const hintParam = initialParams.get("hint") ?? "";
   const familyParam = initialParams.get("family") ?? "";
   const templateIdParam = initialParams.get("templateId") ?? "";
+  const shareNeedParam = initialParams.get("need") ?? "";
+  const shareViewParam = initialParams.get("view") ?? "";
+  const shareSnapshotParam = initialParams.get("snapshot") ?? "";
+  const shareResult = decodeDiagramSnapshot(shareSnapshotParam);
 
   const initialTab = hintParam
     ? "diagram"
-    : (new URLSearchParams(search).get("tab") ?? "library");
+    : shareNeedParam
+      ? "diagram"
+      : (new URLSearchParams(search).get("tab") ?? "library");
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [workspaceSeed, setWorkspaceSeed] = useState<EditableGraphDocument | null>(null);
@@ -491,7 +498,11 @@ export default function LibraryPage() {
         <TabsContent value="diagram">
           <DiagramGeneratorTab
             initialHint={hintParam}
+            initialNeed={shareNeedParam}
             initialFamily={familyParam}
+            initialView={shareViewParam}
+            initialResult={shareResult}
+            initialSnapshotInvalid={Boolean(shareSnapshotParam && !shareResult)}
             initialTemplateId={templateIdParam}
             onOpenWorkspace={(document) => {
               setWorkspaceSeed(document);
@@ -936,23 +947,65 @@ function AxisMeaningsPanel({ axisMeanings }: { axisMeanings: DiagramPlan["axisMe
 
 type DiagramGeneratorTabProps = {
   initialHint?: string;
+  initialNeed?: string;
   initialFamily?: string;
+  initialView?: string;
+  initialResult?: PlanResult | null;
+  initialSnapshotInvalid?: boolean;
   initialTemplateId?: string;
   onOpenWorkspace: (document: EditableGraphDocument) => void;
 };
 
+type ShareFamily = "workflow" | "knowledge-graph";
+
+function parseShareFamily(value: string): ShareFamily | undefined {
+  return value === "workflow" || value === "knowledge-graph" ? value : undefined;
+}
+
+function parseView(value: string): View {
+  return VIEW_OPTIONS.some((option) => option.value === value)
+    ? (value as View)
+    : "overview";
+}
+
+async function copyText(text: string) {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.select();
+  const copied = document.execCommand?.("copy") ?? false;
+  textArea.remove();
+  if (!copied) {
+    throw new Error("Clipboard access is unavailable in this browser.");
+  }
+}
+
 function DiagramGeneratorTab({
   initialHint = "",
+  initialNeed = "",
   initialFamily = "",
+  initialView = "",
+  initialResult = null,
+  initialSnapshotInvalid = false,
   initialTemplateId = "",
   onOpenWorkspace,
 }: DiagramGeneratorTabProps) {
   const { manifest, refetch: refetchManifest } = useManifest();
-  const [need, setNeed] = useState(initialHint);
+  const [need, setNeed] = useState(initialNeed || initialHint);
   const [hintBannerDismissed, setHintBannerDismissed] = useState(false);
   const [visualLanguage, setVisualLanguage] = useState<VisualLanguageChoice>("auto");
-  const [view, setView] = useState<View>("overview");
-  const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
+  const [view, setView] = useState<View>(() => parseView(initialView));
+  const [result, setResult] = useState<PlanResult | null>(initialResult);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [copyLinkError, setCopyLinkError] = useState("");
   const [promotionOpen, setPromotionOpen] = useState(false);
   const [promotionId, setPromotionId] = useState("");
   const [promotionLabel, setPromotionLabel] = useState("");
@@ -978,6 +1031,7 @@ function DiagramGeneratorTab({
   const [refineError, setRefineError] = useState<FetchError | null>(null);
 
   const refinementInputRef = useRef<HTMLTextAreaElement>(null);
+  const autoGenerationStartedRef = useRef(false);
 
   const mutation = useCreateDiagramPlan({
     mutation: {
@@ -998,10 +1052,28 @@ function DiagramGeneratorTab({
     },
   });
 
+  useEffect(() => {
+    const shareNeed = initialNeed.trim();
+    if (!shareNeed || initialResult || autoGenerationStartedRef.current) return;
+
+    autoGenerationStartedRef.current = true;
+    const family = parseShareFamily(initialFamily);
+    mutation.mutate({
+      data: {
+        need: shareNeed,
+        ...(family ? { family } : {}),
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
+      },
+    });
+  }, [initialFamily, initialNeed, initialResult, mutation, view, visualLanguage]);
+
   const handleGenerate = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!need.trim() || mutation.isPending) return;
     setResult(null);
+    setLinkCopied(false);
+    setCopyLinkError("");
     mutation.mutate({
       data: {
         need: need.trim(),
@@ -1009,6 +1081,29 @@ function DiagramGeneratorTab({
         view,
       },
     });
+  };
+
+  const handleCopyLink = async () => {
+    if (!result) return;
+
+    try {
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set("tab", "diagram");
+      shareUrl.searchParams.set("need", result.plan.need);
+      shareUrl.searchParams.set("family", result.plan.family);
+      shareUrl.searchParams.set("view", view);
+      shareUrl.searchParams.set("snapshot", encodeDiagramSnapshot(result));
+      shareUrl.searchParams.delete("hint");
+      shareUrl.searchParams.delete("templateId");
+
+      await copyText(shareUrl.toString());
+      setLinkCopied(true);
+      setCopyLinkError("");
+      window.setTimeout(() => setLinkCopied(false), 2500);
+    } catch (error) {
+      setLinkCopied(false);
+      setCopyLinkError(error instanceof Error ? error.message : "Could not copy the share link.");
+    }
   };
 
   const handleRefine = async () => {
@@ -1034,6 +1129,8 @@ function DiagramGeneratorTab({
 
   const handleReset = () => {
     setResult(null);
+    setLinkCopied(false);
+    setCopyLinkError("");
     mutation.reset();
     setRefineError(null);
     setRefinement("");
@@ -1105,6 +1202,16 @@ function DiagramGeneratorTab({
           >
             ✕
           </button>
+        </div>
+      )}
+      {initialSnapshotInvalid && (
+        <div
+          className="rounded-md border border-amber-300/50 bg-amber-50/70 px-4 py-3 text-xs text-amber-800"
+          role="alert"
+          data-testid="invalid-share-snapshot"
+        >
+          This share link contains an invalid diagram snapshot. The planner will regenerate it from
+          the saved request instead.
         </div>
       )}
 
@@ -1229,14 +1336,37 @@ function DiagramGeneratorTab({
                   ))}
               </div>
             </div>
-            {Object.keys(result.plan.axisMeanings).length > 0 && (
-              <div className="text-right">
-                <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Axis encoding
+            <div className="flex flex-wrap items-start justify-end gap-3">
+              {Object.keys(result.plan.axisMeanings).length > 0 && (
+                <div className="text-right">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Axis encoding
+                  </div>
+                  <AxisMeaningsPanel axisMeanings={result.plan.axisMeanings} />
                 </div>
-                <AxisMeaningsPanel axisMeanings={result.plan.axisMeanings} />
+              )}
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLink}
+                  data-testid="button-copy-diagram-link"
+                  className="gap-1.5"
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copy link
+                </Button>
+                {linkCopied && (
+                  <span className="text-[10px] text-green-600" role="status">
+                    Link copied
+                  </span>
+                )}
+                {copyLinkError && (
+                  <span className="max-w-48 text-right text-[10px] text-destructive" role="alert">
+                    {copyLinkError}
+                  </span>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Tier-1 draft + emphasized diagram side-by-side */}
