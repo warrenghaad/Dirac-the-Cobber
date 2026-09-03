@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Tiered Wireframe Library Manifest",
   "type": "object",
-  "required": ["name", "version", "tokens", "axes", "tiers", "figmaSources", "sourceCatalog", "librarianRules", "components"],
+  "required": ["name", "version", "tokens", "axes", "tiers", "visualLanguages", "componentFamilies", "figmaSources", "librarianRules", "components"],
   "properties": {
     "name": { "type": "string" },
     "version": { "type": "string" },
@@ -53,6 +53,16 @@
           "profile": { "type": "object" }
         }
       }
+    },
+    "visualLanguages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/visualLanguage" }
+    },
+    "componentFamilies": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/componentFamily" }
     },
     "figmaSources": {
       "type": "array",
@@ -148,6 +158,14 @@
           "maxAxes": { "$ref": "#/definitions/axisCoordsLoose" },
           "figmaNodeId": { "type": ["string", "null"] },
           "fileKey": { "type": ["string", "null"] },
+          "visualLanguages": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/visualLanguageId" }
+          },
+          "semanticRoles": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
           "sourceMetadata": { "$ref": "#/definitions/sourceMetadata" },
           "capabilityTags": {
             "type": "array",
@@ -176,6 +194,42 @@
       }
     },
     "axisCoordsLoose": { "$ref": "#/definitions/axisCoords" },
+    "visualLanguageId": {
+      "enum": ["knowledge-graph", "uml", "database", "mui-ui", "flowchart", "workflow", "information-architecture", "mind-map"]
+    },
+    "visualLanguage": {
+      "type": "object",
+      "required": ["id", "label", "description", "cues", "baseFamily", "semanticRoles", "componentFamilies"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/visualLanguageId" },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "cues": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "baseFamily": { "enum": ["knowledge-graph", "workflow"] },
+        "semanticRoles": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "componentFamilies": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+      }
+    },
+    "componentFamily": {
+      "type": "object",
+      "required": ["id", "label", "visualLanguages", "semanticRoles"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "visualLanguages": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/visualLanguageId" },
+          "minItems": 1
+        },
+        "semanticRoles": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
     "compositionSlot": {
       "type": "object",
       "required": ["componentId", "role", "position"],
@@ -219,6 +273,10 @@
         "label": { "type": "string", "minLength": 1 },
         "description": { "type": "string" },
         "family": { "enum": ["tier1", "knowledge-graph", "workflow", "cross-family"] },
+        "visualLanguages": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/visualLanguageId" }
+        },
         "sourceMetadata": { "$ref": "#/definitions/sourceMetadata" },
         "capabilityTags": {
           "type": "array",

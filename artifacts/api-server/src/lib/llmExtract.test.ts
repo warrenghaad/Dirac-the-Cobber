@@ -14,7 +14,7 @@ import {
   WF_NODE_COMPONENT,
   WF_EDGE_COMPONENT,
 } from "@workspace/wireframe-librarian";
-import { buildSystemPrompt } from "./llmExtract";
+import { buildSystemPrompt, planToStructured } from "./llmExtract";
 
 const PROMPT = buildSystemPrompt();
 
@@ -85,5 +85,38 @@ describe("buildSystemPrompt – kind list completeness (regression guard)", () =
     for (const kind of Object.keys(WF_EDGE_COMPONENT)) {
       expect(promptWfEdgeSection).toContain(kind);
     }
+  });
+});
+
+describe("planToStructured – MUI refinement preservation", () => {
+  it("reconstructs Tier-1 UI nodes, containers, and edges", () => {
+    const result = planToStructured({
+      family: "knowledge-graph",
+      placements: [
+        {
+          id: "dashboard",
+          componentId: "prim.node.generic",
+          content: { label: "Dashboard", role: "page", className: "Screen" },
+        },
+        {
+          id: "summary",
+          componentId: "prim.container.plain",
+          content: { label: "Summary", role: "section", className: "Section" },
+        },
+        {
+          id: "nav",
+          componentId: "prim.edge.plain",
+          content: { from: "dashboard", to: "summary", role: "contains" },
+        },
+      ],
+    });
+
+    expect(result.nodes).toEqual([
+      expect.objectContaining({ id: "dashboard", kind: "page", className: "Screen" }),
+      expect.objectContaining({ id: "summary", kind: "section", className: "Section" }),
+    ]);
+    expect(result.edges).toEqual([
+      expect.objectContaining({ id: "nav", kind: "contains", from: "dashboard", to: "summary" }),
+    ]);
   });
 });

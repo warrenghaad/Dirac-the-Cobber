@@ -28,7 +28,7 @@ function layout(plan: DiagramPlan): Map<string, Pt> {
       !p.componentId.includes("lane"),
   );
 
-  if (plan.family === "workflow") {
+  if (plan.family === "workflow" || plan.visualLanguage === "flowchart") {
     let x = 60;
     for (const n of nodes) {
       const { w, h } = nodeSize(n);
@@ -42,13 +42,13 @@ function layout(plan: DiagramPlan): Map<string, Pt> {
   const classes = nodes.filter((n) => n.componentId === "kg.class");
   const literals = nodes.filter((n) => n.componentId === "kg.literal");
   const entities = nodes.filter((n) => !classes.includes(n) && !literals.includes(n));
-  const roles = [...new Set(entities.map((n) => n.content.role ?? ""))];
+  const roles = [...new Set(entities.map((n) => n.content.className ?? n.content.typeTag ?? ""))];
   let x = 60;
   const roleSpan: Record<string, { min: number; max: number }> = {};
   for (const role of roles) {
     const span = { min: x, max: x };
     entities
-      .filter((e) => (e.content.role ?? "") === role)
+      .filter((e) => (e.content.className ?? e.content.typeTag ?? "") === role)
       .forEach((n, i) => {
         const { w, h } = nodeSize(n);
         pos.set(n.id, { x, y: (i % 2 === 0 ? 250 : 400) - h / 2, w, h });
@@ -60,7 +60,7 @@ function layout(plan: DiagramPlan): Map<string, Pt> {
   }
   for (const c of classes) {
     const { w, h } = nodeSize(c);
-    const span = roleSpan[c.content.role ?? ""];
+    const span = roleSpan[c.content.className ?? c.content.typeTag ?? ""];
     const cx = span ? (span.min + span.max) / 2 : x + w / 2;
     pos.set(c.id, { x: cx - w / 2, y: 50, w, h });
     if (!span) x += w + 70;

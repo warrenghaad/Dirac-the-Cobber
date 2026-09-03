@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Glyph } from "@/components/Glyph";
 import {
   FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
-  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition, type SourceAsset, type SourceCatalog, type SourceCatalogEntry,
+  AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
+  type SourceAsset, type SourceCatalog, type SourceCatalogEntry, type VisualLanguage,
 } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
 import { Link, useSearch } from "wouter";
@@ -713,17 +714,10 @@ interface FetchError {
   llmError: boolean;
 }
 
-type Family = "auto" | "workflow" | "knowledge-graph";
+type VisualLanguageChoice = "auto" | VisualLanguage;
 type View = "overview" | "detail";
 type PromotionFamily = "tier1" | "knowledge-graph" | "workflow" | "cross-family";
 type PromotionLevel = "molecule" | "organism" | "template";
-
-const FAMILY_OPTIONS: { value: Family; label: string; description: string }[] = [
-  { value: "auto", label: "Auto-detect", description: "Inferred from your need" },
-  { value: "workflow", label: "Workflow", description: "Process / sequence" },
-  { value: "knowledge-graph", label: "Knowledge Graph", description: "Entities & relations" },
-];
-
 const VIEW_OPTIONS: { value: View; label: string; description: string }[] = [
   { value: "overview", label: "Overview", description: "Terse labels (A5 ≤ 2)" },
   { value: "detail", label: "Detail", description: "Show key properties (A5 = 3)" },
@@ -956,7 +950,7 @@ function DiagramGeneratorTab({
   const { manifest, refetch: refetchManifest } = useManifest();
   const [need, setNeed] = useState(initialHint);
   const [hintBannerDismissed, setHintBannerDismissed] = useState(false);
-  const [family, setFamily] = useState<Family>("auto");
+  const [visualLanguage, setVisualLanguage] = useState<VisualLanguageChoice>("auto");
   const [view, setView] = useState<View>("overview");
   const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
   const [promotionOpen, setPromotionOpen] = useState(false);
@@ -966,6 +960,17 @@ function DiagramGeneratorTab({
   const [promotionFamily, setPromotionFamily] = useState<PromotionFamily>("workflow");
   const [promotionLevel, setPromotionLevel] = useState<PromotionLevel>("template");
   const [promotionSuccess, setPromotionSuccess] = useState<PromoteDiagramPlanResult | null>(null);
+  const languageOptions = useMemo(
+    () => [
+      { value: "auto" as const, label: "Auto-detect", description: "Inferred from your need" },
+      ...manifest.visualLanguages.map((language) => ({
+        value: language.id,
+        label: language.label,
+        description: language.description,
+      })),
+    ],
+    [manifest.visualLanguages],
+  );
 
   // --- refinement (raw fetch; no generated hook for /refine) ---
   const [refinement, setRefinement] = useState("");
@@ -997,7 +1002,13 @@ function DiagramGeneratorTab({
     e?.preventDefault();
     if (!need.trim() || mutation.isPending) return;
     setResult(null);
-    mutation.mutate({ data: { need: need.trim(), ...(family !== "auto" ? { family } : {}), view } });
+    mutation.mutate({
+      data: {
+        need: need.trim(),
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
+      },
+    });
   };
 
   const handleRefine = async () => {
@@ -1131,10 +1142,10 @@ function DiagramGeneratorTab({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <PlannerToggleGroup
-              label="Diagram family"
-              options={FAMILY_OPTIONS}
-              value={family}
-              onChange={(v) => setFamily(v as Family)}
+              label="Visual language"
+              options={languageOptions}
+              value={visualLanguage}
+              onChange={(v) => setVisualLanguage(v as VisualLanguageChoice)}
             />
             <PlannerToggleGroup
               label="Detail level"
@@ -1183,18 +1194,37 @@ function DiagramGeneratorTab({
       {/* Results */}
       {result && (
         <div className="space-y-4" data-testid="panel-results">
-          {/* Header: title, family badge, counts, axis encoding */}
+          {/* Header: title, selected visual language, counts, axis encoding */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold">{result.plan.title}</h2>
               <div className="mt-0.5 flex items-center gap-2">
-                <Badge variant="secondary" className="text-[10px] capitalize">
-                  {result.plan.family}
+                <Badge variant="secondary" className="text-[10px]" data-testid="badge-visual-language">
+                  {manifest.visualLanguages.find((language) => language.id === result.plan.visualLanguage)?.label
+                    ?? result.plan.visualLanguage
+                    ?? result.plan.family}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
                   {result.plan.placements.filter((p) => p.content.from === undefined).length} nodes ·{" "}
                   {result.plan.placements.filter((p) => p.content.from !== undefined).length} edges
                 </span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="visual-language-alternatives">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Alternatives
+                </span>
+                {manifest.visualLanguages
+                  .filter((language) => language.id !== result.plan.visualLanguage)
+                  .map((language) => (
+                    <button
+                      key={language.id}
+                      type="button"
+                      onClick={() => setVisualLanguage(language.id)}
+                      className="rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                    >
+                      {language.label}
+                    </button>
+                  ))}
               </div>
             </div>
             {Object.keys(result.plan.axisMeanings).length > 0 && (

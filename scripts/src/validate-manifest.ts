@@ -173,8 +173,8 @@ if (catalog) {
     }
   }
 
-  const unmatchedIds = new Set(catalog.intakeReport?.unmatchedAssetIds ?? []);
-  const excludedIds = new Set(catalog.intakeReport?.excludedAssetIds ?? []);
+  const unmatchedIds = new Set<string>(catalog.intakeReport?.unmatchedAssetIds ?? []);
+  const excludedIds = new Set<string>(catalog.intakeReport?.excludedAssetIds ?? []);
   const reportIds = new Set([...unmatchedIds, ...excludedIds]);
   for (const reportId of reportIds) {
     if (!assetIds.has(reportId) && !templateIds.has(reportId)) {

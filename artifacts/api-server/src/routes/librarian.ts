@@ -12,6 +12,8 @@ import {
 } from "@workspace/api-zod";
 import {
   buildPlan,
+  classifyVisualLanguageFromManifest,
+  visualLanguageFamily,
   validatePlan,
   type DiagramPlan,
   type PlanRequest,
@@ -141,6 +143,8 @@ router.post("/librarian/plan", async (req, res) => {
 
   const reqData = parsed.data as PlanRequest;
   const manifest = loadManifest();
+  const selectedVisualLanguage =
+    reqData.visualLanguage ?? classifyVisualLanguageFromManifest(reqData.need, manifest);
 
   // Build the plan request, potentially enriched by LLM extraction.
   let planRequest: PlanRequest = reqData;
@@ -155,12 +159,16 @@ router.post("/librarian/plan", async (req, res) => {
       );
     } else {
       try {
-        const llmResult = await extractWithLLM(reqData.need, reqData.family);
+        const llmResult = await extractWithLLM(
+          reqData.need,
+          reqData.family ?? visualLanguageFamily(selectedVisualLanguage),
+        );
         if (llmResult) {
           planRequest = {
             ...reqData,
             // LLM supplies structure; deterministic engine owns axes/tiers.
-            family: reqData.family ?? llmResult.family,
+            family: reqData.family,
+            visualLanguage: selectedVisualLanguage,
             nodes: llmResult.nodes,
             edges: llmResult.edges,
             groups: reqData.groups ?? llmResult.groups,
@@ -243,6 +251,8 @@ router.post("/librarian/refine", async (req, res) => {
     const planRequest: PlanRequest = {
       need: currentPlan.need,
       family: llmResult.family,
+      visualLanguage: currentPlan.visualLanguage,
+      compositionIds: currentPlan.compositionIds,
       nodes: llmResult.nodes,
       edges: llmResult.edges,
       groups: llmResult.groups,

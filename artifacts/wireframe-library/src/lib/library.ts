@@ -17,8 +17,19 @@ export type LibraryComponent = {
   sourceMetadata?: SourceMetadata;
   capabilityTags?: string[];
   mappingStatus?: "approved" | "reference-fallback" | "pending-review";
+  visualLanguages?: VisualLanguage[];
+  semanticRoles?: string[];
 };
 
+export type VisualLanguage =
+  | "knowledge-graph"
+  | "uml"
+  | "database"
+  | "mui-ui"
+  | "flowchart"
+  | "workflow"
+  | "information-architecture"
+  | "mind-map";
 export type Axis = { id: keyof AxisCoords; name: string; levels: string[] };
 
 export type CompositionSlot = {
@@ -138,6 +149,8 @@ export type ManifestData = {
   axes: Axis[];
   tiers: { tier: number; rule: string; profile?: Record<string, unknown> }[];
   librarianRules: { start: string; axisPriority: string[]; constraints: string[] };
+  visualLanguages: VisualLanguageDefinition[];
+  componentFamilies: ComponentFamilyDefinition[];
   components: LibraryComponent[];
   compositions: Composition[];
   sourceCatalog?: SourceCatalog;
@@ -193,3 +206,20 @@ export const FAMILIES = [
 export function componentsByFamily(components: LibraryComponent[], family: string) {
   return components.filter((c) => c.family === family);
 }
+
+export type VisualLanguageDefinition = {
+  id: VisualLanguage;
+  label: string;
+  description: string;
+  cues: string[];
+  baseFamily: "knowledge-graph" | "workflow";
+  semanticRoles: string[];
+  componentFamilies: string[];
+};
+
+export type ComponentFamilyDefinition = {
+  id: string;
+  label: string;
+  visualLanguages: VisualLanguage[];
+  semanticRoles: string[];
+};
