@@ -1019,6 +1019,8 @@ function DiagramGeneratorTab({
       const data = await postJson("/api/librarian/refine", {
         refinement: refinement.trim(),
         currentPlan: result.plan,
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
       });
       setResult(data);
       setRefinement("");

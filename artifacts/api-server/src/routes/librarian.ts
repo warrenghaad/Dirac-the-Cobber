@@ -215,7 +215,7 @@ router.post("/librarian/refine", async (req, res) => {
     return;
   }
 
-  const { refinement, currentPlan } = parsed.data;
+  const { refinement, currentPlan, family, view } = parsed.data;
 
   if (!isLLMConfigured()) {
     res.status(503).json({
@@ -250,9 +250,10 @@ router.post("/librarian/refine", async (req, res) => {
   try {
     const planRequest: PlanRequest = {
       need: currentPlan.need,
-      family: llmResult.family,
+      family: family ?? llmResult.family,
       visualLanguage: currentPlan.visualLanguage,
       compositionIds: currentPlan.compositionIds,
+      view,
       nodes: llmResult.nodes,
       edges: llmResult.edges,
       groups: llmResult.groups,

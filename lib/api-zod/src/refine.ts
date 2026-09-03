@@ -46,6 +46,8 @@ export const RefineDiagramPlanBody = zod.object({
     .min(1)
     .describe("Follow-up instruction, e.g. 'also show the returns flow'"),
   currentPlan: DiagramPlanForRefine,
+  family: zod.enum(["knowledge-graph", "workflow"]).optional(),
+  view: zod.enum(["overview", "detail"]).optional(),
 });
 
 export const RefineDiagramPlanResponse = CreateDiagramPlanResponse;
