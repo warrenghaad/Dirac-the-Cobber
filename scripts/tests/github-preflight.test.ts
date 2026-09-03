@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { preflightGithub, type GitResult } from "../src/github-preflight.ts";
+import {
+  preflightGithub,
+  publishGithub,
+  type GitResult,
+} from "../src/github-preflight.ts";
 
 function runner({
   refs = "",
@@ -8,6 +12,8 @@ function runner({
   readError = "",
   writeStatus = 0,
   writeError = "",
+  publishStatus = 0,
+  publishError = "",
   branch = "main",
   fetchUrl = "https://github.com/acme/example.git",
   pushUrl = fetchUrl,
@@ -17,6 +23,8 @@ function runner({
   readError?: string;
   writeStatus?: number;
   writeError?: string;
+  publishStatus?: number;
+  publishError?: string;
   branch?: string;
   fetchUrl?: string;
   pushUrl?: string;
@@ -39,12 +47,69 @@ function runner({
       return { status: readStatus, stdout: refs, stderr: readError };
     }
     if (args[0] === "push") {
-      return { status: writeStatus, stdout: "", stderr: writeError };
+      if (args.includes("--dry-run")) {
+        return { status: writeStatus, stdout: "", stderr: writeError };
+      }
+      return { status: publishStatus, stdout: "", stderr: publishError };
     }
     throw new Error(`Unexpected git call: ${args.join(" ")}`);
   };
   return { calls, git };
 }
+
+test("publishes only after the read and dry-run write checks pass", () => {
+  const fake = runner({ refs: "abc123\trefs/heads/main\n" });
+  const result = publishGithub({ git: fake.git });
+
+  assert.equal(result.preflight.ok, true);
+  assert.equal(result.push?.status, 0);
+  assert.deepEqual(fake.calls.slice(-2), [
+    ["push", "--dry-run", "origin", "HEAD:refs/heads/main"],
+    ["push", "origin", "HEAD:refs/heads/main"],
+  ]);
+});
+
+test("does not publish when the preflight reports an access failure", () => {
+  const fake = runner({
+    writeStatus: 1,
+    writeError: "remote: Permission to acme/example.git denied.",
+  });
+  const result = publishGithub({ git: fake.git });
+
+  assert.equal(result.preflight.ok, false);
+  assert.equal(result.preflight.state, "authentication-failure");
+  assert.equal(result.push, undefined);
+  assert.equal(
+    fake.calls.some(
+      ([command, option]) => command === "push" && option !== "--dry-run",
+    ),
+    false,
+  );
+});
+
+test("does not publish when the preflight reports configuration or history conflicts", () => {
+  const malformedRemote = runner({
+    fetchUrl: "https://github.com/acme/example/nested",
+  });
+  const malformedResult = publishGithub({ git: malformedRemote.git });
+  assert.equal(malformedResult.preflight.state, "configuration-error");
+  assert.equal(malformedResult.push, undefined);
+
+  const historyConflict = runner({
+    refs: "abc123\trefs/heads/main\n",
+    writeStatus: 1,
+    writeError: "rejected: non-fast-forward",
+  });
+  const conflictResult = publishGithub({ git: historyConflict.git });
+  assert.equal(conflictResult.preflight.state, "history-conflict");
+  assert.equal(conflictResult.push, undefined);
+  assert.equal(
+    historyConflict.calls.some(
+      ([command, option]) => command === "push" && option !== "--dry-run",
+    ),
+    false,
+  );
+});
 
 test("reports an empty repository separately after read and dry-run write checks pass", () => {
   const fake = runner();

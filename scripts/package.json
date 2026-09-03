@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:figma-intake": "node --test ./tests/figma-intake.test.js",
     "preflight:github": "tsx ./src/github-preflight.ts",
+    "publish:github": "tsx ./src/github-preflight.ts --publish",
     "test:github-preflight": "tsx --test ./tests/github-preflight.test.ts"
   },
   "devDependencies": {

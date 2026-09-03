@@ -6,6 +6,7 @@
  *   pnpm run preflight:github
  *   pnpm run preflight:github -- --remote origin --branch main
  *   pnpm run preflight:github -- --json
+ *   pnpm run publish:github -- --remote origin --branch main
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -40,6 +41,11 @@ export type PreflightReport = {
   read: { ok: boolean; detail?: string };
   write: { ok: boolean; detail?: string };
   action?: string;
+};
+
+export type PublishResult = {
+  preflight: PreflightReport;
+  push?: GitResult;
 };
 
 const root = path.resolve(
@@ -362,19 +368,47 @@ export function preflightGithub({
   };
 }
 
+/**
+ * Runs the access preflight and pushes only the exact remote and branch that
+ * passed both the read and dry-run write checks.
+ */
+export function publishGithub({
+  git,
+  requestedRemote,
+  branch,
+}: {
+  git: GitRunner;
+  requestedRemote?: string;
+  branch?: string;
+}): PublishResult {
+  const preflight = preflightGithub({ git, requestedRemote, branch });
+  if (!preflight.ok) return { preflight };
+
+  const push = git([
+    "push",
+    preflight.remote!,
+    `HEAD:refs/heads/${preflight.branch!}`,
+  ]);
+  return { preflight, push };
+}
+
 function parseArgs(args: string[]): {
   remote?: string;
   branch?: string;
   json: boolean;
+  publish: boolean;
 } {
   let remote: string | undefined;
   let branch: string | undefined;
   let json = false;
+  let publish = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === "--") {
       continue;
+    } else if (arg === "--publish") {
+      publish = true;
     } else if (arg === "--json") {
       json = true;
     } else if (arg === "--remote" && args[index + 1]) {
@@ -385,6 +419,9 @@ function parseArgs(args: string[]): {
       console.log(
         "Usage: pnpm run preflight:github -- [--remote <name>] [--branch <name>] [--json]",
       );
+      console.log(
+        "       pnpm run publish:github -- [--remote <name>] [--branch <name>]",
+      );
       process.exit(0);
     } else {
       console.error(`Unknown argument: ${arg}`);
@@ -392,10 +429,10 @@ function parseArgs(args: string[]): {
     }
   }
 
-  return { remote, branch, json };
+  return { remote, branch, json, publish };
 }
 
-function printReport(report: PreflightReport): void {
+function printReport(report: PreflightReport, publishing: boolean): void {
   if (report.ok) {
     const repositoryState = report.repositoryEmpty
       ? "empty repository"
@@ -404,7 +441,9 @@ function printReport(report: PreflightReport): void {
       `GitHub preflight OK: ${repositoryState}; read access and write access verified for "${report.remote}" on branch "${report.branch}".`,
     );
     console.log(
-      "No remote history was changed (write check used git push --dry-run).",
+      publishing
+        ? "Preflight passed; publishing the verified branch now."
+        : "No remote history was changed (write check used git push --dry-run).",
     );
     return;
   }
@@ -424,18 +463,34 @@ function printReport(report: PreflightReport): void {
 }
 
 export function main(): void {
-  const { remote, branch, json } = parseArgs(process.argv.slice(2));
-  const report = preflightGithub({
-    git: runGit,
-    requestedRemote: remote,
-    branch,
-  });
+  const { remote, branch, json, publish } = parseArgs(process.argv.slice(2));
+  const result = publish
+    ? publishGithub({ git: runGit, requestedRemote: remote, branch })
+    : {
+        preflight: preflightGithub({
+          git: runGit,
+          requestedRemote: remote,
+          branch,
+        }),
+      };
+  const report = result.preflight;
   if (json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    printReport(report);
+    printReport(report, publish);
+    if (publish && report.ok && result.push?.status === 0) {
+      console.log(
+        `GitHub publish OK: pushed HEAD to "${report.remote}" branch "${report.branch}".`,
+      );
+    } else if (publish && report.ok) {
+      console.error(
+        `GitHub publish FAILED: ${safeDetail(output(result.push ?? { status: null, stdout: "", stderr: "" })) || "git push failed."}`,
+      );
+    }
   }
-  if (!report.ok) process.exitCode = 1;
+  if (!report.ok || (publish && result.push?.status !== 0)) {
+    process.exitCode = 1;
+  }
 }
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";

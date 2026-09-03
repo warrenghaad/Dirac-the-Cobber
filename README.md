@@ -1,8 +1,20 @@
 # Tiered Wireframe Library
 
-## Verify GitHub access before publishing
+## Publish safely to GitHub
 
-Before publishing this workspace to GitHub, run the read-only preflight:
+The repository publish command runs a GitHub access preflight before it can
+push anything:
+
+```bash
+pnpm run publish:github
+```
+
+It stops without pushing when the remote is misconfigured, GitHub access is
+stale, or the remote branch has conflicting history. Only after read access and
+the dry-run write check pass does it push the current branch to the verified
+GitHub remote.
+
+To run the read-only preflight by itself:
 
 ```bash
 pnpm run preflight:github
@@ -13,6 +25,7 @@ than one GitHub remote is configured, select the publishing remote explicitly:
 
 ```bash
 pnpm run preflight:github -- --remote origin --branch main
+pnpm run publish:github -- --remote origin --branch main
 ```
 
 It verifies read access with `git ls-remote` and write access with
