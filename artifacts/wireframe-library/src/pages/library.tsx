@@ -7,17 +7,21 @@ import { Glyph } from "@/components/Glyph";
 import {
   FAMILIES, componentsByFamily, clampAxes, emphasis, effectiveTier,
   AXIS_IDS, PALETTE, tint, type AxisCoords, type LibraryComponent, type Composition,
+  type SourceAsset, type SourceCatalog, type SourceCatalogEntry, type VisualLanguage,
 } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
 import { Link, useSearch } from "wouter";
 import { CompositionCanvas } from "@/components/CompositionCanvas";
 import {
   AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp,
-  Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
+  Copy, Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
-import type { DiagramPlan, DraftPlacement, ValidationReport } from "@/lib/diagram-types";
+import GraphWorkspace from "@/components/GraphWorkspace";
+import { graphDocumentFromPlan, type EditableGraphDocument } from "@/lib/graph-document";
+import type { DiagramPlan, DraftPlacement, PlanResult, ValidationReport } from "@/lib/diagram-types";
+import { decodeDiagramSnapshot, encodeDiagramSnapshot } from "@/lib/diagram-share";
 import {
   useCreateDiagramPlan,
   usePromoteDiagramPlan,
@@ -55,7 +59,7 @@ function ComponentCard({ c, selected, onSelect }: { c: LibraryComponent; selecte
       }`}
     >
       <div className="flex h-24 items-center justify-center">
-        <Glyph component={c} axes={c.axes} hueIndex={PALETTE.indexOf(PALETTE[0])} scale={0.85} />
+        <Glyph component={c} axes={c.axes} hueIndex={0} scale={0.85} />
       </div>
       <div className="text-xs font-semibold">{c.id}</div>
       <div className="flex items-center gap-2">
@@ -68,6 +72,7 @@ function ComponentCard({ c, selected, onSelect }: { c: LibraryComponent; selecte
 
 function Playground({ component }: { component: LibraryComponent }) {
   const { manifest } = useManifest();
+  const palette = manifest.tokens.palette;
   const [axes, setAxes] = useState<AxisCoords>(component.axes);
   const [hueIndex, setHueIndex] = useState(0);
   const [prevId, setPrevId] = useState(component.id);
@@ -130,7 +135,7 @@ function Playground({ component }: { component: LibraryComponent }) {
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-wide">Hue (class)</div>
             <div className="flex gap-1.5">
-              {PALETTE.map((c, i) => (
+              {palette.map((c, i) => (
                 <button
                   key={c}
                   data-testid={`button-hue-${i}`}
@@ -192,6 +197,197 @@ function LibrarianRules() {
   );
 }
 
+// ─── Source Catalog ──────────────────────────────────────────────────────────
+
+function sourceLocation(source: SourceCatalogEntry) {
+  const { fileKey, localPath, page, nodeId } = source.provenance;
+  return [fileKey ? `Figma ${fileKey}` : localPath, page, nodeId ? `node ${nodeId}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function SourceCard({
+  source,
+  assets,
+  assetCount,
+  templateCount,
+  isLoadingAssets,
+  onLoadAssets,
+}: {
+  source: SourceCatalogEntry;
+  assets: SourceAsset[];
+  assetCount: number;
+  templateCount: number;
+  isLoadingAssets: boolean;
+  onLoadAssets: (sourceId: string, offset: number) => void;
+}) {
+  const usableStatus = source.status === "accessible" || source.status === "local-only";
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  return (
+    <Card className="flex flex-col overflow-hidden border-card-border transition-colors hover-elevate" data-testid={`card-source-${source.id}`}>
+      <div className="border-b border-border bg-muted/20 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-foreground">{source.label}</h3>
+            <div className="mt-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="font-mono">{source.id}</span>
+              {sourceLocation(source) && <span className="normal-case tracking-normal">{sourceLocation(source)}</span>}
+            </div>
+          </div>
+          <Badge variant={usableStatus ? "default" : "secondary"} className="text-[10px] capitalize">
+            {source.status.replace("-", " ")}
+          </Badge>
+        </div>
+      </div>
+      <div className="space-y-4 p-4 text-sm">
+        {source.accessNote && <p className="rounded border border-amber-300/40 bg-amber-50/50 p-2.5 text-xs leading-relaxed text-amber-900">{source.accessNote}</p>}
+        <div className="flex flex-wrap gap-1.5">
+          {source.capabilityClasses.map((capability) => <Badge key={capability} variant="outline" className="text-[10px] font-normal">{capability.replaceAll("-", " ")}</Badge>)}
+        </div>
+        {source.visualLanguages && <p className="text-xs text-muted-foreground">{source.visualLanguages.join(" · ")}</p>}
+        {source.tokenModes && source.tokenModes.length > 0 && (
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Token modes ({source.tokenModes.length})</div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {source.tokenModes.slice(0, 8).map((mode) => <Badge key={mode} variant="secondary" className="text-[10px] font-normal">{mode}</Badge>)}
+              {source.tokenModes.length > 8 && <Badge variant="outline" className="text-[10px]">+{source.tokenModes.length - 8} modes</Badge>}
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.approved}</div><div className="text-[9px] uppercase text-muted-foreground">approved</div></div>
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.unmatched}</div><div className="text-[9px] uppercase text-muted-foreground">unmatched</div></div>
+          <div className="rounded border border-border bg-muted/10 p-2"><div className="font-mono text-base font-semibold">{source.coverage.total}</div><div className="text-[9px] uppercase text-muted-foreground">total</div></div>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {source.inventory.components} components · {source.inventory.componentSets} sets · {source.inventory.variants} variants · {source.inventory.tokenBundles} bundles
+          {source.inventory.pages.length > 0 ? ` · ${source.inventory.pages.length} pages: ${source.inventory.pages.slice(0, 3).join(", ")}${source.inventory.pages.length > 3 ? "…" : ""}` : ""}
+        </p>
+        {(assetCount > 0 || templateCount > 0) && (
+          <details className="rounded border border-border bg-muted/10 p-2.5" onToggle={(event) => {
+            const isOpen = event.currentTarget.open;
+            setIsInventoryOpen(isOpen);
+            if (isOpen && assets.length === 0) onLoadAssets(source.id, 0);
+          }}>
+            <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Browse catalogued material · {assetCount.toLocaleString()} assets · {templateCount} template candidates
+            </summary>
+            {isInventoryOpen && isLoadingAssets && <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading source inventory…</div>}
+            {isInventoryOpen && assets.length > 0 && (
+              <ul className="mt-2 space-y-2">
+                {assets.map((asset) => (
+                  <li key={asset.id} className="border-t border-border pt-2 first:border-t-0 first:pt-0">
+                    <div className="text-xs font-medium text-foreground">{asset.label}</div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-2 text-[10px] text-muted-foreground">
+                      <span>{asset.assetType}</span>
+                      <span>{asset.mappingStatus}</span>
+                      {asset.tokenCount !== undefined && <span>{asset.tokenCount.toLocaleString()} tokens</span>}
+                      {asset.provenance.tokenMode && <span>{asset.provenance.tokenMode}</span>}
+                    </div>
+                    <div className="mt-0.5 break-all font-mono text-[9px] text-muted-foreground">
+                      {asset.provenance.fileKey ?? asset.provenance.localPath ?? asset.id}
+                      {asset.provenance.nodeId ? ` · node ${asset.provenance.nodeId}` : ""}
+                      {asset.provenance.page ? ` · ${asset.provenance.page}` : ""}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {isInventoryOpen && assets.length < assetCount && (
+              <Button variant="outline" size="sm" className="mt-3 w-full text-xs" disabled={isLoadingAssets} onClick={() => onLoadAssets(source.id, assets.length)}>
+                Show 100 more of {assetCount.toLocaleString()} assets
+              </Button>
+            )}
+          </details>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function SourcesBrowser() {
+  const [catalog, setCatalog] = useState<SourceCatalog | null>(null);
+  const [assetsBySource, setAssetsBySource] = useState<Record<string, SourceAsset[]>>({});
+  const [loadingSources, setLoadingSources] = useState<Set<string>>(new Set());
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`${import.meta.env.BASE_URL}api/librarian/catalog`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Catalog request failed (${response.status})`);
+        return response.json() as Promise<SourceCatalog>;
+      })
+      .then((nextCatalog) => { if (!cancelled) setCatalog(nextCatalog); })
+      .catch(async () => {
+        // API outages must not make the approved baseline disappear. This
+        // chunk is intentionally imported only after opening Sources.
+        try {
+          const { default: offlineCatalog } = await import("@/lib/source-catalog.json");
+          if (!cancelled) setCatalog(offlineCatalog as SourceCatalog);
+        } catch {
+          if (!cancelled) setCatalogError("The source catalog could not be loaded.");
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const loadAssets = (sourceId: string, offset: number) => {
+    if (loadingSources.has(sourceId)) return;
+    setLoadingSources((current) => new Set(current).add(sourceId));
+    const finish = () => setLoadingSources((current) => {
+      const next = new Set(current);
+      next.delete(sourceId);
+      return next;
+    });
+    void fetch(`${import.meta.env.BASE_URL}api/librarian/catalog/assets?sourceId=${encodeURIComponent(sourceId)}&offset=${offset}&limit=100`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Catalog asset request failed (${response.status})`);
+        return response.json() as Promise<{ items: SourceAsset[] }>;
+      })
+      .then(({ items }) => setAssetsBySource((current) => ({ ...current, [sourceId]: [...(current[sourceId] ?? []), ...items] })))
+      .catch(async () => {
+        try {
+          const { default: offlineCatalog } = await import("@/lib/source-catalog.json");
+          const items = (offlineCatalog as SourceCatalog).assets?.filter((asset) => asset.sourceId === sourceId).slice(offset, offset + 100) ?? [];
+          setAssetsBySource((current) => ({ ...current, [sourceId]: [...(current[sourceId] ?? []), ...items] }));
+        } catch {
+          // The catalog summary remains visible and the request can be retried.
+        }
+      })
+      .finally(finish);
+  };
+
+  if (!catalog) {
+    return <Card className="flex min-h-[200px] flex-col items-center justify-center border-dashed p-8 text-center text-sm text-muted-foreground">{catalogError ?? <><Loader2 className="mb-3 h-5 w-5 animate-spin" />Loading source catalog…</>}</Card>;
+  }
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+        <div>
+          <h2 className="text-lg font-semibold">Source-backed baseline</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Every source remains visible with access state, provenance, capability class, token modes, and coverage. Unmatched and blocked material is retained instead of being silently discarded.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.approved}</div><div className="text-muted-foreground">approved</div></div>
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.unmatched}</div><div className="text-muted-foreground">unmatched</div></div>
+          <div className="rounded border bg-card px-3 py-2"><div className="font-mono text-base font-semibold">{catalog.coverage.blocked}</div><div className="text-muted-foreground">blocked</div></div>
+        </div>
+      </div>
+      {catalog.intakeReport && catalog.intakeReport.accessFailures.length > 0 && <Card className="border-amber-300/40 bg-amber-50/40 p-4"><div className="text-xs font-semibold uppercase tracking-wide text-amber-900">Access and registration blockers</div><ul className="mt-2 space-y-1 text-xs text-amber-900">{catalog.intakeReport.accessFailures.map((failure) => <li key={failure}>{failure}</li>)}</ul></Card>}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {catalog.sources.map((source) => <SourceCard key={source.id} source={source} assets={assetsBySource[source.id] ?? []} assetCount={source.coverage.total} templateCount={catalog.templateCandidates.filter((candidate) => candidate.sourceId === source.id).length} isLoadingAssets={loadingSources.has(source.id)} onLoadAssets={loadAssets} />)}
+      </div>
+      <Card className="p-5">
+        <h3 className="font-semibold">Template candidates</h3>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {catalog.templateCandidates.map((candidate) => <div key={candidate.id} className="rounded border border-border bg-muted/10 p-3"><div className="text-xs font-semibold">{candidate.label}</div><div className="mt-1 font-mono text-[10px] text-muted-foreground">{candidate.sourceId}</div><div className="mt-2 text-[10px] text-muted-foreground">{candidate.mappingStatus.replace("-", " ")}</div></div>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function LibraryPage() {
   const { manifest } = useManifest();
   const search = useSearch();
@@ -207,12 +403,19 @@ export default function LibraryPage() {
   const hintParam = initialParams.get("hint") ?? "";
   const familyParam = initialParams.get("family") ?? "";
   const templateIdParam = initialParams.get("templateId") ?? "";
+  const shareNeedParam = initialParams.get("need") ?? "";
+  const shareViewParam = initialParams.get("view") ?? "";
+  const shareSnapshotParam = initialParams.get("snapshot") ?? "";
+  const shareResult = decodeDiagramSnapshot(shareSnapshotParam);
 
   const initialTab = hintParam
     ? "diagram"
-    : (new URLSearchParams(search).get("tab") ?? "library");
+    : shareNeedParam
+      ? "diagram"
+      : (new URLSearchParams(search).get("tab") ?? "library");
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [workspaceSeed, setWorkspaceSeed] = useState<EditableGraphDocument | null>(null);
   const [selectedId, setSelectedId] = useState(manifest.components[0]?.id ?? "");
   const selected = manifest.components.find((c) => c.id === selectedId) ?? manifest.components[0];
 
@@ -263,8 +466,10 @@ export default function LibraryPage() {
           <TabsTrigger value="compositions" data-testid="tab-compositions">Compositions</TabsTrigger>
           <TabsTrigger value="templates" data-testid="tab-templates">Templates</TabsTrigger>
           <TabsTrigger value="diagram" data-testid="tab-diagram">Diagram Planner</TabsTrigger>
+          <TabsTrigger value="workspace" data-testid="tab-workspace">Graph Workspace</TabsTrigger>
           <TabsTrigger value="playground" data-testid="tab-playground">Axis Playground</TabsTrigger>
           <TabsTrigger value="rules" data-testid="tab-rules">Librarian Rules</TabsTrigger>
+          <TabsTrigger value="sources" data-testid="tab-sources">Sources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="space-y-8">
@@ -294,9 +499,21 @@ export default function LibraryPage() {
         <TabsContent value="diagram">
           <DiagramGeneratorTab
             initialHint={hintParam}
+            initialNeed={shareNeedParam}
             initialFamily={familyParam}
+            initialView={shareViewParam}
+            initialResult={shareResult}
+            initialSnapshotInvalid={Boolean(shareSnapshotParam && !shareResult)}
             initialTemplateId={templateIdParam}
+            onOpenWorkspace={(document) => {
+              setWorkspaceSeed(document);
+              setActiveTab("workspace");
+            }}
           />
+        </TabsContent>
+
+        <TabsContent value="workspace">
+          <GraphWorkspace seedDocument={workspaceSeed} />
         </TabsContent>
 
         <TabsContent value="playground">
@@ -305,6 +522,10 @@ export default function LibraryPage() {
 
         <TabsContent value="rules">
           <LibrarianRules />
+        </TabsContent>
+
+        <TabsContent value="sources">
+          {activeTab === "sources" && <SourcesBrowser />}
         </TabsContent>
       </Tabs>
     </div>
@@ -505,17 +726,10 @@ interface FetchError {
   llmError: boolean;
 }
 
-type Family = "auto" | "workflow" | "knowledge-graph";
+type VisualLanguageChoice = "auto" | VisualLanguage;
 type View = "overview" | "detail";
 type PromotionFamily = "tier1" | "knowledge-graph" | "workflow" | "cross-family";
 type PromotionLevel = "molecule" | "organism" | "template";
-
-const FAMILY_OPTIONS: { value: Family; label: string; description: string }[] = [
-  { value: "auto", label: "Auto-detect", description: "Inferred from your need" },
-  { value: "workflow", label: "Workflow", description: "Process / sequence" },
-  { value: "knowledge-graph", label: "Knowledge Graph", description: "Entities & relations" },
-];
-
 const VIEW_OPTIONS: { value: View; label: string; description: string }[] = [
   { value: "overview", label: "Overview", description: "Terse labels (A5 ≤ 2)" },
   { value: "detail", label: "Detail", description: "Show key properties (A5 = 3)" },
@@ -734,21 +948,65 @@ function AxisMeaningsPanel({ axisMeanings }: { axisMeanings: DiagramPlan["axisMe
 
 type DiagramGeneratorTabProps = {
   initialHint?: string;
+  initialNeed?: string;
   initialFamily?: string;
+  initialView?: string;
+  initialResult?: PlanResult | null;
+  initialSnapshotInvalid?: boolean;
   initialTemplateId?: string;
+  onOpenWorkspace: (document: EditableGraphDocument) => void;
 };
+
+type ShareFamily = "workflow" | "knowledge-graph";
+
+function parseShareFamily(value: string): ShareFamily | undefined {
+  return value === "workflow" || value === "knowledge-graph" ? value : undefined;
+}
+
+function parseView(value: string): View {
+  return VIEW_OPTIONS.some((option) => option.value === value)
+    ? (value as View)
+    : "overview";
+}
+
+async function copyText(text: string) {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.select();
+  const copied = document.execCommand?.("copy") ?? false;
+  textArea.remove();
+  if (!copied) {
+    throw new Error("Clipboard access is unavailable in this browser.");
+  }
+}
 
 function DiagramGeneratorTab({
   initialHint = "",
+  initialNeed = "",
   initialFamily = "",
+  initialView = "",
+  initialResult = null,
+  initialSnapshotInvalid = false,
   initialTemplateId = "",
+  onOpenWorkspace,
 }: DiagramGeneratorTabProps) {
   const { manifest, refetch: refetchManifest } = useManifest();
-  const [need, setNeed] = useState(initialHint);
+  const [need, setNeed] = useState(initialNeed || initialHint);
   const [hintBannerDismissed, setHintBannerDismissed] = useState(false);
-  const [family, setFamily] = useState<Family>("auto");
-  const [view, setView] = useState<View>("overview");
-  const [result, setResult] = useState<{ plan: DiagramPlan; validation: ValidationReport } | null>(null);
+  const [visualLanguage, setVisualLanguage] = useState<VisualLanguageChoice>("auto");
+  const [view, setView] = useState<View>(() => parseView(initialView));
+  const [result, setResult] = useState<PlanResult | null>(initialResult);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [copyLinkError, setCopyLinkError] = useState("");
   const [promotionOpen, setPromotionOpen] = useState(false);
   const [promotionId, setPromotionId] = useState("");
   const [promotionLabel, setPromotionLabel] = useState("");
@@ -756,6 +1014,17 @@ function DiagramGeneratorTab({
   const [promotionFamily, setPromotionFamily] = useState<PromotionFamily>("workflow");
   const [promotionLevel, setPromotionLevel] = useState<PromotionLevel>("template");
   const [promotionSuccess, setPromotionSuccess] = useState<PromoteDiagramPlanResult | null>(null);
+  const languageOptions = useMemo(
+    () => [
+      { value: "auto" as const, label: "Auto-detect", description: "Inferred from your need" },
+      ...manifest.visualLanguages.map((language) => ({
+        value: language.id,
+        label: language.label,
+        description: language.description,
+      })),
+    ],
+    [manifest.visualLanguages],
+  );
 
   // --- refinement (raw fetch; no generated hook for /refine) ---
   const [refinement, setRefinement] = useState("");
@@ -763,6 +1032,7 @@ function DiagramGeneratorTab({
   const [refineError, setRefineError] = useState<FetchError | null>(null);
 
   const refinementInputRef = useRef<HTMLTextAreaElement>(null);
+  const autoGenerationStartedRef = useRef(false);
 
   const mutation = useCreateDiagramPlan({
     mutation: {
@@ -783,11 +1053,58 @@ function DiagramGeneratorTab({
     },
   });
 
+  useEffect(() => {
+    const shareNeed = initialNeed.trim();
+    if (!shareNeed || initialResult || autoGenerationStartedRef.current) return;
+
+    autoGenerationStartedRef.current = true;
+    const family = parseShareFamily(initialFamily);
+    mutation.mutate({
+      data: {
+        need: shareNeed,
+        ...(family ? { family } : {}),
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
+      },
+    });
+  }, [initialFamily, initialNeed, initialResult, mutation, view, visualLanguage]);
+
   const handleGenerate = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!need.trim() || mutation.isPending) return;
     setResult(null);
-    mutation.mutate({ data: { need: need.trim(), ...(family !== "auto" ? { family } : {}), view } });
+    setLinkCopied(false);
+    setCopyLinkError("");
+    mutation.mutate({
+      data: {
+        need: need.trim(),
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
+      },
+    });
+  };
+
+  const handleCopyLink = async () => {
+    if (!result) return;
+
+    try {
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set("tab", "diagram");
+      shareUrl.searchParams.set("need", result.plan.need);
+      shareUrl.searchParams.set("family", result.plan.family);
+      shareUrl.searchParams.set("view", view);
+      shareUrl.searchParams.set("snapshot", encodeDiagramSnapshot(result));
+      shareUrl.searchParams.delete("hint");
+      shareUrl.searchParams.delete("templateId");
+
+      await copyText(shareUrl.toString());
+      setLinkCopied(true);
+      setCopyLinkError("");
+      window.setTimeout(() => setLinkCopied(false), 2500);
+    } catch (error) {
+      setLinkCopied(false);
+      setCopyLinkError(error instanceof Error ? error.message : "Could not copy the share link.");
+    }
   };
 
   const handleRefine = async () => {
@@ -798,6 +1115,8 @@ function DiagramGeneratorTab({
       const data = await postJson("/api/librarian/refine", {
         refinement: refinement.trim(),
         currentPlan: result.plan,
+        ...(visualLanguage !== "auto" ? { visualLanguage } : {}),
+        view,
       });
       setResult(data);
       setRefinement("");
@@ -811,6 +1130,8 @@ function DiagramGeneratorTab({
 
   const handleReset = () => {
     setResult(null);
+    setLinkCopied(false);
+    setCopyLinkError("");
     mutation.reset();
     setRefineError(null);
     setRefinement("");
@@ -884,6 +1205,16 @@ function DiagramGeneratorTab({
           </button>
         </div>
       )}
+      {initialSnapshotInvalid && (
+        <div
+          className="rounded-md border border-amber-300/50 bg-amber-50/70 px-4 py-3 text-xs text-amber-800"
+          role="alert"
+          data-testid="invalid-share-snapshot"
+        >
+          This share link contains an invalid diagram snapshot. The planner will regenerate it from
+          the saved request instead.
+        </div>
+      )}
 
       {/* Input form */}
       <Card className="p-5">
@@ -921,10 +1252,10 @@ function DiagramGeneratorTab({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <PlannerToggleGroup
-              label="Diagram family"
-              options={FAMILY_OPTIONS}
-              value={family}
-              onChange={(v) => setFamily(v as Family)}
+              label="Visual language"
+              options={languageOptions}
+              value={visualLanguage}
+              onChange={(v) => setVisualLanguage(v as VisualLanguageChoice)}
             />
             <PlannerToggleGroup
               label="Detail level"
@@ -973,28 +1304,70 @@ function DiagramGeneratorTab({
       {/* Results */}
       {result && (
         <div className="space-y-4" data-testid="panel-results">
-          {/* Header: title, family badge, counts, axis encoding */}
+          {/* Header: title, selected visual language, counts, axis encoding */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold">{result.plan.title}</h2>
               <div className="mt-0.5 flex items-center gap-2">
-                <Badge variant="secondary" className="text-[10px] capitalize">
-                  {result.plan.family}
+                <Badge variant="secondary" className="text-[10px]" data-testid="badge-visual-language">
+                  {manifest.visualLanguages.find((language) => language.id === result.plan.visualLanguage)?.label
+                    ?? result.plan.visualLanguage
+                    ?? result.plan.family}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
                   {result.plan.placements.filter((p) => p.content.from === undefined).length} nodes ·{" "}
                   {result.plan.placements.filter((p) => p.content.from !== undefined).length} edges
                 </span>
               </div>
-            </div>
-            {Object.keys(result.plan.axisMeanings).length > 0 && (
-              <div className="text-right">
-                <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Axis encoding
-                </div>
-                <AxisMeaningsPanel axisMeanings={result.plan.axisMeanings} />
+              <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="visual-language-alternatives">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Alternatives
+                </span>
+                {manifest.visualLanguages
+                  .filter((language) => language.id !== result.plan.visualLanguage)
+                  .map((language) => (
+                    <button
+                      key={language.id}
+                      type="button"
+                      onClick={() => setVisualLanguage(language.id)}
+                      className="rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                    >
+                      {language.label}
+                    </button>
+                  ))}
               </div>
-            )}
+            </div>
+            <div className="flex flex-wrap items-start justify-end gap-3">
+              {Object.keys(result.plan.axisMeanings).length > 0 && (
+                <div className="text-right">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Axis encoding
+                  </div>
+                  <AxisMeaningsPanel axisMeanings={result.plan.axisMeanings} />
+                </div>
+              )}
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLink}
+                  data-testid="button-copy-diagram-link"
+                  className="gap-1.5"
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copy link
+                </Button>
+                {linkCopied && (
+                  <span className="text-[10px] text-green-600" role="status">
+                    Link copied
+                  </span>
+                )}
+                {copyLinkError && (
+                  <span className="max-w-48 text-right text-[10px] text-destructive" role="alert">
+                    {copyLinkError}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Tier-1 draft + emphasized diagram side-by-side */}
@@ -1017,6 +1390,23 @@ function DiagramGeneratorTab({
               </div>
             </Card>
           </div>
+
+          <Card className="flex flex-wrap items-center justify-between gap-3 border-primary/25 bg-primary/[0.03] p-4" data-testid="panel-open-workspace">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold"><ArrowRight className="h-4 w-4 text-primary" />Continue editing in Graph Workspace</div>
+              <p className="mt-1 text-xs text-muted-foreground">Turn this valid plan into independent node, relationship, and layout data. Your selected family and template context are preserved.</p>
+            </div>
+            <Button onClick={() => onOpenWorkspace(graphDocumentFromPlan(result.plan, templateComposition ? {
+              id: templateComposition.id,
+              label: templateComposition.label,
+              family: result.plan.family,
+              sourceId: templateComposition.sourceMetadata?.sourceId ?? "figma.visual-logic-primitives",
+              visualLanguage: result.plan.family === "workflow" ? "workflow" : "knowledge graph",
+              mappingStatus: "approved",
+            } : undefined))} data-testid="button-open-graph-workspace">
+              Open editable graph
+            </Button>
+          </Card>
 
           {/* Validation report */}
           <Card className="p-4">

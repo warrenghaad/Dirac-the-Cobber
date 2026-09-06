@@ -49,6 +49,7 @@ export interface AxisCoords {
 export interface PlacementContent {
   label?: string;
   typeTag?: string;
+  className?: string;
   properties?: string[];
   /** @minimum 0 */
   hueIndex?: number;
@@ -82,12 +83,28 @@ export const DiagramPlanFamily = {
   workflow: 'workflow',
 } as const;
 
+export type DiagramPlanVisualLanguage = typeof DiagramPlanVisualLanguage[keyof typeof DiagramPlanVisualLanguage];
+
+
+export const DiagramPlanVisualLanguage = {
+  'knowledge-graph': 'knowledge-graph',
+  uml: 'uml',
+  database: 'database',
+  'mui-ui': 'mui-ui',
+  flowchart: 'flowchart',
+  workflow: 'workflow',
+  'information-architecture': 'information-architecture',
+  'mind-map': 'mind-map',
+} as const;
+
 export type DiagramPlanAxisMeanings = {[key: string]: string};
 
 export interface DiagramPlan {
   need: string;
   title: string;
   family: DiagramPlanFamily;
+  visualLanguage?: DiagramPlanVisualLanguage;
+  compositionIds?: string[];
   axisMeanings: DiagramPlanAxisMeanings;
   tier1Draft: DraftPlacement[];
   /** @minItems 1 */
@@ -108,6 +125,14 @@ export const StructuredNodeKind = {
   decision: 'decision',
   parallel: 'parallel',
   data: 'data',
+  actor: 'actor',
+  table: 'table',
+  column: 'column',
+  component: 'component',
+  page: 'page',
+  section: 'section',
+  topic: 'topic',
+  process: 'process',
 } as const;
 
 export interface StructuredNode {
@@ -129,6 +154,11 @@ export const StructuredEdgeKind = {
   subclass: 'subclass',
   flow: 'flow',
   conditional: 'conditional',
+  association: 'association',
+  'foreign-key': 'foreign-key',
+  contains: 'contains',
+  navigation: 'navigation',
+  branch: 'branch',
 } as const;
 
 export interface StructuredEdge {
@@ -161,6 +191,23 @@ export const PlanRequestFamily = {
   workflow: 'workflow',
 } as const;
 
+/**
+ * Explicit visual-language override; omitted to infer from the need.
+ */
+export type PlanRequestVisualLanguage = typeof PlanRequestVisualLanguage[keyof typeof PlanRequestVisualLanguage];
+
+
+export const PlanRequestVisualLanguage = {
+  'knowledge-graph': 'knowledge-graph',
+  uml: 'uml',
+  database: 'database',
+  'mui-ui': 'mui-ui',
+  flowchart: 'flowchart',
+  workflow: 'workflow',
+  'information-architecture': 'information-architecture',
+  'mind-map': 'mind-map',
+} as const;
+
 export type PlanRequestView = typeof PlanRequestView[keyof typeof PlanRequestView];
 
 
@@ -176,6 +223,9 @@ export interface PlanRequest {
      */
   need: string;
   family?: PlanRequestFamily;
+  /** Explicit visual-language override; omitted to infer from the need. */
+  visualLanguage?: PlanRequestVisualLanguage;
+  compositionIds?: string[];
   nodes?: StructuredNode[];
   edges?: StructuredEdge[];
   groups?: StructuredGroup[];

@@ -1,11 +1,19 @@
-import { INK, PALETTE, ACCENT, sizeOf, tint, type AxisCoords, type LibraryComponent } from "@/lib/library";
+import {
+  STATIC_TOKENS,
+  dashOf,
+  sizeOf,
+  strokeOf,
+  tint,
+  type AxisCoords,
+  type DesignTokens,
+  type LibraryComponent,
+} from "@/lib/library";
+import { useManifest } from "@/lib/manifest-context";
 
 // Renders any manifest component at arbitrary axis coordinates.
 // A1 governs silhouette fidelity: 0 = generic rounded-rect, 1 = role family, >=2 = category shape.
 // A2 governs color: 0 mono ink, 1 accent, >=2 hue from the categorical palette, >=3 deeper tint.
 // A3 = size step, A4 = stroke weight/dash, A5 = label density.
-
-const STROKE_W = [1, 2, 2, 3, 4];
 
 type GlyphProps = {
   component: LibraryComponent;
@@ -37,21 +45,31 @@ function resolveShape(c: LibraryComponent, a1: number): string {
   return c.shape === "rect-outline" ? "rectangle" : c.shape.replace("container-header", "container");
 }
 
-export function glyphColors(axes: AxisCoords, hueIndex: number) {
-  if (axes.a2 <= 0) return { stroke: INK, fill: "white" };
-  if (axes.a2 === 1) return { stroke: ACCENT, fill: tint(ACCENT, 0.15) };
-  const hue = PALETTE[hueIndex % PALETTE.length];
-  return { stroke: hue, fill: tint(hue, axes.a2 >= 3 ? 0.28 : 0.15) };
+export function glyphColors(
+  axes: AxisCoords,
+  hueIndex: number,
+  tokens: DesignTokens = STATIC_TOKENS,
+) {
+  if (axes.a2 <= 0) return { stroke: tokens.ink, fill: "white" };
+  const subtleTint = tokens.tintSteps.at(-1) ?? 0;
+  if (axes.a2 === 1) {
+    return { stroke: tokens.accent, fill: tint(tokens.accent, subtleTint) };
+  }
+  const hue = tokens.palette[hueIndex % tokens.palette.length];
+  const strongerTint = tokens.tintSteps.at(-2) ?? subtleTint;
+  return { stroke: hue, fill: tint(hue, axes.a2 >= 3 ? strongerTint : subtleTint) };
 }
 
 export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, scale = 1 }: GlyphProps) {
-  const { w, h } = sizeOf(axes.a3);
+  const { manifest } = useManifest();
+  const tokens = manifest.tokens;
+  const { w, h } = sizeOf(axes.a3, tokens);
   const W = w * scale;
   const H = h * scale;
-  const sw = STROKE_W[axes.a4];
+  const sw = strokeOf(axes.a4, tokens);
   const dashy = component.shape.includes("dash") || component.id.includes("subclass");
-  const dash = axes.a4 >= 2 && dashy ? "6 4" : undefined;
-  const { stroke, fill } = glyphColors(axes, hueIndex);
+  const dash = axes.a4 >= 2 && dashy ? dashOf("dashed", tokens) : undefined;
+  const { stroke, fill } = glyphColors(axes, hueIndex, tokens);
   const shape = resolveShape(component, axes.a1);
   const label = axes.a5 >= 1 ? (name ?? component.id.split(".").pop()) : undefined;
   const tag = axes.a5 >= 2 ? (typeTag ?? component.family) : undefined;
@@ -59,10 +77,15 @@ export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, sca
 
   if (shape === "arrow" || shape === "line-plain" || shape === "arrow-bidir") {
     const len = W + 40;
-    const edgeColor = axes.a2 > 0 ? stroke : INK;
+     const edgeColor = axes.a2 > 0 ? stroke : tokens.ink;
     const markerId = `m-${component.id.replace(/\W/g, "")}-${axes.a4}-${hueIndex}-${axes.a2}`;
     const markerStartId = `ms-${component.id.replace(/\W/g, "")}-${axes.a4}-${hueIndex}-${axes.a2}`;
-    const dashArr = axes.a4 >= 2 && dashy ? "6 4" : axes.a4 >= 3 ? "6 4" : undefined;
+    const dashArr =
+      axes.a4 >= 2 && dashy
+        ? dashOf("dashed", tokens)
+        : axes.a4 >= 3
+          ? dashOf("dashed", tokens)
+          : undefined;
     return (
       <svg width={len} height={40} viewBox={`0 0 ${len} 40`}>
         <defs>
@@ -94,7 +117,7 @@ export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, sca
   if (shape === "dot") {
     return (
       <svg width={W + 4} height={H + 4} viewBox={`-2 -2 ${W + 4} ${H + 4}`}>
-        <circle cx={W / 2} cy={H / 2} r={5 + axes.a3} fill={axes.a2 > 0 ? stroke : INK} />
+         <circle cx={W / 2} cy={H / 2} r={5 + axes.a3} fill={axes.a2 > 0 ? stroke : tokens.ink} />
       </svg>
     );
   }
@@ -127,7 +150,7 @@ export function Glyph({ component, axes, hueIndex = 0, name, typeTag, props, sca
         );
       })()}
       {label && (
-        <text x={cx} y={propLines.length ? 16 : tag ? cy - 2 : cy + 4} textAnchor="middle" fontSize={Math.max(10, 12 * scale)} fontWeight={600} fill={INK}>
+         <text x={cx} y={propLines.length ? 16 : tag ? cy - 2 : cy + 4} textAnchor="middle" fontSize={Math.max(10, 12 * scale)} fontWeight={600} fill={tokens.ink}>
           {label}
         </text>
       )}

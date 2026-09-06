@@ -12,11 +12,13 @@ import {
 } from "@workspace/api-zod";
 import {
   buildPlan,
+  classifyVisualLanguageFromManifest,
+  visualLanguageFamily,
   validatePlan,
   type DiagramPlan,
   type PlanRequest,
 } from "@workspace/wireframe-librarian";
-import { loadManifest } from "../lib/manifest";
+import { loadManifest, loadSourceCatalog } from "../lib/manifest";
 import { extractWithLLM, isLLMConfigured, refineWithLLM } from "../lib/llmExtract";
 import {
   appendPromotedComposition,
@@ -38,6 +40,30 @@ function isSameWorkspaceOrigin(origin: string | undefined, host: string | undefi
 
 router.get("/librarian/manifest", (_req, res) => {
   res.json(loadManifest());
+});
+
+router.get("/librarian/catalog", (_req, res) => {
+  // The runtime manifest carries this summary too, but catalog clients should
+  // never need to download the complete source-node inventory to render it.
+  res.json(loadManifest().sourceCatalog ?? null);
+});
+
+router.get("/librarian/catalog/assets", (req, res) => {
+  const sourceId = typeof req.query.sourceId === "string" ? req.query.sourceId : "";
+  const offset = Math.max(0, Number.parseInt(String(req.query.offset ?? "0"), 10) || 0);
+  const limit = Math.min(200, Math.max(1, Number.parseInt(String(req.query.limit ?? "100"), 10) || 100));
+  if (!sourceId) {
+    res.status(400).json({ message: "sourceId is required." });
+    return;
+  }
+
+  const catalog = loadSourceCatalog();
+  if (!catalog.sources.some((source) => source.id === sourceId)) {
+    res.status(404).json({ message: `Unknown sourceId "${sourceId}".` });
+    return;
+  }
+  const assets = (catalog.assets ?? []).filter((asset) => asset.sourceId === sourceId);
+  res.json({ items: assets.slice(offset, offset + limit), total: assets.length, offset, limit });
 });
 
 router.get("/librarian/compositions", (req, res) => {
@@ -117,6 +143,8 @@ router.post("/librarian/plan", async (req, res) => {
 
   const reqData = parsed.data as PlanRequest;
   const manifest = loadManifest();
+  const selectedVisualLanguage =
+    reqData.visualLanguage ?? classifyVisualLanguageFromManifest(reqData.need, manifest);
 
   // Build the plan request, potentially enriched by LLM extraction.
   let planRequest: PlanRequest = reqData;
@@ -131,12 +159,16 @@ router.post("/librarian/plan", async (req, res) => {
       );
     } else {
       try {
-        const llmResult = await extractWithLLM(reqData.need, reqData.family);
+        const llmResult = await extractWithLLM(
+          reqData.need,
+          reqData.family ?? visualLanguageFamily(selectedVisualLanguage),
+        );
         if (llmResult) {
           planRequest = {
             ...reqData,
             // LLM supplies structure; deterministic engine owns axes/tiers.
-            family: reqData.family ?? llmResult.family,
+            family: reqData.family,
+            visualLanguage: selectedVisualLanguage,
             nodes: llmResult.nodes,
             edges: llmResult.edges,
             groups: reqData.groups ?? llmResult.groups,
@@ -183,7 +215,7 @@ router.post("/librarian/refine", async (req, res) => {
     return;
   }
 
-  const { refinement, currentPlan } = parsed.data;
+  const { refinement, currentPlan, family, view } = parsed.data;
 
   if (!isLLMConfigured()) {
     res.status(503).json({
@@ -218,7 +250,10 @@ router.post("/librarian/refine", async (req, res) => {
   try {
     const planRequest: PlanRequest = {
       need: currentPlan.need,
-      family: llmResult.family,
+      family: family ?? llmResult.family,
+      visualLanguage: currentPlan.visualLanguage,
+      compositionIds: currentPlan.compositionIds,
+      view,
       nodes: llmResult.nodes,
       edges: llmResult.edges,
       groups: llmResult.groups,

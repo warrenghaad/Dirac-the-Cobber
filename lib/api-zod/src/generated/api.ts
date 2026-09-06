@@ -23,11 +23,13 @@ export const GetLibraryManifestResponse = zod.record(zod.string(), zod.unknown()
 export const CreateDiagramPlanBody = zod.object({
   "need": zod.string().min(1).describe('Natural-language description, e.g. \"map who works where\"'),
   "family": zod.enum(['knowledge-graph', 'workflow']).optional(),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional().describe('Explicit visual-language override; omitted to infer from the need.'),
+  "compositionIds": zod.array(zod.string()).optional(),
   "nodes": zod.array(zod.object({
   "id": zod.string(),
   "label": zod.string(),
   "className": zod.string(),
-  "kind": zod.enum(['entity', 'class', 'literal', 'task', 'start', 'end', 'decision', 'parallel', 'data']).optional(),
+  "kind": zod.enum(['entity', 'class', 'literal', 'task', 'start', 'end', 'decision', 'parallel', 'data', 'actor', 'table', 'column', 'component', 'page', 'section', 'topic', 'process']).optional(),
   "focal": zod.boolean().optional(),
   "properties": zod.array(zod.string()).optional(),
   "parent": zod.string().optional()
@@ -37,7 +39,7 @@ export const CreateDiagramPlanBody = zod.object({
   "from": zod.string(),
   "to": zod.string(),
   "label": zod.string().optional(),
-  "kind": zod.enum(['relation', 'property', 'subclass', 'flow', 'conditional']).optional()
+  "kind": zod.enum(['relation', 'property', 'subclass', 'flow', 'conditional', 'association', 'foreign-key', 'contains', 'navigation', 'branch']).optional()
 })).optional(),
   "groups": zod.array(zod.object({
   "id": zod.string(),
@@ -72,6 +74,8 @@ export const CreateDiagramPlanResponse = zod.object({
   "need": zod.string(),
   "title": zod.string(),
   "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
   "axisMeanings": zod.record(zod.string(), zod.string()),
   "tier1Draft": zod.array(zod.object({
   "id": zod.string(),
@@ -93,6 +97,7 @@ export const CreateDiagramPlanResponse = zod.object({
   "content": zod.object({
   "label": zod.string().optional(),
   "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(createDiagramPlanResponsePlanPlacementsItemContentHueIndexMin).optional(),
   "from": zod.string().optional(),
@@ -143,6 +148,8 @@ export const ValidateDiagramPlanBody = zod.object({
   "need": zod.string(),
   "title": zod.string(),
   "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
   "axisMeanings": zod.record(zod.string(), zod.string()),
   "tier1Draft": zod.array(zod.object({
   "id": zod.string(),
@@ -164,6 +171,7 @@ export const ValidateDiagramPlanBody = zod.object({
   "content": zod.object({
   "label": zod.string().optional(),
   "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(validateDiagramPlanBodyPlacementsItemContentHueIndexMin).optional(),
   "from": zod.string().optional(),
@@ -222,6 +230,8 @@ export const PromoteDiagramPlanBody = zod.object({
   "need": zod.string(),
   "title": zod.string(),
   "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
   "axisMeanings": zod.record(zod.string(), zod.string()),
   "tier1Draft": zod.array(zod.object({
   "id": zod.string(),
@@ -243,6 +253,7 @@ export const PromoteDiagramPlanBody = zod.object({
   "content": zod.object({
   "label": zod.string().optional(),
   "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemContentHueIndexMin).optional(),
   "from": zod.string().optional(),
