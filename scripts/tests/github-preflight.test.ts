@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   preflightGithub,
   publishGithub,
+  runCli,
   type GitResult,
 } from "../src/github-preflight.ts";
 
@@ -67,6 +68,65 @@ test("publishes only after the read and dry-run write checks pass", () => {
     ["push", "--dry-run", "origin", "HEAD:refs/heads/main"],
     ["push", "origin", "HEAD:refs/heads/main"],
   ]);
+});
+
+test("reports a safe failure when the final push fails after preflight passes", () => {
+  const fake = runner({
+    refs: "abc123\trefs/heads/main\n",
+    publishStatus: 128,
+    publishError:
+      "fatal: authentication failed for https://writer:secret@github.com/acme/example.git?token=hidden#fragment",
+  });
+  const logs: string[] = [];
+  const errors: string[] = [];
+
+  const status = runCli(["--publish"], fake.git, {
+    log: (message) => logs.push(message),
+    error: (message) => errors.push(message),
+  });
+
+  assert.equal(status, 1);
+  assert.deepEqual(fake.calls.slice(-2), [
+    ["push", "--dry-run", "origin", "HEAD:refs/heads/main"],
+    ["push", "origin", "HEAD:refs/heads/main"],
+  ]);
+  assert.match(errors.join("\n"), /GitHub publish FAILED:/);
+  assert.doesNotMatch(
+    [...logs, ...errors].join("\n"),
+    /writer|secret|token=|hidden|fragment/,
+  );
+  assert.doesNotMatch(logs.join("\n"), /GitHub publish OK:/);
+});
+
+test("reports the final push failure in JSON without leaking credentials", () => {
+  const fake = runner({
+    publishStatus: 128,
+    publishError:
+      "fatal: authentication failed for https://writer:secret@github.com/acme/example.git?token=hidden#fragment",
+  });
+  const logs: string[] = [];
+
+  const status = runCli(["--publish", "--json"], fake.git, {
+    log: (message) => logs.push(message),
+    error: () => {
+      throw new Error("JSON publishing should not write to stderr");
+    },
+  });
+  const report = JSON.parse(logs.join("\n")) as {
+    ok: boolean;
+    preflight: { ok: boolean };
+    publish: { ok: boolean; detail: string };
+  };
+
+  assert.equal(status, 1);
+  assert.equal(report.ok, false);
+  assert.equal(report.preflight.ok, true);
+  assert.equal(report.publish.ok, false);
+  assert.match(report.publish.detail, /authentication failed/);
+  assert.doesNotMatch(
+    logs.join("\n"),
+    /writer|secret|token=|hidden|fragment/,
+  );
 });
 
 test("does not publish when the preflight reports an access failure", () => {

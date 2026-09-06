@@ -48,6 +48,11 @@ export type PublishResult = {
   push?: GitResult;
 };
 
+export type CliOutput = {
+  log: (message: string) => void;
+  error: (message: string) => void;
+};
+
 const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
@@ -432,15 +437,19 @@ function parseArgs(args: string[]): {
   return { remote, branch, json, publish };
 }
 
-function printReport(report: PreflightReport, publishing: boolean): void {
+function printReport(
+  report: PreflightReport,
+  publishing: boolean,
+  io: CliOutput,
+): void {
   if (report.ok) {
     const repositoryState = report.repositoryEmpty
       ? "empty repository"
       : "existing repository";
-    console.log(
+    io.log(
       `GitHub preflight OK: ${repositoryState}; read access and write access verified for "${report.remote}" on branch "${report.branch}".`,
     );
-    console.log(
+    io.log(
       publishing
         ? "Preflight passed; publishing the verified branch now."
         : "No remote history was changed (write check used git push --dry-run).",
@@ -448,49 +457,85 @@ function printReport(report: PreflightReport, publishing: boolean): void {
     return;
   }
 
-  console.error(`GitHub preflight FAILED: ${report.state}.`);
-  if (report.remote) console.error(`Remote: ${report.remote}`);
-  if (report.fetchUrl) console.error(`Fetch URL: ${report.fetchUrl}`);
-  if (report.pushUrl) console.error(`Push URL: ${report.pushUrl}`);
-  if (report.branch) console.error(`Branch: ${report.branch}`);
+  io.error(`GitHub preflight FAILED: ${report.state}.`);
+  if (report.remote) io.error(`Remote: ${report.remote}`);
+  if (report.fetchUrl) io.error(`Fetch URL: ${report.fetchUrl}`);
+  if (report.pushUrl) io.error(`Push URL: ${report.pushUrl}`);
+  if (report.branch) io.error(`Branch: ${report.branch}`);
   if (report.repositoryEmpty !== null) {
-    console.error(
+    io.error(
       `Repository state: ${report.repositoryEmpty ? "empty" : "contains refs"}.`,
     );
   }
-  if (report.action) console.error(`Action: ${report.action}`);
-  console.error("No remote history was changed.");
+  if (report.action) io.error(`Action: ${report.action}`);
+  io.error("No remote history was changed.");
 }
 
-export function main(): void {
-  const { remote, branch, json, publish } = parseArgs(process.argv.slice(2));
+export function runCli(
+  args: string[],
+  git: GitRunner = runGit,
+  io: CliOutput = console,
+): number {
+  const { remote, branch, json, publish } = parseArgs(args);
   const result = publish
-    ? publishGithub({ git: runGit, requestedRemote: remote, branch })
+    ? publishGithub({ git, requestedRemote: remote, branch })
     : {
         preflight: preflightGithub({
-          git: runGit,
+          git,
           requestedRemote: remote,
           branch,
         }),
       };
   const report = result.preflight;
   if (json) {
-    console.log(JSON.stringify(report, null, 2));
+    if (publish) {
+      const publishOk = report.ok && result.push?.status === 0;
+      io.log(
+        JSON.stringify(
+          {
+            ok: publishOk,
+            preflight: report,
+            publish: report.ok
+              ? {
+                  ok: publishOk,
+                  detail: publishOk
+                    ? undefined
+                    : safeDetail(
+                        output(
+                          result.push ?? {
+                            status: null,
+                            stdout: "",
+                            stderr: "",
+                          },
+                        ),
+                      ) || "git push failed.",
+                }
+              : { ok: false, skipped: true },
+          },
+          null,
+          2,
+        ),
+      );
+    } else {
+      io.log(JSON.stringify(report, null, 2));
+    }
   } else {
-    printReport(report, publish);
+    printReport(report, publish, io);
     if (publish && report.ok && result.push?.status === 0) {
-      console.log(
+      io.log(
         `GitHub publish OK: pushed HEAD to "${report.remote}" branch "${report.branch}".`,
       );
     } else if (publish && report.ok) {
-      console.error(
+      io.error(
         `GitHub publish FAILED: ${safeDetail(output(result.push ?? { status: null, stdout: "", stderr: "" })) || "git push failed."}`,
       );
     }
   }
-  if (!report.ok || (publish && result.push?.status !== 0)) {
-    process.exitCode = 1;
-  }
+  return !report.ok || (publish && result.push?.status !== 0) ? 1 : 0;
+}
+
+export function main(): void {
+  process.exitCode = runCli(process.argv.slice(2));
 }
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";
