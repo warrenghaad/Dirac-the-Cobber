@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "postinstall": "node scripts/hydrate-source-catalog.mjs",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "dev": "concurrently --names \"libs,wireframe,api,sandbox\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm run dev:libs\" \"pnpm --filter @workspace/wireframe-library run dev\" \"pnpm --filter @workspace/api-server run dev\" \"pnpm --filter @workspace/mockup-sandbox run dev\"",
     "dev:libs": "tsc --build --watch",
