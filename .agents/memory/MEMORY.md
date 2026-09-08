@@ -1,1 +1,2 @@
 - [Post-merge lockfile drift](post-merge-lockfile.md) — if post-merge setup fails with ERR_PNPM_OUTDATED_LOCKFILE, run `pnpm install --no-frozen-lockfile` then re-run setup.
+- [GitHub connector repository transfer](github-connector-git-transfer.md) — use Git Data API blobs/tree/commit when shell Git receives an invalid injected credential.
