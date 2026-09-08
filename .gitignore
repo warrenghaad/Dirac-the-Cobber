@@ -37,15 +37,6 @@ yarn-error.log
 testem.log
 /typings
 
-# Hydrated source-catalog mirrors. The lossless compressed canonical catalog is
-# tracked at docs/wireframe-library/source-catalog.json.gz.
-/docs/wireframe-library/source-catalog.json
-/artifacts/wireframe-library/src/lib/source-catalog.json
-
-# Imported source payloads are external library content, not application source.
-/attached_assets/**/*.fig
-/attached_assets/**/*.zip
-
 # System Files
 .DS_Store
 Thumbs.db

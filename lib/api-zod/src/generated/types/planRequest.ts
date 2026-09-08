@@ -7,7 +7,6 @@
  */
 import type { PlanRequestFamily } from './planRequestFamily';
 import type { PlanRequestView } from './planRequestView';
-import type { PlanRequestVisualLanguage } from './planRequestVisualLanguage';
 import type { StructuredEdge } from './structuredEdge';
 import type { StructuredGroup } from './structuredGroup';
 import type { StructuredNode } from './structuredNode';
@@ -19,9 +18,6 @@ export interface PlanRequest {
      */
   need: string;
   family?: PlanRequestFamily;
-  /** Explicit visual-language override; omitted to infer from the need. */
-  visualLanguage?: PlanRequestVisualLanguage;
-  compositionIds?: string[];
   nodes?: StructuredNode[];
   edges?: StructuredEdge[];
   groups?: StructuredGroup[];

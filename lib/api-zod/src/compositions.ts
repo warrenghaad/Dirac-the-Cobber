@@ -44,20 +44,6 @@ export const Composition = zod.object({
   label: zod.string().min(1),
   description: zod.string().optional(),
   family: CompositionFamily,
-  visualLanguages: zod
-    .array(
-      zod.enum([
-        "knowledge-graph",
-        "uml",
-        "database",
-        "mui-ui",
-        "flowchart",
-        "workflow",
-        "information-architecture",
-        "mind-map",
-      ]),
-    )
-    .optional(),
   slots: zod.array(CompositionSlot).min(1),
 });
 export type Composition = zod.infer<typeof Composition>;

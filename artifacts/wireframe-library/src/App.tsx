@@ -37,7 +37,7 @@ function Router() {
  * Children always render immediately using the bundled manifest as fallback,
  * so the loading state never blocks the UI.
  */
-export function ManifestGate({ children }: { children: React.ReactNode }) {
+function ManifestGate({ children }: { children: React.ReactNode }) {
   const { isError, refetch } = useManifest();
 
   return (

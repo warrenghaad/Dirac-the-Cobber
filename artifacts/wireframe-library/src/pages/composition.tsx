@@ -130,13 +130,7 @@ export default function CompositionPage() {
 
   // Resolve effective axes for each slot (for the slider UI)
   const viewport = { w: 640, h: 480 };
-  const records = layoutSlots(
-    composition,
-    viewport,
-    axesOverrides,
-    manifest.components,
-    manifest.tokens,
-  );
+  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
 
   const handleAxesChange = (slotIndex: number, newAxes: AxisCoords) => {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));

@@ -1,22 +1,25 @@
 /**
  * Self-contained SVG renderer for a DiagramPlan.
- * Uses design tokens from the live manifest context.
+ * Uses design tokens from lib/library.ts (same source as manifest.json).
  */
 import type { DiagramPlan, Placement } from "@/lib/diagram-types";
-import { dashOf, sizeOf, strokeOf, tint, type DesignTokens } from "@/lib/library";
-import { useManifest } from "@/lib/manifest-context";
+import { INK, PAPER, PALETTE, SIZE_WIDTHS, ASPECT, tint } from "@/lib/library";
 
 type Pt = { x: number; y: number; w: number; h: number };
+
+const STROKE_W = [1, 2, 2, 3, 4]; // a4 level → px
+const DASHED = "6 4";
 
 function isEdge(p: Placement) {
   return p.content.from !== undefined && p.content.to !== undefined;
 }
 
-function nodeSize(p: Placement, tokens: DesignTokens) {
-  return sizeOf(p.axes.a3, tokens);
+function nodeSize(p: Placement) {
+  const w = SIZE_WIDTHS[p.axes.a3] ?? SIZE_WIDTHS[2];
+  return { w, h: Math.round(w * ASPECT) };
 }
 
-function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
+function layout(plan: DiagramPlan): Map<string, Pt> {
   const pos = new Map<string, Pt>();
   const nodes = plan.placements.filter(
     (p) =>
@@ -25,10 +28,10 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
       !p.componentId.includes("lane"),
   );
 
-  if (plan.family === "workflow" || plan.visualLanguage === "flowchart") {
+  if (plan.family === "workflow") {
     let x = 60;
     for (const n of nodes) {
-      const { w, h } = nodeSize(n, tokens);
+      const { w, h } = nodeSize(n);
       pos.set(n.id, { x, y: 220 - h / 2, w, h });
       x += w + 90;
     }
@@ -39,20 +42,15 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
   const classes = nodes.filter((n) => n.componentId === "kg.class");
   const literals = nodes.filter((n) => n.componentId === "kg.literal");
   const entities = nodes.filter((n) => !classes.includes(n) && !literals.includes(n));
-  const roleOf = (placement: Placement) =>
-    placement.content.className ??
-    placement.content.typeTag ??
-    placement.content.role ??
-    "";
-  const roles = [...new Set(entities.map(roleOf))];
+  const roles = [...new Set(entities.map((n) => n.content.role ?? ""))];
   let x = 60;
   const roleSpan: Record<string, { min: number; max: number }> = {};
   for (const role of roles) {
     const span = { min: x, max: x };
     entities
-      .filter((e) => roleOf(e) === role)
+      .filter((e) => (e.content.role ?? "") === role)
       .forEach((n, i) => {
-        const { w, h } = nodeSize(n, tokens);
+        const { w, h } = nodeSize(n);
         pos.set(n.id, { x, y: (i % 2 === 0 ? 250 : 400) - h / 2, w, h });
         span.max = x + w;
         x += w + 70;
@@ -61,15 +59,15 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
     x += 50;
   }
   for (const c of classes) {
-    const { w, h } = nodeSize(c, tokens);
-    const span = roleSpan[roleOf(c)];
+    const { w, h } = nodeSize(c);
+    const span = roleSpan[c.content.role ?? ""];
     const cx = span ? (span.min + span.max) / 2 : x + w / 2;
     pos.set(c.id, { x: cx - w / 2, y: 50, w, h });
     if (!span) x += w + 70;
   }
   let lx = 120;
   for (const l of literals) {
-    const { w, h } = nodeSize(l, tokens);
+    const { w, h } = nodeSize(l);
     pos.set(l.id, { x: lx, y: 430, w, h });
     lx += w + 70;
   }
@@ -80,16 +78,14 @@ function center(pt: Pt) {
   return { cx: pt.x + pt.w / 2, cy: pt.y + pt.h / 2 };
 }
 
-function NodeShape({ p, pt, tokens }: { p: Placement; pt: Pt; tokens: DesignTokens }) {
+function NodeShape({ p, pt }: { p: Placement; pt: Pt }) {
   const hue =
-    p.content.hueIndex !== undefined ? tokens.palette[p.content.hueIndex] : undefined;
-  const stroke = hue ?? tokens.ink;
-  const subtleTint = tokens.tintSteps.at(-1) ?? 0;
-  const strongerTint = tokens.tintSteps.at(-2) ?? subtleTint;
+    p.content.hueIndex !== undefined ? PALETTE[p.content.hueIndex] : undefined;
+  const stroke = hue ?? INK;
   const fill = hue
-    ? tint(hue, p.content.focal ? strongerTint : subtleTint)
+    ? tint(hue, p.content.focal ? 0.25 : 0.15)
     : "white";
-  const sw = strokeOf(p.axes.a4, tokens);
+  const sw = STROKE_W[p.axes.a4] ?? 1;
   const { cx, cy } = center(pt);
   const common = { fill, stroke, strokeWidth: sw } as const;
   const shape = (() => {
@@ -154,7 +150,7 @@ function NodeShape({ p, pt, tokens }: { p: Placement; pt: Pt; tokens: DesignToke
           textAnchor="middle"
           fontSize={12.5}
           fontWeight={600}
-          fill={tokens.ink}
+          fill={INK}
           fontFamily="Inter, sans-serif"
         >
           {p.content.label}
@@ -193,11 +189,9 @@ function NodeShape({ p, pt, tokens }: { p: Placement; pt: Pt; tokens: DesignToke
 function EdgeShape({
   p,
   pos,
-  tokens,
 }: {
   p: Placement;
   pos: Map<string, Pt>;
-  tokens: DesignTokens;
 }) {
   const a = pos.get(p.content.from!);
   const b = pos.get(p.content.to!);
@@ -210,10 +204,10 @@ function EdgeShape({
   const x1 = ac.cx + (dx / len) * ar, y1 = ac.cy + (dy / len) * ar;
   const x2 = bc.cx - (dx / len) * br, y2 = bc.cy - (dy / len) * br;
   const hue =
-    p.content.hueIndex !== undefined ? tokens.palette[p.content.hueIndex] : tokens.ink;
+    p.content.hueIndex !== undefined ? PALETTE[p.content.hueIndex] : INK;
   const dashed =
     p.componentId === "kg.subclass-edge" || p.axes.a4 >= 2;
-  const sw = strokeOf(p.axes.a4, tokens);
+  const sw = STROKE_W[p.axes.a4] ?? 1;
   const t = 0.38;
   const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
   const mx = x1 + (x2 - x1) * t + nx * 10;
@@ -240,7 +234,7 @@ function EdgeShape({
         y2={y2}
         stroke={hue}
         strokeWidth={sw}
-        strokeDasharray={dashed ? dashOf("dashed", tokens) : undefined}
+        strokeDasharray={dashed ? DASHED : undefined}
         markerEnd={`url(#${markerId})`}
       />
       {p.axes.a5 >= 1 && p.content.label && (
@@ -251,7 +245,7 @@ function EdgeShape({
             width={p.content.label.length * 6.4 + 8}
             height={14}
             rx={4}
-            fill={tokens.paper}
+            fill={PAPER}
           />
           <text
             x={mx}
@@ -271,9 +265,7 @@ function EdgeShape({
 }
 
 export function DiagramRenderer({ plan }: { plan: DiagramPlan }) {
-  const { manifest } = useManifest();
-  const tokens = manifest.tokens;
-  const pos = layout(plan, tokens);
+  const pos = layout(plan);
   const pts = [...pos.values()];
   const width = Math.max(720, ...pts.map((p) => p.x + p.w + 80));
   const height = Math.max(360, ...pts.map((p) => p.y + p.h + 80));
@@ -283,13 +275,13 @@ export function DiagramRenderer({ plan }: { plan: DiagramPlan }) {
     <svg
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
-      style={{ background: tokens.paper, borderRadius: 12 }}
+      style={{ background: PAPER, borderRadius: 12 }}
     >
       {edges.map((e) => (
-        <EdgeShape key={e.id} p={e} pos={pos} tokens={tokens} />
+        <EdgeShape key={e.id} p={e} pos={pos} />
       ))}
       {nodes.map((n) => (
-        <NodeShape key={n.id} p={n} pt={pos.get(n.id)!} tokens={tokens} />
+        <NodeShape key={n.id} p={n} pt={pos.get(n.id)!} />
       ))}
     </svg>
   );

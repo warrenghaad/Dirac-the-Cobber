@@ -278,9 +278,6 @@ const COMPONENT_NODE_KIND: Record<string, StructuredNode["kind"]> = {
   "wf.decision": "decision",
   "wf.parallel": "parallel",
   "wf.data": "data",
-  "prim.node.generic": "component",
-  "prim.node.sharp": "page",
-  "prim.container.plain": "section",
 };
 
 /**
@@ -298,7 +295,6 @@ export async function refineWithLLM(
       content: {
         label?: string;
         role?: string;
-        className?: string;
         from?: string;
         to?: string;
         focal?: boolean;
@@ -439,7 +435,7 @@ Rules:
  * Reconstruct StructuredNode/StructuredEdge arrays from a DiagramPlan so the
  * LLM can see the current diagram in the same schema it was built from.
  */
-export function planToStructured(plan: {
+function planToStructured(plan: {
   family: string;
   placements: Array<{
     id: string;
@@ -447,7 +443,6 @@ export function planToStructured(plan: {
     content: {
       label?: string;
       role?: string;
-      className?: string;
       from?: string;
       to?: string;
       focal?: boolean;
@@ -459,8 +454,7 @@ export function planToStructured(plan: {
   const edges: StructuredEdge[] = [];
 
   for (const p of plan.placements) {
-    const edgeKind = structuredEdgeKind(p.content.role)
-      ?? COMPONENT_EDGE_KIND[p.componentId];
+    const edgeKind = COMPONENT_EDGE_KIND[p.componentId];
     if (edgeKind !== undefined) {
       edges.push({
         id: p.id,
@@ -487,13 +481,12 @@ export function planToStructured(plan: {
       continue;
     }
 
-    const nodeKind = structuredNodeKind(p.content.role)
-      ?? COMPONENT_NODE_KIND[p.componentId];
+    const nodeKind = COMPONENT_NODE_KIND[p.componentId];
     if (nodeKind !== undefined) {
       nodes.push({
         id: p.id,
         label: p.content.label ?? p.id,
-        className: p.content.className ?? p.content.role ?? p.id,
+        className: p.content.role ?? p.id,
         kind: nodeKind,
         focal: p.content.focal,
         properties: p.content.properties,
@@ -511,27 +504,4 @@ const COMPONENT_EDGE_KIND: Record<string, StructuredEdge["kind"]> = {
   "kg.subclass-edge": "subclass",
   "wf.flow-edge": "flow",
   "wf.cond-edge": "conditional",
-  "prim.edge.plain": "relation",
 };
-
-const STRUCTURED_NODE_KINDS = new Set<NonNullable<StructuredNode["kind"]>>([
-  "entity", "class", "literal", "task", "start", "end", "decision", "parallel",
-  "data", "actor", "table", "column", "component", "page", "section", "topic", "process",
-]);
-
-const STRUCTURED_EDGE_KINDS = new Set<NonNullable<StructuredEdge["kind"]>>([
-  "relation", "property", "subclass", "flow", "conditional", "association",
-  "foreign-key", "contains", "navigation", "branch",
-]);
-
-function structuredNodeKind(role?: string): StructuredNode["kind"] | undefined {
-  return role && STRUCTURED_NODE_KINDS.has(role as NonNullable<StructuredNode["kind"]>)
-    ? role as NonNullable<StructuredNode["kind"]>
-    : undefined;
-}
-
-function structuredEdgeKind(role?: string): StructuredEdge["kind"] | undefined {
-  return role && STRUCTURED_EDGE_KINDS.has(role as NonNullable<StructuredEdge["kind"]>)
-    ? role as NonNullable<StructuredEdge["kind"]>
-    : undefined;
-}

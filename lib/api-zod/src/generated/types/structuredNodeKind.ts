@@ -19,12 +19,4 @@ export const StructuredNodeKind = {
   decision: 'decision',
   parallel: 'parallel',
   data: 'data',
-  actor: 'actor',
-  table: 'table',
-  column: 'column',
-  component: 'component',
-  page: 'page',
-  section: 'section',
-  topic: 'topic',
-  process: 'process',
 } as const;
