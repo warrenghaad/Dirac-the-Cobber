@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tiered Wireframe Library Manifest",
+  "type": "object",
+  "required": ["name", "version", "tokens", "axes", "tiers", "librarianRules", "components"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "spec": { "type": "string" },
+    "tokens": {
+      "type": "object",
+      "required": ["ink", "palette", "sizeScale", "strokeScale"],
+      "properties": {
+        "ink": { "type": "string" },
+        "paper": { "type": "string" },
+        "accent": { "type": "string" },
+        "palette": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
+        "tintSteps": { "type": "array", "items": { "type": "number" } },
+        "sizeScale": {
+          "type": "object",
+          "properties": {
+            "widths": { "type": "array", "items": { "type": "number" }, "minItems": 5, "maxItems": 5 },
+            "aspect": { "type": "number" },
+            "ratio": { "type": "number" }
+          }
+        },
+        "strokeScale": { "type": "array", "items": { "type": "number" } },
+        "dashVocabulary": { "type": "object" }
+      }
+    },
+    "axes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "levels"],
+        "properties": {
+          "id": { "enum": ["a1", "a2", "a3", "a4", "a5"] },
+          "name": { "type": "string" },
+          "levels": { "type": "array", "items": { "type": "string" }, "minItems": 5, "maxItems": 5 }
+        }
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tier", "rule"],
+        "properties": {
+          "tier": { "type": "integer", "minimum": 1, "maximum": 4 },
+          "rule": { "type": "string" },
+          "profile": { "type": "object" }
+        }
+      }
+    },
+    "librarianRules": {
+      "type": "object",
+      "required": ["start", "axisPriority", "constraints"],
+      "properties": {
+        "start": { "type": "string" },
+        "axisPriority": { "type": "array", "items": { "type": "string" } },
+        "constraints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "family", "tier", "shape", "axes", "maxAxes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+\\.[a-z-]+(\\.[a-z-]+)?$" },
+          "family": { "type": "string" },
+          "tier": { "type": "integer", "minimum": 1, "maximum": 4 },
+          "shape": { "type": "string" },
+          "axes": { "$ref": "#/definitions/axisCoords" },
+          "maxAxes": { "$ref": "#/definitions/axisCoordsLoose" },
+          "figmaNodeId": { "type": ["string", "null"] },
+          "figmaFileKey": { "type": ["string", "null"] }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "axisCoords": {
+      "type": "object",
+      "required": ["a1", "a2", "a3", "a4", "a5"],
+      "additionalProperties": false,
+      "properties": {
+        "a1": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "a2": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "a3": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "a4": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "a5": { "type": "integer", "minimum": 0, "maximum": 4 }
+      }
+    },
+    "axisCoordsLoose": { "$ref": "#/definitions/axisCoords" }
+  }
+}

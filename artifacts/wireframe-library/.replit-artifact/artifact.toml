@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Tiered Wireframe Library"
+version = "1.0.0"
+id = "artifacts/wireframe-library"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22252
+
+[services.development]
+run = "pnpm --filter @workspace/wireframe-library run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wireframe-library", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/wireframe-library/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22252"
+BASE_PATH = "/"

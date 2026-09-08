@@ -1,0 +1,254 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: librarian
+    description: Tiered wireframe library librarian (need → diagram plan)
+paths:
+  /librarian/manifest:
+    get:
+      operationId: getLibraryManifest
+      tags: [librarian]
+      summary: Get the wireframe library manifest
+      responses:
+        "200":
+          description: The manifest (docs/wireframe-library/manifest.json)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryManifest"
+  /librarian/plan:
+    post:
+      operationId: createDiagramPlan
+      tags: [librarian]
+      summary: Turn a described need into a validated diagram plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanRequest"
+      responses:
+        "200":
+          description: Diagram plan plus validation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /librarian/validate:
+    post:
+      operationId: validateDiagramPlan
+      tags: [librarian]
+      summary: Validate an existing diagram plan against the library constraints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagramPlan"
+      responses:
+        "200":
+          description: Validation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationReport"
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ApiError:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    LibraryManifest:
+      type: object
+      description: Mirror of docs/wireframe-library/manifest.json
+      additionalProperties: true
+    AxisCoords:
+      type: object
+      required: [a1, a2, a3, a4, a5]
+      properties:
+        a1: { type: integer, minimum: 0, maximum: 4 }
+        a2: { type: integer, minimum: 0, maximum: 4 }
+        a3: { type: integer, minimum: 0, maximum: 4 }
+        a4: { type: integer, minimum: 0, maximum: 4 }
+        a5: { type: integer, minimum: 0, maximum: 4 }
+    PlacementContent:
+      type: object
+      properties:
+        label: { type: string }
+        typeTag: { type: string }
+        properties:
+          type: array
+          items: { type: string }
+        hueIndex: { type: integer, minimum: 0 }
+        from: { type: string }
+        to: { type: string }
+        parent: { type: string }
+        role: { type: string }
+        focal: { type: boolean }
+    Placement:
+      type: object
+      required: [id, componentId, axes, content]
+      properties:
+        id: { type: string }
+        componentId: { type: string }
+        axes:
+          $ref: "#/components/schemas/AxisCoords"
+        content:
+          $ref: "#/components/schemas/PlacementContent"
+    DraftPlacement:
+      type: object
+      required: [id, componentId]
+      properties:
+        id: { type: string }
+        componentId: { type: string }
+        from: { type: string }
+        to: { type: string }
+        label: { type: string }
+    DiagramPlan:
+      type: object
+      required: [need, title, family, axisMeanings, tier1Draft, placements, notes]
+      properties:
+        need: { type: string }
+        title: { type: string }
+        family:
+          type: string
+          enum: [knowledge-graph, workflow]
+        axisMeanings:
+          type: object
+          additionalProperties: { type: string }
+        tier1Draft:
+          type: array
+          items:
+            $ref: "#/components/schemas/DraftPlacement"
+        placements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Placement"
+        notes:
+          type: array
+          items: { type: string }
+    StructuredNode:
+      type: object
+      required: [id, label, className]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        className: { type: string }
+        kind:
+          type: string
+          enum: [entity, class, literal, task, start, end, decision, parallel, data]
+        focal: { type: boolean }
+        properties:
+          type: array
+          items: { type: string }
+        parent: { type: string }
+    StructuredEdge:
+      type: object
+      required: [from, to]
+      properties:
+        id: { type: string }
+        from: { type: string }
+        to: { type: string }
+        label: { type: string }
+        kind:
+          type: string
+          enum: [relation, property, subclass, flow, conditional]
+    StructuredGroup:
+      type: object
+      required: [id, label]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        kind:
+          type: string
+          enum: [group, lane]
+    PlanRequest:
+      type: object
+      required: [need]
+      properties:
+        need:
+          type: string
+          minLength: 1
+          description: Natural-language description, e.g. "map who works where"
+        family:
+          type: string
+          enum: [knowledge-graph, workflow]
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/StructuredNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/StructuredEdge"
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/StructuredGroup"
+        view:
+          type: string
+          enum: [overview, detail]
+    ValidationIssue:
+      type: object
+      required: [severity, rule, message]
+      properties:
+        severity:
+          type: string
+          enum: [error, warning]
+        rule: { type: string }
+        message: { type: string }
+        placementId: { type: string }
+    ValidationReport:
+      type: object
+      required: [valid, issues]
+      properties:
+        valid: { type: boolean }
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+    PlanResult:
+      type: object
+      required: [plan, validation]
+      properties:
+        plan:
+          $ref: "#/components/schemas/DiagramPlan"
+        validation:
+          $ref: "#/components/schemas/ValidationReport"
+

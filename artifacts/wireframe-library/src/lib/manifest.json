@@ -1,0 +1,1145 @@
+{
+  "$schema": "./manifest.schema.json",
+  "name": "tiered-wireframe-library",
+  "version": "0.1.0",
+  "spec": "./SPEC.md",
+  "tokens": {
+    "ink": "#1A1D23",
+    "paper": "#FBFAF7",
+    "accent": "#2563EB",
+    "palette": [
+      "#2563EB",
+      "#D97706",
+      "#059669",
+      "#7C3AED",
+      "#DC2626"
+    ],
+    "tintSteps": [
+      1,
+      0.75,
+      0.5,
+      0.3,
+      0.15
+    ],
+    "sizeScale": {
+      "widths": [
+        64,
+        80,
+        100,
+        125,
+        156
+      ],
+      "aspect": 0.62,
+      "ratio": 1.25
+    },
+    "strokeScale": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "dashVocabulary": {
+      "solid": [],
+      "dashed": [
+        6,
+        4
+      ],
+      "dotted": [
+        2,
+        3
+      ],
+      "double": "double"
+    }
+  },
+  "axes": [
+    {
+      "id": "a1",
+      "name": "shape-semantics",
+      "levels": [
+        "generic rounded-rect",
+        "role family (rect/ellipse)",
+        "category shapes",
+        "compound (badges, ports)",
+        "pictographic"
+      ]
+    },
+    {
+      "id": "a2",
+      "name": "color",
+      "levels": [
+        "mono ink",
+        "single accent",
+        "categorical palette ≤5 hues",
+        "palette + sub-class tints",
+        "full semantic incl. state"
+      ]
+    },
+    {
+      "id": "a3",
+      "name": "size",
+      "levels": [
+        "S0 64",
+        "S1 80",
+        "S2 100 (base)",
+        "S3 125",
+        "S4 156"
+      ]
+    },
+    {
+      "id": "a4",
+      "name": "stroke-line",
+      "levels": [
+        "W1 1px solid",
+        "W2 2px",
+        "W2 + dashed",
+        "W3 + full dash vocabulary",
+        "W4 + dash + double"
+      ]
+    },
+    {
+      "id": "a5",
+      "name": "label-density",
+      "levels": [
+        "none",
+        "name",
+        "name + type tag",
+        "name + type + key properties",
+        "full property table"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "tier": 1,
+      "rule": "locked equal-consequence profile",
+      "profile": {
+        "a1": [
+          0,
+          1
+        ],
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      }
+    },
+    {
+      "tier": 2,
+      "rule": "max axis level 2; default working tier"
+    },
+    {
+      "tier": 3,
+      "rule": "max axis level 3; up to three raised axes"
+    },
+    {
+      "tier": 4,
+      "rule": "max one Tier-4 hero component per view"
+    }
+  ],
+  "figmaSources": [
+    {
+      "fileKey": "dpWgseUU58TAk7wAVl55yt",
+      "url": "https://www.figma.com/file/dpWgseUU58TAk7wAVl55yt/MUI-Material-Design-Component-Figma-Library-For-React",
+      "kind": "design",
+      "label": "MUI Material Design Component Library (Community)",
+      "intakeStatus": "done — 8 component(s) matched",
+      "addedAt": "2026-08-04"
+    },
+    {
+      "fileKey": "fxyEtWUCgZrA2MsraKSjKe",
+      "url": "https://www.figma.com/design/fxyEtWUCgZrA2MsraKSjKe/Figma-Draw-Playground--Community-",
+      "kind": "design",
+      "label": "Figma Draw Playground (Community)",
+      "intakeStatus": "done — 0 component(s) matched",
+      "addedAt": "2026-07-27",
+      "scanResult": {
+        "componentNodes": 0,
+        "noteableNodeTypes": {
+          "ELLIPSE": 104,
+          "VECTOR": 131,
+          "FRAME": 183,
+          "RECTANGLE": 31
+        }
+      },
+      "scannedAt": "2026-07-27"
+    },
+    {
+      "fileKey": "jVY2CNS79i0bsdrVgC5Bfs",
+      "url": "https://www.figma.com/board/jVY2CNS79i0bsdrVgC5Bfs/mindmap--Community-",
+      "kind": "figjam",
+      "label": "Mindmap (Community FigJam)",
+      "intakeStatus": "done — 0 component(s) matched",
+      "addedAt": "2026-07-27",
+      "scanResult": {
+        "componentNodes": 0,
+        "noteableNodeTypes": {
+          "CONNECTOR": 84,
+          "SHAPE_WITH_TEXT": 2
+        }
+      },
+      "scannedAt": "2026-07-27"
+    },
+    {
+      "fileKey": "5JebW1QtNsfn9eQ9aPYPJD",
+      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect--Design-System--Component-Library-Community",
+      "kind": "design",
+      "label": "Dialect – Design System & Component Library (Community)",
+      "intakeStatus": "done — 0 component(s) matched",
+      "addedAt": "2026-08-19"
+    }
+  ],
+  "librarianRules": {
+    "start": "draft topology at Tier 1 only (equal consequence) for structure review",
+    "axisPriority": [
+      "a1:category",
+      "a2:class-membership",
+      "a3:importance-degree",
+      "a4:edge-kind",
+      "a5:information-need"
+    ],
+    "constraints": [
+      "one meaning per axis; no double-encoding except declared accessibility redundancy",
+      "never skip a level on an axis",
+      "max 5 distinct hues per view",
+      "max 2 size steps of spread per view",
+      "max one Tier-4 component per view"
+    ]
+  },
+  "components": [
+    {
+      "id": "prim.node.generic",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.sharp",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rectangle",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.round",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "ellipse",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": "86:47",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.node.pill",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "pill",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.diamond",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "diamond",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.hexagon",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "hexagon",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.parallelogram",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "parallelogram",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.node.cylinder",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "cylinder",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 4,
+        "a3": 4,
+        "a4": 4,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.edge.plain",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "line-arrow",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": "49:549",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.edge.undirected",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "line-plain",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.edge.bidirectional",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "arrow-bidir",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 0,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "prim.container.plain",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "rect-outline",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 2,
+        "a5": 2
+      },
+      "figmaNodeId": "523:3725",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "prim.anchor.point",
+      "family": "tier1",
+      "tier": 1,
+      "shape": "dot",
+      "axes": {
+        "a1": 0,
+        "a2": 0,
+        "a3": 2,
+        "a4": 0,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "figmaNodeId": "38:37",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "kg.entity",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.class",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "rectangle",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 2,
+        "a5": 2
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": "31:77",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "kg.literal",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "ellipse",
+      "axes": {
+        "a1": 1,
+        "a2": 0,
+        "a3": 1,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.property-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow-labeled",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 2,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.relation-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow",
+      "axes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 4,
+        "a3": 2,
+        "a4": 4,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.subclass-edge",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "arrow-dashed",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 2,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 3,
+        "a5": 1
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "kg.group",
+      "family": "knowledge-graph",
+      "tier": 2,
+      "shape": "container",
+      "axes": {
+        "a1": 1,
+        "a2": 1,
+        "a3": 2,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 2,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.start-end",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "pill",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 1,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 2,
+        "a5": 1
+      },
+      "figmaNodeId": "516:2333",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.task",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "rounded-rect",
+      "axes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 4,
+        "a4": 3,
+        "a5": 4
+      },
+      "figmaNodeId": "120:1439",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.decision",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "diamond",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 3,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.parallel",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "hexagon",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 3,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.data",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "parallelogram",
+      "axes": {
+        "a1": 2,
+        "a2": 1,
+        "a3": 1,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 2,
+        "a4": 2,
+        "a5": 3
+      },
+      "figmaNodeId": "525:3811",
+      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+    },
+    {
+      "id": "wf.flow-edge",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "arrow",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 0
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 4,
+        "a5": 1
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.cond-edge",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "arrow-guarded",
+      "axes": {
+        "a1": 2,
+        "a2": 0,
+        "a3": 2,
+        "a4": 1,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 2,
+        "a2": 2,
+        "a3": 2,
+        "a4": 3,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    },
+    {
+      "id": "wf.lane",
+      "family": "workflow",
+      "tier": 2,
+      "shape": "container-header",
+      "axes": {
+        "a1": 1,
+        "a2": 1,
+        "a3": 2,
+        "a4": 0,
+        "a5": 1
+      },
+      "maxAxes": {
+        "a1": 1,
+        "a2": 2,
+        "a3": 4,
+        "a4": 1,
+        "a5": 2
+      },
+      "figmaNodeId": null
+    }
+  ],
+  "compositions": [
+    {
+      "id": "mol.task-card",
+      "atomicLevel": "molecule",
+      "label": "Task Card",
+      "description": "A generic task node with an inline label and a status-badge anchor point.",
+      "family": "tier1",
+      "slots": [
+        {
+          "componentId": "prim.node.generic",
+          "role": "container",
+          "position": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "prim.node.generic",
+          "role": "label",
+          "position": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "axes": {
+            "a5": 1
+          }
+        },
+        {
+          "componentId": "prim.anchor.point",
+          "role": "status-badge",
+          "position": {
+            "x": 0.85,
+            "y": 0.15
+          }
+        }
+      ]
+    },
+    {
+      "id": "mol.kg-entity-labeled",
+      "atomicLevel": "molecule",
+      "label": "Labeled KG Entity",
+      "description": "A knowledge-graph entity linked to a literal value via a property edge.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.entity",
+          "role": "subject",
+          "position": {
+            "x": 0.15,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "edge",
+          "position": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "kg.literal",
+          "role": "literal",
+          "position": {
+            "x": 0.85,
+            "y": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "org.workflow-decision-branch",
+      "atomicLevel": "organism",
+      "label": "Workflow Decision Branch",
+      "description": "A decision diamond that fans out to two conditional task branches.",
+      "family": "workflow",
+      "slots": [
+        {
+          "componentId": "wf.decision",
+          "role": "decision",
+          "position": {
+            "x": 0.5,
+            "y": 0.2
+          }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-left",
+          "position": {
+            "x": 0.25,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-right",
+          "position": {
+            "x": 0.75,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task-left",
+          "position": {
+            "x": 0.2,
+            "y": 0.8
+          }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task-right",
+          "position": {
+            "x": 0.8,
+            "y": 0.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "org.kg-class-hierarchy",
+      "atomicLevel": "organism",
+      "label": "KG Class Hierarchy",
+      "description": "A parent class with two subclass edges leading to two entity nodes.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.class",
+          "role": "parent-class",
+          "position": {
+            "x": 0.5,
+            "y": 0.15
+          }
+        },
+        {
+          "componentId": "kg.subclass-edge",
+          "role": "subclass-left",
+          "position": {
+            "x": 0.3,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "kg.subclass-edge",
+          "role": "subclass-right",
+          "position": {
+            "x": 0.7,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-left",
+          "position": {
+            "x": 0.2,
+            "y": 0.85
+          }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-right",
+          "position": {
+            "x": 0.8,
+            "y": 0.85
+          }
+        }
+      ]
+    },
+    {
+      "id": "tpl.simple-workflow",
+      "atomicLevel": "template",
+      "label": "Simple Workflow",
+      "description": "Start → task → decision → two conditional branches → two end nodes.",
+      "family": "workflow",
+      "slots": [
+        {
+          "componentId": "wf.start-end",
+          "role": "start",
+          "position": {
+            "x": 0.5,
+            "y": 0.05
+          }
+        },
+        {
+          "componentId": "wf.flow-edge",
+          "role": "flow-1",
+          "position": {
+            "x": 0.5,
+            "y": 0.2
+          }
+        },
+        {
+          "componentId": "wf.task",
+          "role": "task",
+          "position": {
+            "x": 0.5,
+            "y": 0.35
+          }
+        },
+        {
+          "componentId": "wf.flow-edge",
+          "role": "flow-2",
+          "position": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "wf.decision",
+          "role": "decision",
+          "position": {
+            "x": 0.5,
+            "y": 0.62
+          }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-yes",
+          "position": {
+            "x": 0.25,
+            "y": 0.75
+          }
+        },
+        {
+          "componentId": "wf.cond-edge",
+          "role": "branch-no",
+          "position": {
+            "x": 0.75,
+            "y": 0.75
+          }
+        },
+        {
+          "componentId": "wf.start-end",
+          "role": "end-yes",
+          "position": {
+            "x": 0.2,
+            "y": 0.92
+          }
+        },
+        {
+          "componentId": "wf.start-end",
+          "role": "end-no",
+          "position": {
+            "x": 0.8,
+            "y": 0.92
+          }
+        }
+      ]
+    },
+    {
+      "id": "tpl.knowledge-graph-overview",
+      "atomicLevel": "template",
+      "label": "Knowledge Graph Overview",
+      "description": "A grouped KG view: one class, three entities, property edges, and a surrounding group container.",
+      "family": "knowledge-graph",
+      "slots": [
+        {
+          "componentId": "kg.group",
+          "role": "group",
+          "position": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "componentId": "kg.class",
+          "role": "class",
+          "position": {
+            "x": 0.5,
+            "y": 0.15
+          }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-1",
+          "position": {
+            "x": 0.3,
+            "y": 0.38
+          }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-2",
+          "position": {
+            "x": 0.5,
+            "y": 0.45
+          }
+        },
+        {
+          "componentId": "kg.relation-edge",
+          "role": "relation-3",
+          "position": {
+            "x": 0.7,
+            "y": 0.38
+          }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-1",
+          "position": {
+            "x": 0.2,
+            "y": 0.65
+          }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-2",
+          "position": {
+            "x": 0.5,
+            "y": 0.72
+          }
+        },
+        {
+          "componentId": "kg.entity",
+          "role": "entity-3",
+          "position": {
+            "x": 0.8,
+            "y": 0.65
+          }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "property-1",
+          "position": {
+            "x": 0.35,
+            "y": 0.85
+          }
+        },
+        {
+          "componentId": "kg.property-edge",
+          "role": "property-2",
+          "position": {
+            "x": 0.65,
+            "y": 0.85
+          }
+        }
+      ]
+    }
+  ]
+}
