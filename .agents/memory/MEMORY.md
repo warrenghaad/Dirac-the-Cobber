@@ -1,2 +1,5 @@
 - [Post-merge lockfile drift](post-merge-lockfile.md) — if post-merge setup fails with ERR_PNPM_OUTDATED_LOCKFILE, run `pnpm install --no-frozen-lockfile` then re-run setup.
 - [GitHub connector repository transfer](github-connector-git-transfer.md) — use Git Data API blobs/tree/commit when shell Git receives an invalid injected credential.
+- [API codegen exports](api-codegen-exports.md) — Orval may append duplicate barrel exports; remove duplicates after regeneration before running typechecks.
+- [Nested pnpm arguments](nested-pnpm-arguments.md) — wrapper scripts may forward the `--` separator, so CLI parsers should ignore a standalone separator.
+- [Source catalog offline mirror](source-catalog-offline-mirror.md) — retain the complete baseline during API outages without bloating the initial bundle.

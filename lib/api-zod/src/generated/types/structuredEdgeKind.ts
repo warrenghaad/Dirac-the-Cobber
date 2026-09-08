@@ -15,4 +15,9 @@ export const StructuredEdgeKind = {
   subclass: 'subclass',
   flow: 'flow',
   conditional: 'conditional',
+  association: 'association',
+  'foreign-key': 'foreign-key',
+  contains: 'contains',
+  navigation: 'navigation',
+  branch: 'branch',
 } as const;

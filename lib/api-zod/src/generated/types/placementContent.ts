@@ -9,6 +9,7 @@
 export interface PlacementContent {
   label?: string;
   typeTag?: string;
+  className?: string;
   properties?: string[];
   /** @minimum 0 */
   hueIndex?: number;

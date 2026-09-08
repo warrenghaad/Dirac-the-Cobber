@@ -2,12 +2,14 @@ import { useRef } from "react";
 import { Glyph, glyphColors } from "@/components/Glyph";
 import {
   sizeOf,
+  dashOf,
   clampAxes,
   MANIFEST,
-  INK,
+  strokeOf,
   type AxisCoords,
   type Composition,
   type CompositionSlot,
+  type DesignTokens,
   type LibraryComponent,
 } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
@@ -50,7 +52,8 @@ export function layoutSlots(
   composition: Composition,
   viewport: { w: number; h: number },
   axesOverrides: AxesOverrideMap = {},
-  components: LibraryComponent[] = MANIFEST.components
+  components: LibraryComponent[] = MANIFEST.components,
+  tokens: DesignTokens = MANIFEST.tokens,
 ): LayoutRecord[] {
   return composition.slots.map((slot, index) => {
     const component = components.find((c) => c.id === slot.componentId) ?? null;
@@ -71,7 +74,7 @@ export function layoutSlots(
           ])
         ) as AxisCoords);
 
-    const { w, h } = sizeOf(axes.a3);
+    const { w, h } = sizeOf(axes.a3, tokens);
     return {
       slot,
       component,
@@ -108,19 +111,20 @@ type EdgeLineProps = {
   record: LayoutRecord;
   allRecords: LayoutRecord[];
   markerId: string;
+  tokens: DesignTokens;
 };
 
-function EdgeLine({ record, allRecords, markerId }: EdgeLineProps) {
+function EdgeLine({ record, allRecords, markerId, tokens }: EdgeLineProps) {
   const neighbours = edgeNeighbours(record.slot, allRecords);
   if (!neighbours) return null;
   const [src, tgt] = neighbours;
 
-  const { stroke } = glyphColors(record.axes, 0);
+  const { stroke } = glyphColors(record.axes, 0, tokens);
   const isDashed =
     record.slot.componentId.includes("subclass") ||
     record.slot.componentId.includes("dash") ||
     record.axes.a4 >= 2;
-  const sw = [1, 1.5, 2, 2.5, 3][record.axes.a4] ?? 1.5;
+  const sw = strokeOf(record.axes.a4, tokens);
 
   // Shorten the line so it doesn't overlap the node glyphs
   const dx = tgt.px - src.px;
@@ -162,7 +166,7 @@ function EdgeLine({ record, allRecords, markerId }: EdgeLineProps) {
         y2={y2}
         stroke={stroke}
         strokeWidth={sw}
-        strokeDasharray={isDashed ? "6 4" : undefined}
+        strokeDasharray={isDashed ? dashOf("dashed", tokens) : undefined}
         markerEnd={`url(#${markerId})`}
       />
       {showLabel && (
@@ -186,14 +190,15 @@ function EdgeLine({ record, allRecords, markerId }: EdgeLineProps) {
 type ContainerRectProps = {
   record: LayoutRecord;
   allRecords: LayoutRecord[];
+  tokens: DesignTokens;
 };
 
-function ContainerRect({ record, allRecords }: ContainerRectProps) {
+function ContainerRect({ record, allRecords, tokens }: ContainerRectProps) {
   const siblings = allRecords.filter(
     (r) => r.index !== record.index && !isEdge(r.slot)
   );
 
-  const { stroke, fill } = glyphColors(record.axes, 0);
+  const { stroke, fill } = glyphColors(record.axes, 0, tokens);
 
   if (siblings.length === 0) {
     // Fallback: just render a rect centered on position
@@ -207,8 +212,8 @@ function ContainerRect({ record, allRecords }: ContainerRectProps) {
         height={sh + pad * 2}
         fill="transparent"
         stroke={stroke}
-        strokeWidth={1}
-        strokeDasharray="4 4"
+        strokeWidth={strokeOf(record.axes.a4, tokens)}
+        strokeDasharray={dashOf("dashed", tokens)}
         rx={6}
       />
     );
@@ -224,7 +229,7 @@ function ContainerRect({ record, allRecords }: ContainerRectProps) {
     maxY = Math.max(maxY, r.py + r.sh / 2);
   }
 
-  const sw = [1, 1.5, 2, 2.5, 3][record.axes.a4] ?? 1;
+  const sw = strokeOf(record.axes.a4, tokens);
   const label = record.axes.a5 >= 1 ? record.slot.role : undefined;
 
   return (
@@ -245,7 +250,7 @@ function ContainerRect({ record, allRecords }: ContainerRectProps) {
           y={minY - pad + 13}
           fontSize={9}
           fontWeight={600}
-          fill={INK}
+          fill={tokens.ink}
         >
           {label}
         </text>
@@ -340,9 +345,16 @@ export function CompositionCanvas({
   const internalRef = useRef<SVGSVGElement>(null);
   const ref = (svgRef ?? internalRef) as React.RefObject<SVGSVGElement>;
   const { manifest } = useManifest();
+  const tokens = manifest.tokens;
 
   const viewport = { w: BASE_W, h: BASE_H };
-  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
+  const records = layoutSlots(
+    composition,
+    viewport,
+    axesOverrides,
+    manifest.components,
+    tokens,
+  );
 
   const containerRecords = records.filter((r) => isContainer(r.slot));
   const edgeRecords = records.filter((r) => isEdge(r.slot));
@@ -365,7 +377,7 @@ export function CompositionCanvas({
     >
       {/* 1. Container slots — lowest z-order */}
       {containerRecords.map((r) => (
-        <ContainerRect key={r.index} record={r} allRecords={records} />
+        <ContainerRect key={r.index} record={r} allRecords={records} tokens={tokens} />
       ))}
 
       {/* 2. Edge slots — middle z-order */}
@@ -375,6 +387,7 @@ export function CompositionCanvas({
           record={r}
           allRecords={records}
           markerId={`arrow-${composition.id.replace(/\W/g, "")}-${r.index}`}
+          tokens={tokens}
         />
       ))}
 
