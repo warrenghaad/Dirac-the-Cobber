@@ -7,6 +7,7 @@
  */
 import type { DiagramPlanAxisMeanings } from './diagramPlanAxisMeanings';
 import type { DiagramPlanFamily } from './diagramPlanFamily';
+import type { DiagramPlanVisualLanguage } from './diagramPlanVisualLanguage';
 import type { DraftPlacement } from './draftPlacement';
 import type { Placement } from './placement';
 
@@ -14,8 +15,11 @@ export interface DiagramPlan {
   need: string;
   title: string;
   family: DiagramPlanFamily;
+  visualLanguage?: DiagramPlanVisualLanguage;
+  compositionIds?: string[];
   axisMeanings: DiagramPlanAxisMeanings;
   tier1Draft: DraftPlacement[];
+  /** @minItems 1 */
   placements: Placement[];
   notes: string[];
 }

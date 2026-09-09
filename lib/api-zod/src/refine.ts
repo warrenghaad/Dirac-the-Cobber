@@ -9,6 +9,19 @@ import { CreateDiagramPlanResponse } from "./generated/api";
 const DiagramPlanForRefine = zod.object({
   need: zod.string(),
   family: zod.enum(["knowledge-graph", "workflow"]),
+  visualLanguage: zod
+    .enum([
+      "knowledge-graph",
+      "uml",
+      "database",
+      "mui-ui",
+      "flowchart",
+      "workflow",
+      "information-architecture",
+      "mind-map",
+    ])
+    .optional(),
+  compositionIds: zod.array(zod.string()).optional(),
   placements: zod.array(
     zod.object({
       id: zod.string(),
@@ -16,6 +29,7 @@ const DiagramPlanForRefine = zod.object({
       content: zod.object({
         label: zod.string().optional(),
         role: zod.string().optional(),
+        className: zod.string().optional(),
         from: zod.string().optional(),
         to: zod.string().optional(),
         focal: zod.boolean().optional(),
@@ -32,6 +46,8 @@ export const RefineDiagramPlanBody = zod.object({
     .min(1)
     .describe("Follow-up instruction, e.g. 'also show the returns flow'"),
   currentPlan: DiagramPlanForRefine,
+  family: zod.enum(["knowledge-graph", "workflow"]).optional(),
+  view: zod.enum(["overview", "detail"]).optional(),
 });
 
 export const RefineDiagramPlanResponse = CreateDiagramPlanResponse;

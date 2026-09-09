@@ -10,7 +10,7 @@
  *  3. Token mirror consistency with the React token sheet
  *     (artifacts/mockup-sandbox/src/components/mockups/wireframe-library/_shared/tokens.tsx)
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Ajv from "ajv";
@@ -18,6 +18,8 @@ import Ajv from "ajv";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(root, "docs/wireframe-library/manifest.json");
 const schemaPath = path.join(root, "docs/wireframe-library/manifest.schema.json");
+const catalogPath = path.join(root, "docs/wireframe-library/source-catalog.json");
+const artifactCatalogPath = path.join(root, "artifacts/wireframe-library/src/lib/source-catalog.json");
 const tokensPath = path.join(
   root,
   "artifacts/mockup-sandbox/src/components/mockups/wireframe-library/_shared/tokens.tsx",
@@ -47,9 +49,180 @@ interface Component {
   tier: number;
   axes: Record<AxisId, number>;
   maxAxes: Record<AxisId, number>;
+  figmaNodeId: string | null;
+  fileKey?: string | null;
 }
 
 const components: Component[] = manifest.components ?? [];
+const sourceKeys = new Set((manifest.figmaSources ?? []).map((source: { fileKey: string }) => source.fileKey));
+
+for (const c of components) {
+  const hasNode = c.figmaNodeId !== null && c.figmaNodeId !== undefined;
+  const hasFile = c.fileKey !== null && c.fileKey !== undefined;
+  if (hasNode !== hasFile) {
+    fail(`figma-reference: ${c.id} must provide figmaNodeId and fileKey together`);
+  } else if (hasFile && !sourceKeys.has(c.fileKey as string)) {
+    fail(`figma-reference: ${c.id} references unknown figmaSources fileKey ${c.fileKey}`);
+  }
+}
+
+// ---------- 2b. Source catalog integrity ----------
+// The baseline is intentionally broader than renderer-ready components. These
+// checks make gaps, permissions, and local-token provenance explicit rather
+// than allowing the intake path to omit unfamiliar source material.
+const runtimeCatalog = manifest.sourceCatalog;
+const catalog = existsSync(catalogPath) ? JSON.parse(readFileSync(catalogPath, "utf8")) : undefined;
+if (catalog) {
+  const sourceIds = new Set<string>();
+  const assetIds = new Set<string>();
+  const templateIds = new Set<string>();
+  const catalogSources = new Map<string, any>();
+  const catalogAssets = new Map<string, any>();
+  const derivedCoverageBySource = new Map<string, { approved: number; unmatched: number; excluded: number; blocked: number }>();
+  const inspectableCoverage = (coverage: any) =>
+    coverage.approved + coverage.unmatched + coverage.excluded;
+
+  for (const source of catalog.sources ?? []) {
+    if (sourceIds.has(source.id)) fail(`source-catalog: duplicate source id ${source.id}`);
+    sourceIds.add(source.id);
+    catalogSources.set(source.id, source);
+
+    if (inspectableCoverage(source.coverage) !== source.coverage.total) {
+      fail(`source-catalog: ${source.id} coverage total must equal approved + unmatched + excluded`);
+    }
+    if ((source.status === "inaccessible" || source.status === "pending-registration") && !source.accessNote) {
+      fail(`source-catalog: ${source.id} must explain why it cannot be inspected`);
+    }
+    if (source.status === "local-only" && !source.provenance?.localPath) {
+      fail(`source-catalog: local-only source ${source.id} must preserve a localPath`);
+    }
+  }
+
+  for (const asset of catalog.assets ?? []) {
+    if (assetIds.has(asset.id)) fail(`source-catalog: duplicate asset id ${asset.id}`);
+    assetIds.add(asset.id);
+    catalogAssets.set(asset.id, asset);
+    if (!catalogSources.has(asset.sourceId)) {
+      fail(`source-catalog: asset ${asset.id} references unknown source ${asset.sourceId}`);
+    }
+    if (asset.provenance?.sourceId && asset.provenance.sourceId !== asset.sourceId) {
+      fail(`source-catalog: asset ${asset.id} provenance sourceId must match its sourceId`);
+    }
+    if (asset.assetType === "token-bundle" && asset.provenance?.localPath) {
+      const tokenPath = path.join(root, asset.provenance.localPath);
+      if (!existsSync(tokenPath)) fail(`source-catalog: token bundle ${asset.id} localPath does not exist: ${asset.provenance.localPath}`);
+    }
+    if (asset.mappingStatus === "blocked" && catalogSources.get(asset.sourceId)?.status !== "inaccessible") {
+      fail(`source-catalog: blocked asset ${asset.id} must belong to an inaccessible source`);
+    }
+    const derived = derivedCoverageBySource.get(asset.sourceId) ?? { approved: 0, unmatched: 0, excluded: 0, blocked: 0 };
+    if (asset.mappingStatus in derived) derived[asset.mappingStatus as keyof typeof derived] += 1;
+    derivedCoverageBySource.set(asset.sourceId, derived);
+  }
+
+  for (const source of catalog.sources ?? []) {
+    const derived = derivedCoverageBySource.get(source.id) ?? { approved: 0, unmatched: 0, excluded: 0, blocked: 0 };
+    if (
+      derived.approved !== source.coverage.approved ||
+      derived.unmatched !== source.coverage.unmatched ||
+      derived.excluded !== source.coverage.excluded
+    ) {
+      fail(
+        `source-catalog: ${source.id} coverage is not backed by its catalog assets ` +
+          `(expected ${derived.approved}/${derived.unmatched}/${derived.excluded}, got ${source.coverage.approved}/${source.coverage.unmatched}/${source.coverage.excluded})`,
+      );
+    }
+    if (derived.blocked > source.coverage.blocked) {
+      fail(`source-catalog: ${source.id} has more blocked assets than its declared access blockers`);
+    }
+  }
+
+  for (const candidate of catalog.templateCandidates ?? []) {
+    if (templateIds.has(candidate.id)) fail(`source-catalog: duplicate template candidate id ${candidate.id}`);
+    templateIds.add(candidate.id);
+    if (!catalogSources.has(candidate.sourceId)) {
+      fail(`source-catalog: template candidate ${candidate.id} references unknown source ${candidate.sourceId}`);
+    }
+  }
+
+  for (const mapping of catalog.mappings ?? []) {
+    if (!catalogAssets.has(mapping.assetId)) {
+      fail(`source-catalog: mapping references unknown asset ${mapping.assetId}`);
+    }
+    if (mapping.status === "approved" && mapping.targetType === "component" && !components.some((component) => component.id === mapping.targetId)) {
+      fail(`source-catalog: approved component mapping ${mapping.assetId} references unknown component ${mapping.targetId}`);
+    }
+  }
+
+  if (inspectableCoverage(catalog.coverage) !== catalog.coverage.total) {
+    fail("source-catalog: overall coverage total must equal approved + unmatched + excluded");
+  }
+  const summedCoverage = (catalog.sources ?? []).reduce(
+    (sum: { total: number; approved: number; unmatched: number; excluded: number; blocked: number }, source: any) => ({
+      total: sum.total + source.coverage.total,
+      approved: sum.approved + source.coverage.approved,
+      unmatched: sum.unmatched + source.coverage.unmatched,
+      excluded: sum.excluded + source.coverage.excluded,
+      blocked: sum.blocked + source.coverage.blocked,
+    }),
+    { total: 0, approved: 0, unmatched: 0, excluded: 0, blocked: 0 },
+  );
+  for (const key of ["total", "approved", "unmatched", "excluded", "blocked"] as const) {
+    if (catalog.coverage[key] !== summedCoverage[key]) {
+      fail(`source-catalog: overall ${key}=${catalog.coverage[key]} does not match source coverage ${summedCoverage[key]}`);
+    }
+  }
+
+  const unmatchedIds = new Set<string>(catalog.intakeReport?.unmatchedAssetIds ?? []);
+  const excludedIds = new Set<string>(catalog.intakeReport?.excludedAssetIds ?? []);
+  const reportIds = new Set([...unmatchedIds, ...excludedIds]);
+  for (const reportId of reportIds) {
+    if (!assetIds.has(reportId) && !templateIds.has(reportId)) {
+      fail(`source-catalog: intake report references unknown asset or template ${reportId}`);
+    }
+  }
+  const expectedUnmatched = new Set([
+    ...(catalog.assets ?? []).filter((asset: any) => asset.mappingStatus === "unmatched").map((asset: any) => asset.id),
+    ...(catalog.templateCandidates ?? []).filter((candidate: any) => candidate.mappingStatus === "unmatched").map((candidate: any) => candidate.id),
+  ]);
+  const expectedExcluded = new Set([
+    ...(catalog.assets ?? []).filter((asset: any) => asset.mappingStatus === "excluded").map((asset: any) => asset.id),
+    ...(catalog.templateCandidates ?? []).filter((candidate: any) => candidate.mappingStatus === "excluded").map((candidate: any) => candidate.id),
+  ]);
+  if (expectedUnmatched.size !== unmatchedIds.size || [...expectedUnmatched].some((id) => !unmatchedIds.has(id))) {
+    fail("source-catalog: intake report must list every unmatched asset and template candidate");
+  }
+  if (expectedExcluded.size !== excludedIds.size || [...expectedExcluded].some((id) => !excludedIds.has(id))) {
+    fail("source-catalog: intake report must list every intentionally excluded asset and template candidate");
+  }
+} else {
+  fail("source-catalog: full source-catalog.json is missing");
+}
+
+if (!runtimeCatalog) {
+  fail("source-catalog: manifest has no source catalog summary");
+} else if (catalog) {
+  for (const key of ["catalogVersion", "capabilityClasses", "sources", "templateCandidates", "mappings", "coverage"] as const) {
+    if (JSON.stringify(runtimeCatalog[key]) !== JSON.stringify(catalog[key])) {
+      fail(`source-catalog: manifest summary ${key} differs from the canonical catalog`);
+    }
+  }
+  if (JSON.stringify(runtimeCatalog.intakeReport?.accessFailures ?? []) !== JSON.stringify(catalog.intakeReport?.accessFailures ?? [])) {
+    fail("source-catalog: manifest summary access failures differ from the canonical catalog");
+  }
+}
+
+// The browser fallback intentionally lazy-loads this mirror. Require it to be
+// byte-for-byte semantically equal to the canonical catalog so API downtime
+// cannot make approved sources disappear.
+if (!existsSync(artifactCatalogPath)) {
+  fail("source-catalog: artifact fallback catalog is missing");
+} else {
+  const artifactCatalog = JSON.parse(readFileSync(artifactCatalogPath, "utf8"));
+  if (JSON.stringify(artifactCatalog) !== JSON.stringify(catalog)) {
+    fail("source-catalog: artifact fallback catalog differs from the canonical manifest catalog");
+  }
+}
 
 for (const c of components) {
   // max(axes) <= tier: a tier-T component may not currently sit above level T on any axis
@@ -184,5 +357,5 @@ if (errors.length > 0) {
   process.exit(1);
 }
 console.log(
-  `manifest validation OK: schema valid, ${components.length} components pass tier/profile invariants, token mirror in sync.`,
+  `manifest validation OK: schema valid, ${components.length} components pass tier/profile invariants, source catalog verified, token mirror in sync.`,
 );

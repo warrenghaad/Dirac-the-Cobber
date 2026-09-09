@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Tiered Wireframe Library Manifest",
   "type": "object",
-  "required": ["name", "version", "tokens", "axes", "tiers", "librarianRules", "components"],
+  "required": ["name", "version", "tokens", "axes", "tiers", "visualLanguages", "componentFamilies", "figmaSources", "librarianRules", "components"],
   "properties": {
     "name": { "type": "string" },
     "version": { "type": "string" },
@@ -54,6 +54,87 @@
         }
       }
     },
+    "visualLanguages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/visualLanguage" }
+    },
+    "componentFamilies": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/componentFamily" }
+    },
+    "figmaSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fileKey", "url", "kind", "label", "intakeStatus", "addedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "fileKey": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["design", "figjam"] },
+          "nodeId": { "type": "string", "pattern": "^\\d+:\\d+$" },
+          "intakeMode": { "enum": ["semantic-primitives"] },
+          "label": { "type": "string", "minLength": 1 },
+          "intakeStatus": { "type": "string", "minLength": 1 },
+          "addedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "scannedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "scanResult": {
+            "type": "object",
+            "required": ["componentNodes", "noteableNodeTypes"],
+            "additionalProperties": false,
+            "properties": {
+              "componentNodes": { "type": "integer", "minimum": 0 },
+              "noteableNodeTypes": {
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sourceCatalog": {
+      "type": "object",
+      "required": ["catalogVersion", "capabilityClasses", "sources", "templateCandidates", "coverage"],
+      "additionalProperties": false,
+      "properties": {
+        "catalogVersion": { "type": "string", "minLength": 1 },
+        "capabilityClasses": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "enum": [
+              "graph-primitive",
+              "graph-template",
+              "data-surface",
+              "ui-building-block",
+              "reference-only"
+            ]
+          }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/sourceCatalogEntry" }
+        },
+        "assets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/sourceAsset" }
+        },
+        "templateCandidates": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/templateCandidate" }
+        },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/sourceMapping" }
+        },
+        "coverage": { "$ref": "#/definitions/sourceCoverage" },
+        "intakeReport": { "$ref": "#/definitions/intakeReport" }
+      }
+    },
     "librarianRules": {
       "type": "object",
       "required": ["start", "axisPriority", "constraints"],
@@ -67,7 +148,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "family", "tier", "shape", "axes", "maxAxes"],
+          "required": ["id", "family", "tier", "shape", "axes", "maxAxes", "figmaNodeId"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z]+\\.[a-z-]+(\\.[a-z-]+)?$" },
           "family": { "type": "string" },
@@ -76,9 +157,27 @@
           "axes": { "$ref": "#/definitions/axisCoords" },
           "maxAxes": { "$ref": "#/definitions/axisCoordsLoose" },
           "figmaNodeId": { "type": ["string", "null"] },
-          "figmaFileKey": { "type": ["string", "null"] }
+          "fileKey": { "type": ["string", "null"] },
+          "visualLanguages": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/visualLanguageId" }
+          },
+          "semanticRoles": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "sourceMetadata": { "$ref": "#/definitions/sourceMetadata" },
+          "capabilityTags": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "mappingStatus": { "enum": ["approved", "reference-fallback", "pending-review"] }
         }
       }
+    },
+    "compositions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/composition" }
     }
   },
   "definitions": {
@@ -94,6 +193,248 @@
         "a5": { "type": "integer", "minimum": 0, "maximum": 4 }
       }
     },
-    "axisCoordsLoose": { "$ref": "#/definitions/axisCoords" }
+    "axisCoordsLoose": { "$ref": "#/definitions/axisCoords" },
+    "visualLanguageId": {
+      "enum": ["knowledge-graph", "uml", "database", "mui-ui", "flowchart", "workflow", "information-architecture", "mind-map"]
+    },
+    "visualLanguage": {
+      "type": "object",
+      "required": ["id", "label", "description", "cues", "baseFamily", "semanticRoles", "componentFamilies"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/visualLanguageId" },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "cues": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "baseFamily": { "enum": ["knowledge-graph", "workflow"] },
+        "semanticRoles": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "componentFamilies": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+      }
+    },
+    "componentFamily": {
+      "type": "object",
+      "required": ["id", "label", "visualLanguages", "semanticRoles"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "visualLanguages": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/visualLanguageId" },
+          "minItems": 1
+        },
+        "semanticRoles": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "compositionSlot": {
+      "type": "object",
+      "required": ["componentId", "role", "position"],
+      "additionalProperties": false,
+      "properties": {
+        "componentId": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "position": {
+          "type": "object",
+          "required": ["x", "y"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "number", "minimum": 0, "maximum": 1 },
+            "y": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "a1": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "a2": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "a3": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "a4": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "a5": { "type": "integer", "minimum": 0, "maximum": 4 }
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "required": ["id", "atomicLevel", "label", "family", "slots"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$"
+        },
+        "atomicLevel": { "enum": ["molecule", "organism", "template"] },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "family": { "enum": ["tier1", "knowledge-graph", "workflow", "cross-family"] },
+        "visualLanguages": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/visualLanguageId" }
+        },
+        "sourceMetadata": { "$ref": "#/definitions/sourceMetadata" },
+        "capabilityTags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/compositionSlot" }
+        }
+      }
+    },
+    "sourceMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "fileKey": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 },
+        "localPath": { "type": "string", "minLength": 1 },
+        "nodeId": { "type": "string", "minLength": 1 },
+        "page": { "type": "string", "minLength": 1 },
+        "variant": { "type": "string", "minLength": 1 },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
+        },
+        "tokenMode": { "type": "string", "minLength": 1 },
+        "previewRef": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sourceCatalogEntry": {
+      "type": "object",
+      "required": ["id", "label", "kind", "status", "provenance", "capabilityClasses", "inventory", "coverage"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["figma-design", "figjam", "local-fig", "token-export", "reference"] },
+        "status": {
+          "enum": ["accessible", "local-only", "pending-registration", "inaccessible", "reference-only"]
+        },
+        "accessNote": { "type": "string" },
+        "provenance": { "$ref": "#/definitions/sourceMetadata" },
+        "capabilityClasses": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "graph-primitive",
+              "graph-template",
+              "data-surface",
+              "ui-building-block",
+              "reference-only"
+            ]
+          }
+        },
+        "visualLanguages": { "type": "array", "items": { "type": "string" } },
+        "tokenModes": { "type": "array", "items": { "type": "string" } },
+        "inventory": {
+          "type": "object",
+          "required": ["pages", "components", "componentSets", "variants", "tokenBundles"],
+          "additionalProperties": false,
+          "properties": {
+            "pages": { "type": "array", "items": { "type": "string" } },
+            "components": { "type": "integer", "minimum": 0 },
+            "componentSets": { "type": "integer", "minimum": 0 },
+            "variants": { "type": "integer", "minimum": 0 },
+            "tokenBundles": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "coverage": { "$ref": "#/definitions/sourceCoverage" }
+      }
+    },
+    "sourceAsset": {
+      "type": "object",
+      "required": ["id", "sourceId", "label", "assetType", "capabilityClasses", "provenance", "mappingStatus"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "assetType": {
+          "enum": ["page", "node", "component", "component-set", "variant", "template", "token-bundle", "token-mode", "reference"]
+        },
+        "capabilityClasses": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "graph-primitive",
+              "graph-template",
+              "data-surface",
+              "ui-building-block",
+              "reference-only"
+            ]
+          }
+        },
+        "capabilityTags": { "type": "array", "items": { "type": "string" } },
+        "provenance": { "$ref": "#/definitions/sourceMetadata" },
+        "mappingStatus": { "enum": ["approved", "unmatched", "excluded", "blocked", "reference-only"] },
+        "previewRef": { "type": "string" },
+        "tokenCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "templateCandidate": {
+      "type": "object",
+      "required": ["id", "label", "sourceId", "capabilityClasses", "mappingStatus", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "capabilityClasses": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["graph-template", "data-surface", "ui-building-block", "reference-only", "graph-primitive"] }
+        },
+        "capabilityTags": { "type": "array", "items": { "type": "string" } },
+        "mappingStatus": { "enum": ["approved", "unmatched", "excluded", "blocked", "reference-only"] },
+        "provenance": { "$ref": "#/definitions/sourceMetadata" }
+      }
+    },
+    "sourceMapping": {
+      "type": "object",
+      "required": ["assetId", "targetType", "targetId", "status", "rationale"],
+      "additionalProperties": false,
+      "properties": {
+        "assetId": { "type": "string", "minLength": 1 },
+        "targetType": { "enum": ["component", "composition", "token"] },
+        "targetId": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["approved", "reference-fallback", "pending-review"] },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sourceCoverage": {
+      "type": "object",
+      "required": ["total", "approved", "unmatched", "excluded", "blocked"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "approved": { "type": "integer", "minimum": 0 },
+        "unmatched": { "type": "integer", "minimum": 0 },
+        "excluded": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "intakeReport": {
+      "type": "object",
+      "required": ["generatedAt", "sourcesInspected", "accessFailures", "unmatchedAssetIds", "excludedAssetIds"],
+      "additionalProperties": false,
+      "properties": {
+        "generatedAt": { "type": "string", "minLength": 1 },
+        "sourcesInspected": { "type": "integer", "minimum": 0 },
+        "accessFailures": { "type": "array", "items": { "type": "string" } },
+        "unmatchedAssetIds": { "type": "array", "items": { "type": "string" } },
+        "excludedAssetIds": { "type": "array", "items": { "type": "string" } }
+      }
+    }
   }
 }
