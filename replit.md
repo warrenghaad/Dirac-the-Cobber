@@ -1,3 +1,5 @@
+> PRIORITY: Import components from UI kits, graph visualization libraries, IA patterns, database/schema diagrams, and component matrices. Extract visual logic from each. Build the manifest as a connected knowledge graph.
+
 # Project: Tiered Wireframe Library (design-logic hub)
 
 Hub-and-spoke system where LLM agents auto-design knowledge/property graphs and workflow diagrams.
