@@ -1,0 +1,29 @@
+flowchart TB
+  subgraph Devices["Working devices"]
+    Air["MacBook Air\nlocal corpus mirror"]
+    Mini["Mac mini\nalways-on hub"]
+  end
+
+  subgraph Authority["Authority by material"]
+    GitHub["GitHub\ncode + schemas + policy"]
+    Corpus["StudiOS corpus\ndocuments + media"]
+    Catalog["Catalog + relation graph\nmetadata + decisions"]
+  end
+
+  subgraph Safety["Independent recovery"]
+    TM["Time Machine\nper Mac"]
+    NAS["Future Synology NAS\nDrive + Btrfs snapshots"]
+    Offsite["Second backup target"]
+  end
+
+  Air <-->|"Git push / pull"| GitHub
+  Mini <-->|"Git push / pull"| GitHub
+  Air <-->|"Syncthing now\nSynology Drive later"| Corpus
+  Mini <-->|"Syncthing now\nSynology Drive later"| Corpus
+  Corpus -->|"scan + evidence"| Catalog
+  Catalog -->|"validated job plan"| Corpus
+  Air --> TM
+  Mini --> TM
+  Corpus --> NAS
+  NAS --> Offsite
+
