@@ -1,0 +1,97 @@
+version: 0.1.0
+policy_id: trivius.studios.filesystem
+status: proposed
+
+roots:
+  corpus:
+    mac_path: "~/StudiOS"
+    purpose: replicated documents and media
+    forbid_icloud: true
+  repositories:
+    mac_path: "~/Developer/Trivius"
+    purpose: independent Git clones
+    sync_transport: git
+  device_local:
+    mac_path: "~/StudiOS-Local"
+    purpose: caches, builds, derived indexes, and temporary data
+    sync_transport: none
+
+forbidden_paths:
+  - "~/Library/Mobile Documents/**"
+  - "~/Library/CloudStorage/iCloud Drive/**"
+  - "~/Desktop/**"
+  - "~/Documents/**"
+
+zones:
+  - id: inbox
+    path: "00_INBOX"
+    custody: append-first
+    automation: inventory_only
+  - id: canon
+    path: "10_CANON"
+    custody: human_approved
+    automation: propose_only
+  - id: project_materials
+    path: "20_PROJECT-MATERIALS"
+    custody: active
+    automation: propose_only
+  - id: research
+    path: "30_RESEARCH"
+    custody: active
+    automation: propose_only
+  - id: media
+    path: "40_MEDIA"
+    custody: master_and_derivative
+    automation: type_specific_analysis
+  - id: data
+    path: "50_DATA"
+    custody: machine_readable
+    automation: generated_exports_allowed
+  - id: automation
+    path: "60_AUTOMATION"
+    custody: policy_and_job_records
+    automation: append_logs
+  - id: archive
+    path: "70_ARCHIVE"
+    custody: read_mostly
+    automation: no_rewrite
+  - id: quarantine
+    path: "80_QUARANTINE"
+    custody: reversible_holding
+    automation: no_delete
+  - id: system_map
+    path: "99_SYSTEM-MAP"
+    custody: pointers_and_maps
+    automation: generated_exports_allowed
+
+relationships:
+  allowed:
+    - EXACT_DUPLICATE_OF
+    - NEAR_DUPLICATE_OF
+    - REVISION_OF
+    - DERIVED_FROM
+    - SUBJECT_OVERLAP
+    - BELONGS_TO_PROJECT
+    - EXPRESSES_CONCEPT
+    - OBSERVED_AT_PATH
+    - SUPERSEDES
+    - SYNC_CONFLICT_WITH
+  require_evidence:
+    - EXACT_DUPLICATE_OF
+    - NEAR_DUPLICATE_OF
+    - SUBJECT_OVERLAP
+    - SUPERSEDES
+
+guardrails:
+  destructive_actions_enabled: false
+  require_source_hash_before_move: true
+  require_destination_hash_after_copy: true
+  require_collision_policy: true
+  require_rollback_record: true
+  require_human_approval_for:
+    - canonical_selection
+    - move_out_of_inbox
+    - quarantine
+    - merge
+    - delete
+
