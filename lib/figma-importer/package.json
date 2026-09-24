@@ -1,0 +1,18 @@
+{
+  "name": "@workspace/figma-importer",
+  "version": "0.0.1",
+  "description": "Import Figma component libraries into the Librarian system",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@workspace/api-spec": "workspace:*",
+    "@workspace/wireframe-librarian": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}
