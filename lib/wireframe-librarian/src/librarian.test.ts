@@ -329,6 +329,86 @@ describe("buildPlan – structured workflow input", () => {
   });
 });
 
+describe("buildPlan – composition selection", () => {
+  const manifestWithCompositions: Manifest = {
+    ...MANIFEST,
+    compositions: [
+      {
+        id: "mol.workflow-task",
+        atomicLevel: "molecule",
+        label: "Workflow task",
+        family: "workflow",
+        slots: [
+          {
+            componentId: "wf.task",
+            role: "task",
+            position: { x: 0.5, y: 0.5 },
+          },
+        ],
+      },
+      {
+        id: "mol.kg-entity",
+        atomicLevel: "molecule",
+        label: "Knowledge graph entity",
+        family: "knowledge-graph",
+        slots: [
+          {
+            componentId: "kg.entity",
+            role: "entity",
+            position: { x: 0.5, y: 0.5 },
+          },
+        ],
+      },
+    ],
+  };
+
+  it("carries a compatible known composition onto the node placement", () => {
+    const plan = buildPlan(
+      {
+        need: "approval workflow",
+        family: "workflow",
+        nodes: [
+          {
+            id: "approve",
+            label: "Approve",
+            className: "task",
+            kind: "task",
+            compositionId: "mol.workflow-task",
+          },
+        ],
+      },
+      manifestWithCompositions,
+    );
+
+    expect(plan.placements.find((placement) => placement.id === "approve")?.content.compositionId)
+      .toBe("mol.workflow-task");
+  });
+
+  it("drops an unknown or incompatible composition and keeps the primitive component", () => {
+    const plan = buildPlan(
+      {
+        need: "approval workflow",
+        family: "workflow",
+        nodes: [
+          {
+            id: "approve",
+            label: "Approve",
+            className: "task",
+            kind: "task",
+            compositionId: "mol.kg-entity",
+          },
+        ],
+      },
+      manifestWithCompositions,
+    );
+    const placement = plan.placements.find((candidate) => candidate.id === "approve");
+
+    expect(placement?.componentId).toBe("wf.task");
+    expect(placement?.content.compositionId).toBeUndefined();
+    expect(plan.notes.some((note) => note.includes("incompatible family"))).toBe(true);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // buildPlan — edge case: >5 distinct classes (hue budget overflow)
 // ---------------------------------------------------------------------------

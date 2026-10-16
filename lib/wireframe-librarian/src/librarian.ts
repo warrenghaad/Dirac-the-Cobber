@@ -485,6 +485,9 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
   }
 
   const byId = new Map(manifest.components.map((c) => [c.id, c]));
+  const compositionsById = new Map(
+    (manifest.compositions ?? []).map((composition) => [composition.id, composition]),
+  );
   const component = (id: string): ManifestComponent => {
     const c = byId.get(id);
     if (!c) throw new Error(`Manifest has no component "${id}"`);
@@ -547,6 +550,24 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
     }
     const compId = nodeTable[kind] ?? fallbackNodeComponent;
     const comp = component(compId);
+    let compositionId: string | undefined;
+    if (n.compositionId) {
+      const composition = compositionsById.get(n.compositionId);
+      if (
+        composition &&
+        (composition.family === family ||
+          composition.family === "tier1" ||
+          composition.family === "cross-family")
+      ) {
+        compositionId = composition.id;
+      } else {
+        notes.push(
+          composition
+            ? `Node "${n.id}" requested composition "${n.compositionId}" from incompatible family "${composition.family}"; using "${compId}" instead.`
+            : `Node "${n.id}" requested unknown composition "${n.compositionId}"; using "${compId}" instead.`,
+        );
+      }
+    }
     if (!componentSupportsLanguage(comp, visualLanguage, manifest)) {
       notes.push(
         `Component "${comp.id}" is not declared for visual language "${visualLanguage}".`,
@@ -575,6 +596,7 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
         label: n.label,
         typeTag: axes.a5 >= 2 ? n.className : undefined,
         className: n.className,
+        compositionId,
         properties: axes.a5 >= 3 ? n.properties : undefined,
         hueIndex,
         parent: n.parent,

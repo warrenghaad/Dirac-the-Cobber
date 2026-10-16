@@ -3,9 +3,18 @@
  * Uses design tokens from the live manifest context.
  */
 import type { DiagramPlan, Placement } from "@workspace/api-client-react";
-import { dashOf, sizeOf, strokeOf, tint, type DesignTokens } from "@/lib/library";
-import { useManifest } from "@/lib/manifest-context";
 import type { RefObject } from "react";
+import {
+  dashOf,
+  sizeOf,
+  strokeOf,
+  type DesignTokens,
+  type Composition,
+  type LibraryComponent,
+} from "@/lib/library";
+import { CompositionCanvas } from "@/components/CompositionCanvas";
+import { Glyph } from "@/components/Glyph";
+import { useManifest } from "@/lib/manifest-context";
 
 type Pt = { x: number; y: number; w: number; h: number };
 
@@ -13,11 +22,18 @@ function isEdge(p: Placement) {
   return p.content.from !== undefined && p.content.to !== undefined;
 }
 
-function nodeSize(p: Placement, tokens: DesignTokens) {
+function nodeSize(p: Placement, hasComposition: boolean, tokens: DesignTokens) {
+  if (hasComposition) {
+    return { w: 240, h: 180 };
+  }
   return sizeOf(p.axes.a3, tokens);
 }
 
-function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
+function layout(
+  plan: DiagramPlan,
+  compositionsById: ReadonlyMap<string, Composition>,
+  tokens: DesignTokens,
+): Map<string, Pt> {
   const pos = new Map<string, Pt>();
   const nodes = plan.placements.filter(
     (p) =>
@@ -29,7 +45,11 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
   if (plan.family === "workflow" || plan.visualLanguage === "flowchart") {
     let x = 60;
     for (const n of nodes) {
-      const { w, h } = nodeSize(n, tokens);
+      const { w, h } = nodeSize(
+        n,
+        Boolean(n.content.compositionId && compositionsById.has(n.content.compositionId)),
+        tokens,
+      );
       pos.set(n.id, { x, y: 220 - h / 2, w, h });
       x += w + 90;
     }
@@ -41,10 +61,7 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
   const literals = nodes.filter((n) => n.componentId === "kg.literal");
   const entities = nodes.filter((n) => !classes.includes(n) && !literals.includes(n));
   const roleOf = (placement: Placement) =>
-    placement.content.className ??
-    placement.content.typeTag ??
-    placement.content.role ??
-    "";
+    placement.content.className ?? placement.content.typeTag ?? placement.content.role ?? "";
   const roles = [...new Set(entities.map(roleOf))];
   let x = 60;
   const roleSpan: Record<string, { min: number; max: number }> = {};
@@ -53,7 +70,11 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
     entities
       .filter((e) => roleOf(e) === role)
       .forEach((n, i) => {
-        const { w, h } = nodeSize(n, tokens);
+        const { w, h } = nodeSize(
+          n,
+          Boolean(n.content.compositionId && compositionsById.has(n.content.compositionId)),
+          tokens,
+        );
         pos.set(n.id, { x, y: (i % 2 === 0 ? 250 : 400) - h / 2, w, h });
         span.max = x + w;
         x += w + 70;
@@ -62,7 +83,11 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
     x += 50;
   }
   for (const c of classes) {
-    const { w, h } = nodeSize(c, tokens);
+    const { w, h } = nodeSize(
+      c,
+      Boolean(c.content.compositionId && compositionsById.has(c.content.compositionId)),
+      tokens,
+    );
     const span = roleSpan[roleOf(c)];
     const cx = span ? (span.min + span.max) / 2 : x + w / 2;
     pos.set(c.id, { x: cx - w / 2, y: 50, w, h });
@@ -70,7 +95,11 @@ function layout(plan: DiagramPlan, tokens: DesignTokens): Map<string, Pt> {
   }
   let lx = 120;
   for (const l of literals) {
-    const { w, h } = nodeSize(l, tokens);
+    const { w, h } = nodeSize(
+      l,
+      Boolean(l.content.compositionId && compositionsById.has(l.content.compositionId)),
+      tokens,
+    );
     pos.set(l.id, { x: lx, y: 430, w, h });
     lx += w + 70;
   }
@@ -81,112 +110,63 @@ function center(pt: Pt) {
   return { cx: pt.x + pt.w / 2, cy: pt.y + pt.h / 2 };
 }
 
-function NodeShape({ p, pt, tokens }: { p: Placement; pt: Pt; tokens: DesignTokens }) {
-  const hue =
-    p.content.hueIndex !== undefined ? tokens.palette[p.content.hueIndex] : undefined;
-  const stroke = hue ?? tokens.ink;
-  const subtleTint = tokens.tintSteps.at(-1) ?? 0;
-  const strongerTint = tokens.tintSteps.at(-2) ?? subtleTint;
-  const fill = hue
-    ? tint(hue, p.content.focal ? strongerTint : subtleTint)
-    : "white";
-  const sw = strokeOf(p.axes.a4, tokens);
-  const { cx, cy } = center(pt);
-  const common = { fill, stroke, strokeWidth: sw } as const;
-  const shape = (() => {
-    switch (p.componentId) {
-      case "kg.class":
-        return <rect x={pt.x} y={pt.y} width={pt.w} height={pt.h} {...common} />;
-      case "kg.literal":
-        return (
-          <ellipse cx={cx} cy={cy} rx={pt.w / 2} ry={pt.h / 2} {...common} />
-        );
-      case "wf.start-end":
-        return (
-          <rect
-            x={pt.x}
-            y={pt.y}
-            width={pt.w}
-            height={pt.h}
-            rx={pt.h / 2}
-            {...common}
+function NodeShape({
+  p,
+  pt,
+  component,
+  composition,
+  tokens,
+}: {
+  p: Placement;
+  pt: Pt;
+  component?: LibraryComponent;
+  composition?: Composition;
+  tokens: DesignTokens;
+}) {
+  const { cx } = center(pt);
+  if (composition) {
+    const scale = Math.min(pt.w / 640, pt.h / 480);
+    const hueMap = Object.fromEntries(
+      composition.slots.map((_, index) => [index, p.content.hueIndex ?? 0]),
+    );
+    return (
+      <g data-composition-id={composition.id}>
+        <g transform={`translate(${pt.x}, ${pt.y})`}>
+          <CompositionCanvas
+            composition={composition}
+            instanceId={p.id}
+            hueMap={hueMap}
+            scale={scale}
           />
-        );
-      case "wf.decision":
-        return (
-          <polygon
-            points={`${cx},${pt.y} ${pt.x + pt.w},${cy} ${cx},${pt.y + pt.h} ${pt.x},${cy}`}
-            {...common}
-          />
-        );
-      case "wf.parallel": {
-        const q = pt.w * 0.22;
-        return (
-          <polygon
-            points={`${pt.x + q},${pt.y} ${pt.x + pt.w - q},${pt.y} ${pt.x + pt.w},${cy} ${pt.x + pt.w - q},${pt.y + pt.h} ${pt.x + q},${pt.y + pt.h} ${pt.x},${cy}`}
-            {...common}
-          />
-        );
-      }
-      case "wf.data": {
-        const s = pt.w * 0.15;
-        return (
-          <polygon
-            points={`${pt.x + s},${pt.y} ${pt.x + pt.w},${pt.y} ${pt.x + pt.w - s},${pt.y + pt.h} ${pt.x},${pt.y + pt.h}`}
-            {...common}
-          />
-        );
-      }
-      default:
-        return (
-          <rect x={pt.x} y={pt.y} width={pt.w} height={pt.h} rx={10} {...common} />
-        );
-    }
-  })();
-
-  const showTag = p.axes.a5 >= 2 && p.content.typeTag;
-  return (
-    <g>
-      {shape}
-      {p.axes.a5 >= 1 && (
-        <text
-          x={cx}
-          y={showTag ? cy : cy + 4}
-          textAnchor="middle"
-          fontSize={12.5}
-          fontWeight={600}
-          fill={tokens.ink}
-          fontFamily="Inter, sans-serif"
-        >
-          {p.content.label}
-        </text>
-      )}
-      {showTag && (
-        <text
-          x={cx}
-          y={cy + 15}
-          textAnchor="middle"
-          fontSize={10}
-          fill="#6B7280"
-          fontFamily="Inter, sans-serif"
-        >
-          {p.content.typeTag}
-        </text>
-      )}
-      {p.axes.a5 >= 3 &&
-        (p.content.properties ?? []).map((prop, i) => (
+        </g>
+        {p.axes.a5 >= 1 && (
           <text
-            key={prop}
             x={cx}
-            y={pt.y + pt.h + 14 + i * 13}
+            y={pt.y + pt.h - 8}
             textAnchor="middle"
-            fontSize={9.5}
-            fill="#6B7280"
+            fontSize={12.5}
+            fontWeight={600}
+            fill={tokens.ink}
             fontFamily="Inter, sans-serif"
           >
-            {prop}
+            {p.content.label}
           </text>
-        ))}
+        )}
+      </g>
+    );
+  }
+
+  if (!component) return null;
+  return (
+    <g transform={`translate(${pt.x}, ${pt.y})`} data-component-id={component.id}>
+      <Glyph
+        component={component}
+        axes={p.axes}
+        hueIndex={p.content.hueIndex}
+        name={p.content.label}
+        typeTag={p.content.typeTag}
+        props={p.content.properties}
+      />
     </g>
   );
 }
@@ -298,7 +278,13 @@ export function DiagramRenderer({
 }) {
   const { manifest } = useManifest();
   const tokens = manifest.tokens;
-  const pos = layout(plan, tokens);
+  const componentsById = new Map(
+    manifest.components.map((component) => [component.id, component]),
+  );
+  const compositionsById = new Map(
+    manifest.compositions.map((composition) => [composition.id, composition]),
+  );
+  const pos = layout(plan, compositionsById, tokens);
   const pts = [...pos.values()];
   const width = Math.max(720, ...pts.map((p) => p.x + p.w + 80));
   const height = Math.max(360, ...pts.map((p) => p.y + p.h + 80));
@@ -316,7 +302,18 @@ export function DiagramRenderer({
         <EdgeShape key={e.id} p={e} pos={pos} tokens={tokens} />
       ))}
       {nodes.map((n) => (
-        <NodeShape key={n.id} p={n} pt={pos.get(n.id)!} tokens={tokens} />
+        <NodeShape
+          key={n.id}
+          p={n}
+          pt={pos.get(n.id)!}
+          component={componentsById.get(n.componentId)}
+          tokens={tokens}
+          composition={
+            n.content.compositionId
+              ? compositionsById.get(n.content.compositionId)
+              : undefined
+          }
+        />
       ))}
     </svg>
   );

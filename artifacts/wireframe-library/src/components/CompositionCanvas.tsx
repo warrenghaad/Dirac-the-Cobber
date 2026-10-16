@@ -352,6 +352,7 @@ export function downloadSVG(
 
 export type CompositionCanvasProps = {
   composition: Composition;
+  instanceId?: string;
   /** Per-slot axis overrides keyed by slot index */
   axesOverrides?: AxesOverrideMap;
   /** Per-slot hue index keyed by slot index */
@@ -368,6 +369,7 @@ const BASE_H = 480;
 
 export function CompositionCanvas({
   composition,
+  instanceId,
   axesOverrides = {},
   hueMap = {},
   scale = 1,
@@ -418,7 +420,7 @@ export function CompositionCanvas({
           key={r.index}
           record={r}
           allRecords={records}
-          markerId={`arrow-${composition.id.replace(/\W/g, "")}-${r.index}`}
+          markerId={`arrow-${composition.id.replace(/\W/g, "")}-${instanceId?.replace(/\W/g, "") ?? "default"}-${r.index}`}
           tokens={tokens}
         />
       ))}

@@ -30,6 +30,7 @@ const DiagramPlanForRefine = zod.object({
         label: zod.string().optional(),
         role: zod.string().optional(),
         className: zod.string().optional(),
+        compositionId: zod.string().optional(),
         from: zod.string().optional(),
         to: zod.string().optional(),
         focal: zod.boolean().optional(),

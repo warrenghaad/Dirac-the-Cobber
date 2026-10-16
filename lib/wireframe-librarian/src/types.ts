@@ -219,6 +219,8 @@ export interface PlacementContent {
   properties?: string[];
   /** Index into tokens.palette; encodes class membership (A2 meaning). */
   hueIndex?: number;
+  /** Known manifest composition to render in place of the primitive node. */
+  compositionId?: string;
   /** For edges: placement ids of endpoints. */
   from?: string;
   to?: string;
@@ -287,6 +289,8 @@ export interface StructuredNode {
   focal?: boolean;
   properties?: string[];
   parent?: string;
+  /** Optional known manifest composition selected for this node. */
+  compositionId?: string;
 }
 
 export interface StructuredEdge {

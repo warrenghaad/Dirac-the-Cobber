@@ -19,7 +19,6 @@ export const GetLibraryManifestResponse = zod.record(zod.string(), zod.unknown()
  */
 
 
-
 export const CreateDiagramPlanBody = zod.object({
   "need": zod.string().min(1).describe('Natural-language description, e.g. \"map who works where\"'),
   "family": zod.enum(['knowledge-graph', 'workflow']).optional(),
@@ -32,7 +31,8 @@ export const CreateDiagramPlanBody = zod.object({
   "kind": zod.enum(['entity', 'class', 'literal', 'task', 'start', 'end', 'decision', 'parallel', 'data', 'actor', 'table', 'column', 'component', 'page', 'section', 'topic', 'process']).optional(),
   "focal": zod.boolean().optional(),
   "properties": zod.array(zod.string()).optional(),
-  "parent": zod.string().optional()
+  "parent": zod.string().optional(),
+  "compositionId": zod.string().optional().describe('Known manifest composition to render for this node')
 })).optional(),
   "edges": zod.array(zod.object({
   "id": zod.string().optional(),
@@ -67,8 +67,6 @@ export const createDiagramPlanResponsePlanPlacementsItemAxesA5Max = 4;
 export const createDiagramPlanResponsePlanPlacementsItemContentHueIndexMin = 0;
 
 
-
-
 export const CreateDiagramPlanResponse = zod.object({
   "plan": zod.object({
   "need": zod.string(),
@@ -100,6 +98,7 @@ export const CreateDiagramPlanResponse = zod.object({
   "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(createDiagramPlanResponsePlanPlacementsItemContentHueIndexMin).optional(),
+  "compositionId": zod.string().optional().describe('Known manifest composition to render for this node'),
   "from": zod.string().optional(),
   "to": zod.string().optional(),
   "parent": zod.string().optional(),
@@ -142,8 +141,6 @@ export const validateDiagramPlanBodyPlacementsItemAxesA5Max = 4;
 export const validateDiagramPlanBodyPlacementsItemContentHueIndexMin = 0;
 
 
-
-
 export const ValidateDiagramPlanBody = zod.object({
   "need": zod.string(),
   "title": zod.string(),
@@ -174,6 +171,7 @@ export const ValidateDiagramPlanBody = zod.object({
   "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(validateDiagramPlanBodyPlacementsItemContentHueIndexMin).optional(),
+  "compositionId": zod.string().optional().describe('Known manifest composition to render for this node'),
   "from": zod.string().optional(),
   "to": zod.string().optional(),
   "parent": zod.string().optional(),
@@ -217,12 +215,9 @@ export const promoteDiagramPlanBodyPlanPlacementsItemAxesA5Max = 4;
 export const promoteDiagramPlanBodyPlanPlacementsItemContentHueIndexMin = 0;
 
 
-
-
 export const promoteDiagramPlanBodyIdRegExp = new RegExp('^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$');
 
 export const promoteDiagramPlanBodyDescriptionMax = 500;
-
 
 
 export const PromoteDiagramPlanBody = zod.object({
@@ -256,6 +251,7 @@ export const PromoteDiagramPlanBody = zod.object({
   "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemContentHueIndexMin).optional(),
+  "compositionId": zod.string().optional().describe('Known manifest composition to render for this node'),
   "from": zod.string().optional(),
   "to": zod.string().optional(),
   "parent": zod.string().optional(),
@@ -273,9 +269,7 @@ export const PromoteDiagramPlanBody = zod.object({
 })
 
 
-
 export const promoteDiagramPlanResponseCompositionIdRegExp = new RegExp('^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$');
-
 
 
 export const promoteDiagramPlanResponseCompositionSlotsItemPositionXMin = 0;
@@ -298,8 +292,6 @@ export const promoteDiagramPlanResponseCompositionSlotsItemAxesA4Max = 4;
 
 export const promoteDiagramPlanResponseCompositionSlotsItemAxesA5Min = 0;
 export const promoteDiagramPlanResponseCompositionSlotsItemAxesA5Max = 4;
-
-
 
 
 export const PromoteDiagramPlanResponse = zod.object({
@@ -335,5 +327,4 @@ export const PromoteDiagramPlanResponse = zod.object({
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
-
 

@@ -162,11 +162,11 @@ router.post("/librarian/plan", async (req, res) => {
         const llmResult = await extractWithLLM(
           reqData.need,
           reqData.family ?? visualLanguageFamily(selectedVisualLanguage),
+          manifest.compositions,
         );
         if (llmResult) {
           planRequest = {
             ...reqData,
-            // LLM supplies structure; deterministic engine owns axes/tiers.
             family: reqData.family,
             visualLanguage: selectedVisualLanguage,
             nodes: llmResult.nodes,
@@ -176,11 +176,6 @@ router.post("/librarian/plan", async (req, res) => {
           extraNotes.push(...llmResult.notes);
         }
       } catch (llmErr) {
-        // LLM is configured but failed — surface the error so the caller can
-        // show a user-facing message and offer a retry.  Do NOT silently fall
-        // back to deterministic: for free-form needs the keyword extractor
-        // produces a misleading diagram that the user has no way to identify
-        // as wrong unless they read the notes carefully.
         req.log.warn({ err: llmErr }, "LLM extraction failed");
         const detail = llmErr instanceof Error ? llmErr.message : String(llmErr);
         res.status(503).json({
@@ -229,7 +224,11 @@ router.post("/librarian/refine", async (req, res) => {
 
   let llmResult;
   try {
-    llmResult = await refineWithLLM(currentPlan, refinement);
+    llmResult = await refineWithLLM(
+      currentPlan,
+      refinement,
+      manifest.compositions,
+    );
     if (!llmResult) {
       res.status(503).json({
         message: "AI refinement is not available (LLM not configured).",

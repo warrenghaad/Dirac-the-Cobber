@@ -157,6 +157,9 @@ components:
           type: array
           items: { type: string }
         hueIndex: { type: integer, minimum: 0 }
+        compositionId:
+          type: string
+          description: Known manifest composition to render for this node
         from: { type: string }
         to: { type: string }
         parent: { type: string }
@@ -226,6 +229,9 @@ components:
           type: array
           items: { type: string }
         parent: { type: string }
+        compositionId:
+          type: string
+          description: Known manifest composition to render for this node
     StructuredEdge:
       type: object
       required: [from, to]
@@ -369,4 +375,3 @@ components:
       properties:
         composition:
           $ref: "#/components/schemas/PromotedComposition"
-
