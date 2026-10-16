@@ -5,6 +5,7 @@
 import type { DiagramPlan, Placement } from "@/lib/diagram-types";
 import { dashOf, sizeOf, strokeOf, tint, type DesignTokens } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
+import type { RefObject } from "react";
 
 type Pt = { x: number; y: number; w: number; h: number };
 
@@ -270,7 +271,31 @@ function EdgeShape({
   );
 }
 
-export function DiagramRenderer({ plan }: { plan: DiagramPlan }) {
+/** Serializes the rendered diagram and triggers a vector image download. */
+export function downloadSVG(
+  svgRef: RefObject<SVGSVGElement | null>,
+  filename = "diagram.svg",
+) {
+  const svg = svgRef.current;
+  if (!svg) return;
+
+  const svgString = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function DiagramRenderer({
+  plan,
+  svgRef,
+}: {
+  plan: DiagramPlan;
+  svgRef?: RefObject<SVGSVGElement | null>;
+}) {
   const { manifest } = useManifest();
   const tokens = manifest.tokens;
   const pos = layout(plan, tokens);
@@ -281,8 +306,10 @@ export function DiagramRenderer({ plan }: { plan: DiagramPlan }) {
   const nodes = plan.placements.filter((p) => !isEdge(p) && pos.has(p.id));
   return (
     <svg
+      ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
+      xmlns="http://www.w3.org/2000/svg"
       style={{ background: tokens.paper, borderRadius: 12 }}
     >
       {edges.map((e) => (

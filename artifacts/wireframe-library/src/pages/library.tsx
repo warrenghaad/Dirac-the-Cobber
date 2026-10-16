@@ -17,7 +17,8 @@ import {
   Copy, Download, ExternalLink, Loader2, Play, RotateCcw, Sparkles, ArrowRight,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DiagramRenderer } from "@/components/DiagramRenderer";
+import { DiagramRenderer, downloadSVG } from "@/components/DiagramRenderer";
+import { useToast } from "@/hooks/use-toast";
 import GraphWorkspace from "@/components/GraphWorkspace";
 import { graphDocumentFromPlan, type EditableGraphDocument } from "@/lib/graph-document";
 import type { DiagramPlan, DraftPlacement, PlanResult, ValidationReport } from "@/lib/diagram-types";
@@ -1030,8 +1031,11 @@ function DiagramGeneratorTab({
   const [refinement, setRefinement] = useState("");
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState<FetchError | null>(null);
+  const [copyingJson, setCopyingJson] = useState(false);
 
   const refinementInputRef = useRef<HTMLTextAreaElement>(null);
+  const diagramSvgRef = useRef<SVGSVGElement>(null);
+  const { toast } = useToast();
   const autoGenerationStartedRef = useRef(false);
 
   const mutation = useCreateDiagramPlan({
@@ -1125,6 +1129,34 @@ function DiagramGeneratorTab({
       setRefineError({ message: fe.message ?? String(e), llmError: fe.llmError === true });
     } finally {
       setRefining(false);
+    }
+  };
+
+  const handleDownloadSVG = () => {
+    downloadSVG(diagramSvgRef, "diagram.svg");
+  };
+
+  const handleCopyJSON = async () => {
+    if (!result || copyingJson) return;
+
+    setCopyingJson(true);
+    try {
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+      await navigator.clipboard.writeText(JSON.stringify(result.plan, null, 2));
+      toast({
+        title: "Diagram JSON copied",
+        description: "The diagram plan is ready to paste anywhere.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not copy diagram JSON",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCopyingJson(false);
     }
   };
 
@@ -1386,7 +1418,29 @@ function DiagramGeneratorTab({
                 <span className="text-xs text-muted-foreground">Final plan with axis encoding</span>
               </div>
               <div className="overflow-auto rounded-lg border border-border">
-                <DiagramRenderer plan={result.plan} />
+                <DiagramRenderer plan={result.plan} svgRef={diagramSvgRef} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadSVG}
+                  data-testid="button-download-diagram-svg"
+                  className="gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download SVG
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyJSON}
+                  disabled={copyingJson}
+                  data-testid="button-copy-diagram-json"
+                  className="gap-1.5"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  {copyingJson ? "Copying…" : "Copy JSON"}
+                </Button>
               </div>
             </Card>
           </div>
