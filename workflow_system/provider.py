@@ -11,18 +11,49 @@ class ProviderError(Exception):
 
 
 def configuration():
-    managed = bool(os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY"))
-    base = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL") if managed else os.environ.get("LLM_BASE_URL")
-    key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY") if managed else os.environ.get("OPENAI_API_KEY") or os.environ.get("XAI_API_KEY")
-    base = (base or ("https://api.x.ai/v1" if os.environ.get("XAI_API_KEY") else "https://api.openai.com/v1")).rstrip("/")
-    model = os.environ.get("LLM_MODEL", "gpt-4.1-mini" if "openai" in base else "grok-3-mini")
-    return {"base": base, "key": key, "model": model, "managed": managed}
+    managed_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    xai_key = os.environ.get("XAI_API_KEY")
+    managed = bool(managed_key)
+    error = None
+    if managed:
+        # Managed credentials must never fall back to a public provider endpoint.
+        base = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL", "").strip().rstrip("/")
+        key = managed_key
+        default_model = "gpt-4.1-mini"
+        if not base:
+            key = None
+            error = "Replit-managed model configuration is incomplete: its matching base URL is required."
+    elif openai_key and xai_key:
+        # Refuse ambiguity even with a custom URL: do not guess which credential
+        # the owner intended to send to that endpoint.
+        base, key = "", None
+        default_model = ""
+        error = "Both OpenAI and xAI credentials are configured. Keep only the intended provider credential."
+    else:
+        key = openai_key or xai_key
+        default_base = "https://api.x.ai/v1" if xai_key else "https://api.openai.com/v1"
+        default_model = "grok-3-mini" if xai_key else "gpt-4.1-mini"
+        base = (os.environ.get("LLM_BASE_URL") or default_base).strip().rstrip("/")
+        # A well-known provider's endpoint cannot receive another provider's key,
+        # including when LLM_BASE_URL was set explicitly.
+        hostname = urlparse(base).hostname
+        if (openai_key and hostname == "api.x.ai") or (xai_key and hostname == "api.openai.com"):
+            key = None
+            error = "The model endpoint does not match the configured provider credential."
+    parsed = urlparse(base)
+    if key and (parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password):
+        key = None
+        error = "Model base URL must be HTTPS and must not contain embedded credentials."
+        base = ""
+    model = os.environ.get("LLM_MODEL", default_model)
+    return {"base": base, "key": key, "model": model, "managed": managed, "error": error}
 
 
 def status():
     c = configuration()
     return dict(configured=bool(c["key"]), model=c["model"], baseUrl=c["base"],
-                provider="Replit AI" if c["managed"] else "OpenAI-compatible")
+                provider="Replit AI" if c["managed"] else "OpenAI-compatible", error=c.get("error"))
 
 
 SYSTEM = """You are one stage in a human-supervised engineering workflow.
@@ -69,6 +100,8 @@ class ModelProvider:
 
     def generate(self, stage, run, upstream):
         cfg = configuration()
+        if cfg.get("error"):
+            raise ProviderError(cfg["error"])
         if not cfg["key"]:
             raise ProviderError("Connect a model provider in Replit before running agents.")
         parsed = urlparse(cfg["base"])

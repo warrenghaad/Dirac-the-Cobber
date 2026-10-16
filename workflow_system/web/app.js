@@ -291,7 +291,7 @@ function renderSettings() {
   const light=node("span",`provider-light${provider.configured?" ready":""}`);
   const statusText=node("div");
   statusText.append(node("strong","",provider.configured?"Provider configured":"Provider not configured"));
-  statusText.append(node("p","",provider.configured?`${provider.provider||"Provider"} · ${provider.model||"Model configured"}`:"Connect a model provider in Replit before running agents."));
+  statusText.append(node("p","",provider.error || (provider.configured?`${provider.provider||"Provider"} · ${provider.model||"Model configured"}`:"Connect a model provider in Replit before running agents.")));
   status.append(light,statusText);card.append(status);
   const details=node("dl","settings-details");
   [["Provider",provider.provider||"Not connected"],["Model",provider.model||"—"],["Endpoint",provider.baseUrl||"Not available"],["Credentials","Never displayed"]].forEach(([label,value])=>{const wrap=node("div"),dt=node("dt","",label),dd=node("dd","",value);wrap.append(dt,dd);details.append(wrap);});

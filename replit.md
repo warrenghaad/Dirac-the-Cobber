@@ -45,6 +45,9 @@ Recognized server environment settings:
   and `LLM_MODEL`.
 Use Replit integrations/secrets to configure credentials, never chat or code.
 Image inputs require a vision-capable configured model.
+Dual OpenAI/xAI credentials are rejected rather than guessed; each default
+endpoint is selected with its matching credential. Managed credentials require
+their managed base URL and never fall back to the public OpenAI endpoint.
 
 ## Storage and publication boundary
 

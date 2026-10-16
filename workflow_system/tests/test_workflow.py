@@ -15,7 +15,7 @@ from PIL import Image
 from workflow_system import server
 from workflow_system.engine import Conflict, Engine, public_run
 from workflow_system.import_board import load_board, TASKS
-from workflow_system.provider import ModelProvider, ProviderError, validate_output
+from workflow_system.provider import ModelProvider, ProviderError, configuration, status, validate_output
 from workflow_system.store import Store
 
 
@@ -204,6 +204,48 @@ class WorkflowTests(unittest.TestCase):
         with patch("workflow_system.provider.configuration", return_value=dict(key=None, base="https://example.com/v1", model="test", managed=False)):
             with self.assertRaises(ProviderError):
                 ModelProvider().generate({}, {}, {})
+
+    def test_dual_provider_credentials_fail_closed_without_network(self):
+        for custom in ({}, {"LLM_BASE_URL": "https://example.com/v1"}):
+            with self.subTest(custom=bool(custom)), patch.dict("os.environ", {
+                "OPENAI_API_KEY": "test-openai-only",
+                "XAI_API_KEY": "test-xai-only", **custom,
+            }, clear=True), patch("urllib.request.urlopen") as outbound:
+                cfg = configuration()
+                self.assertIsNone(cfg["key"])
+                self.assertFalse(status()["configured"])
+                self.assertIn("Both OpenAI and xAI", status()["error"])
+                with self.assertRaisesRegex(ProviderError, "Both OpenAI and xAI"):
+                    ModelProvider().generate({}, {}, {})
+                outbound.assert_not_called()
+
+    def test_default_endpoint_tracks_selected_credential(self):
+        for env, endpoint, key in [
+            ({"OPENAI_API_KEY": "test-openai-only"}, "https://api.openai.com/v1", "test-openai-only"),
+            ({"XAI_API_KEY": "test-xai-only"}, "https://api.x.ai/v1", "test-xai-only"),
+            ({"AI_INTEGRATIONS_OPENAI_API_KEY": "test-managed-only",
+              "AI_INTEGRATIONS_OPENAI_BASE_URL": "https://managed.example/v1"},
+             "https://managed.example/v1", "test-managed-only"),
+        ]:
+            with self.subTest(endpoint=endpoint), patch.dict("os.environ", env, clear=True):
+                cfg = configuration()
+                self.assertEqual(cfg["base"], endpoint)
+                self.assertEqual(cfg["key"], key)
+                self.assertTrue(status()["configured"])
+                self.assertIsNone(cfg["error"])
+
+    def test_missing_managed_endpoint_and_mismatched_provider_are_blocked(self):
+        for env in [
+            {"AI_INTEGRATIONS_OPENAI_API_KEY": "test-managed-only"},
+            {"OPENAI_API_KEY": "test-openai-only", "LLM_BASE_URL": "https://api.x.ai/v1"},
+            {"XAI_API_KEY": "test-xai-only", "LLM_BASE_URL": "https://api.openai.com/v1"},
+        ]:
+            with self.subTest(keys=list(env)), patch.dict("os.environ", env, clear=True), patch("urllib.request.urlopen") as outbound:
+                self.assertIsNone(configuration()["key"])
+                self.assertFalse(status()["configured"])
+                with self.assertRaises(ProviderError):
+                    ModelProvider().generate({}, {}, {})
+                outbound.assert_not_called()
 
     def test_model_adapter_request_and_schema(self):
         cfg = dict(key="unit-test-only", base="https://example.com/v1", model="test-model", managed=False)
