@@ -21,7 +21,6 @@ import { DiagramRenderer, downloadSVG } from "@/components/DiagramRenderer";
 import { useToast } from "@/hooks/use-toast";
 import GraphWorkspace from "@/components/GraphWorkspace";
 import { graphDocumentFromPlan, type EditableGraphDocument } from "@/lib/graph-document";
-import type { DiagramPlan, DraftPlacement, PlanResult, ValidationReport } from "@/lib/diagram-types";
 import { decodeDiagramSnapshot, encodeDiagramSnapshot } from "@/lib/diagram-share";
 import {
   useCreateDiagramPlan,

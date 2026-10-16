@@ -2,7 +2,7 @@
  * Self-contained SVG renderer for a DiagramPlan.
  * Uses design tokens from the live manifest context.
  */
-import type { DiagramPlan, Placement } from "@/lib/diagram-types";
+import type { DiagramPlan, Placement } from "@workspace/api-client-react";
 import { dashOf, sizeOf, strokeOf, tint, type DesignTokens } from "@/lib/library";
 import { useManifest } from "@/lib/manifest-context";
 import type { RefObject } from "react";

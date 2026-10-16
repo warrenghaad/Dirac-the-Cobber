@@ -8,7 +8,7 @@ import {
   type LibraryComponent,
   type ManifestData,
 } from "@/lib/library";
-import type { DiagramPlan } from "@/lib/diagram-types";
+import type { DiagramPlan } from "@workspace/api-client-react";
 
 vi.mock("@/lib/manifest-context", () => ({
   useManifest: vi.fn(),

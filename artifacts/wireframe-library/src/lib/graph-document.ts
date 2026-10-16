@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { AxisCoords, Composition, LibraryComponent } from "@/lib/library";
-import type { DiagramPlan, Placement } from "@/lib/diagram-types";
+import type { DiagramPlan, Placement } from "@workspace/api-client-react";
 
 export const GRAPH_CANVAS = { width: 960, height: 600 } as const;
 export const DEFAULT_AXES: AxisCoords = { a1: 1, a2: 0, a3: 2, a4: 0, a5: 2 };
