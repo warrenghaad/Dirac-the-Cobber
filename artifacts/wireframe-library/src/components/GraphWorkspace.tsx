@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Glyph } from "@/components/Glyph";
+import { GraphImportPanel } from "@/components/GraphImportPanel";
 import { useManifest } from "@/lib/manifest-context";
 import {
   DEFAULT_AXES,
@@ -319,6 +320,25 @@ function GraphCanvas({
   );
 }
 
+function PropertyEditor({ id, values, onChange }: { id: string; values: string[]; onChange: (values: string[]) => void }) {
+  return (
+    <div className="w-44 space-y-1">
+      {values.map((value, index) => (
+        <div key={index} className="flex gap-1">
+          <input
+            aria-label={`Property ${index + 1} for ${id}`}
+            value={value}
+            onChange={(event) => onChange(values.map((item, i) => i === index ? event.target.value : item))}
+            className="min-w-0 flex-1 rounded border border-input bg-background px-2 py-1.5"
+          />
+          <button aria-label={`Remove property ${index + 1} for ${id}`} className="px-1 text-destructive" onClick={() => onChange(values.filter((_, i) => i !== index))}><Trash2 className="h-3 w-3" /></button>
+        </div>
+      ))}
+      <button className="text-[10px] text-primary hover:underline" aria-label={`Add property for ${id}`} onClick={() => onChange([...values, ""])}>Add property</button>
+    </div>
+  );
+}
+
 function NodeTable({
   document,
   components,
@@ -352,7 +372,7 @@ function NodeTable({
                 <td className="px-3 py-2"><button className="font-mono text-[10px] text-primary hover:underline" onClick={() => onSelect(node.id)}>{node.id}</button></td>
                 <td className="px-3 py-2"><input aria-label={`Label for ${node.id}`} value={node.label} onChange={(event) => onUpdate(node.id, { label: event.target.value })} className="w-28 rounded border border-input bg-background px-2 py-1.5" /></td>
                 <td className="px-3 py-2"><input aria-label={`Type for ${node.id}`} value={node.typeTag} onChange={(event) => onUpdate(node.id, { typeTag: event.target.value })} className="w-24 rounded border border-input bg-background px-2 py-1.5" /></td>
-                <td className="px-3 py-2"><input aria-label={`Properties for ${node.id}`} value={node.properties.join(", ")} onChange={(event) => onUpdate(node.id, { properties: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} className="w-36 rounded border border-input bg-background px-2 py-1.5" placeholder="status, owner" /></td>
+                <td className="px-3 py-2"><PropertyEditor id={node.id} values={node.properties} onChange={(properties) => onUpdate(node.id, { properties })} /></td>
                 <td className="px-3 py-2"><select aria-label={`Visual for ${node.id}`} value={node.componentId} onChange={(event) => onUpdate(node.id, { componentId: event.target.value })} className="w-36 rounded border border-input bg-background px-2 py-1.5"><option value={node.componentId}>{node.componentId}</option>{nodeComponents.filter((component) => component.id !== node.componentId).map((component) => <option key={component.id} value={component.id}>{component.id}</option>)}</select></td>
                 <td className="px-3 py-2"><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" aria-label={`Delete ${node.id}`} onClick={() => onDelete(node.id)}><Trash2 className="h-3.5 w-3.5" /></Button></td>
               </tr>
@@ -388,7 +408,7 @@ function EdgeTable({
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[650px] text-left text-xs">
-          <thead className="bg-muted/30 text-[10px] uppercase tracking-wide text-muted-foreground"><tr><th className="px-3 py-2">Relationship</th><th className="px-3 py-2">From</th><th className="px-3 py-2">To</th><th className="px-3 py-2">Label</th><th className="w-10 px-3 py-2" /></tr></thead>
+          <thead className="bg-muted/30 text-[10px] uppercase tracking-wide text-muted-foreground"><tr><th className="px-3 py-2">Relationship</th><th className="px-3 py-2">From</th><th className="px-3 py-2">To</th><th className="px-3 py-2">Label</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">Properties</th><th className="w-10 px-3 py-2" /></tr></thead>
           <tbody>
             {document.edges.map((edge) => (
               <tr key={edge.id} className={`border-t border-border align-top ${selectedId === edge.id ? "bg-primary/5" : ""}`} data-testid={`edge-row-${edge.id}`}>
@@ -396,10 +416,12 @@ function EdgeTable({
                 <td className="px-3 py-2"><select aria-label={`Source for ${edge.id}`} value={edge.source} onChange={(event) => onUpdate(edge.id, { source: event.target.value })} className="w-32 rounded border border-input bg-background px-2 py-1.5"><option value="">Choose source</option>{document.nodes.map((node) => <option key={node.id} value={node.id}>{node.label || node.id}</option>)}</select></td>
                 <td className="px-3 py-2"><select aria-label={`Target for ${edge.id}`} value={edge.target} onChange={(event) => onUpdate(edge.id, { target: event.target.value })} className="w-32 rounded border border-input bg-background px-2 py-1.5"><option value="">Choose target</option>{document.nodes.map((node) => <option key={node.id} value={node.id}>{node.label || node.id}</option>)}</select></td>
                 <td className="px-3 py-2"><input aria-label={`Label for ${edge.id}`} value={edge.label} onChange={(event) => onUpdate(edge.id, { label: event.target.value })} className="w-32 rounded border border-input bg-background px-2 py-1.5" placeholder="works at" /></td>
+                <td className="px-3 py-2"><input aria-label={`Type for ${edge.id}`} value={edge.typeTag ?? ""} onChange={(event) => onUpdate(edge.id, { typeTag: event.target.value })} className="w-24 rounded border border-input bg-background px-2 py-1.5" /></td>
+                <td className="px-3 py-2"><PropertyEditor id={edge.id} values={edge.properties ?? []} onChange={(properties) => onUpdate(edge.id, { properties })} /></td>
                 <td className="px-3 py-2"><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" aria-label={`Delete ${edge.id}`} onClick={() => onDelete(edge.id)}><Trash2 className="h-3.5 w-3.5" /></Button></td>
               </tr>
             ))}
-            {document.edges.length === 0 && <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">No relationships yet. Add one after creating two nodes.</td></tr>}
+            {document.edges.length === 0 && <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">No relationships yet. Add one after creating two nodes.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -623,7 +645,7 @@ export function GraphWorkspace({
   const addNode = () => {
     const component = firstComponent(manifest.components, document.family);
     let index = document.nodes.length + 1;
-    while (document.nodes.some((node) => node.id === `node-${index}`)) index += 1;
+    while ([...document.nodes, ...document.edges].some((item) => item.id === `node-${index}`)) index += 1;
     const node: GraphNode = {
       id: `node-${index}`,
       label: `New node ${index}`,
@@ -646,7 +668,7 @@ export function GraphWorkspace({
     const sourceId = from ?? document.nodes[0]?.id ?? "";
     const targetId = to ?? document.nodes.find((node) => node.id !== sourceId)?.id ?? "";
     let index = document.edges.length + 1;
-    while (document.edges.some((edge) => edge.id === `edge-${index}`)) index += 1;
+    while ([...document.nodes, ...document.edges].some((item) => item.id === `edge-${index}`)) index += 1;
     const edge: GraphEdge = {
       id: `edge-${index}`,
       source: sourceId,
@@ -757,6 +779,20 @@ export function GraphWorkspace({
           )}
         </div>
       </Card>
+
+      <GraphImportPanel
+        key={document.id}
+        family={document.family}
+        components={manifest.components}
+        onImport={(imported) => {
+          const next = { ...imported, id: `graph-import-${crypto.randomUUID()}`, updatedAt: new Date().toISOString() };
+          saveCollection({ ...collection, activeId: next.id, workspaces: [...collection.workspaces, next] });
+          setSelectedId(null);
+          setConnectingFrom(null);
+          setTemplateChoice("");
+          setStatus(`Imported ${next.nodes.length} nodes and ${next.edges.length} relationships into a new workspace.`);
+        }}
+      />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
         <div className="space-y-3">

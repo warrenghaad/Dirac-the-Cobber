@@ -36,6 +36,8 @@ export const GraphEdgeSchema = z.object({
   source: z.string(),
   target: z.string(),
   label: z.string(),
+  typeTag: z.string().optional(),
+  properties: z.array(z.string()).optional(),
   componentId: z.string().min(1),
   axes: AxisSchema,
   hueIndex: z.number().int().min(0).max(4).optional(),

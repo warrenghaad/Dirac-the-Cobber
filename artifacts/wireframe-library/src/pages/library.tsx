@@ -25,6 +25,10 @@ import { decodeDiagramSnapshot, encodeDiagramSnapshot } from "@/lib/diagram-shar
 import {
   useCreateDiagramPlan,
   usePromoteDiagramPlan,
+  type DiagramPlan,
+  type DraftPlacement,
+  type PlanResult,
+  type ValidationReport,
   type PromoteDiagramPlanRequest,
   type PromoteDiagramPlanResult,
 } from "@workspace/api-client-react";

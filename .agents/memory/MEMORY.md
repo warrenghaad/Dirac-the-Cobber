@@ -4,3 +4,4 @@
 - [Nested pnpm arguments](nested-pnpm-arguments.md) — wrapper scripts may forward the `--` separator, so CLI parsers should ignore a standalone separator.
 - [Source catalog offline mirror](source-catalog-offline-mirror.md) — retain the complete baseline during API outages without bloating the initial bundle.
 - [Editable persistence schemas](editable-persistence-schemas.md) — persisted drafts must accept every intermediate state the editor can create, not only final valid output.
+- [Non-destructive graph imports](graph-import-safety.md) — bulk data imports create a separate workspace by default; replacement or merging needs an explicit choice.
