@@ -34,8 +34,12 @@ export type LayoutRecord = {
   index: number;
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
+export type Bounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 const FALLBACK_AXES: AxisCoords = { a1: 1, a2: 0, a3: 2, a4: 0, a5: 0 };
 const FALLBACK_MAX: AxisCoords = { a1: 4, a2: 4, a3: 4, a4: 4, a5: 4 };
 
@@ -91,7 +95,7 @@ export function layoutSlots(
 // ─── Edge Rendering ───────────────────────────────────────────────────────────
 
 /** For an edge slot, find the 2 nearest non-edge neighbours (by unit-fraction distance). */
-function edgeNeighbours(
+export function edgeNeighbours(
   edgeSlot: CompositionSlot,
   allRecords: LayoutRecord[]
 ): [LayoutRecord, LayoutRecord] | null {
@@ -103,10 +107,50 @@ function edgeNeighbours(
   const dist = (r: LayoutRecord) =>
     Math.hypot(r.slot.position.x - edgeSlot.position.x, r.slot.position.y - edgeSlot.position.y);
 
-  const sorted = [...candidates].sort((a, b) => dist(a) - dist(b));
+  const sorted = [...candidates].sort((a, b) => {
+    const difference = dist(a) - dist(b);
+    // Unit-fraction positions can produce tiny floating-point differences
+    // for a true tie. Preserve manifest order so routes remain deterministic.
+    return Math.abs(difference) < 1e-9 ? a.index - b.index : difference;
+  });
   return [sorted[0], sorted[1]];
 }
 
+/** Calculate the SVG bounds for a container, including its padding. */
+export function containerBounds(
+  record: LayoutRecord,
+  allRecords: LayoutRecord[]
+): Bounds {
+  const siblings = allRecords.filter(
+    (r) => r.index !== record.index && !isEdge(r.slot)
+  );
+
+  if (siblings.length === 0) {
+    const pad = 12;
+    return {
+      x: record.px - record.sw / 2 - pad,
+      y: record.py - record.sh / 2 - pad,
+      width: record.sw + pad * 2,
+      height: record.sh + pad * 2,
+    };
+  }
+
+  const pad = 24;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const r of siblings) {
+    minX = Math.min(minX, r.px - r.sw / 2);
+    minY = Math.min(minY, r.py - r.sh / 2);
+    maxX = Math.max(maxX, r.px + r.sw / 2);
+    maxY = Math.max(maxY, r.py + r.sh / 2);
+  }
+
+  return {
+    x: minX - pad,
+    y: minY - pad,
+    width: maxX - minX + pad * 2,
+    height: maxY - minY + pad * 2,
+  };
+}
 type EdgeLineProps = {
   record: LayoutRecord;
   allRecords: LayoutRecord[];
@@ -194,51 +238,39 @@ type ContainerRectProps = {
 };
 
 function ContainerRect({ record, allRecords, tokens }: ContainerRectProps) {
-  const siblings = allRecords.filter(
+  const { stroke, fill } = glyphColors(record.axes, 0, tokens);
+
+  const bounds = containerBounds(record, allRecords);
+  const hasSiblings = allRecords.some(
     (r) => r.index !== record.index && !isEdge(r.slot)
   );
 
-  const { stroke, fill } = glyphColors(record.axes, 0, tokens);
+  const sw = strokeOf(record.axes.a4, tokens);
+  const label = record.axes.a5 >= 1 ? record.slot.role : undefined;
 
-  if (siblings.length === 0) {
-    // Fallback: just render a rect centered on position
-    const { sw, sh, px, py } = record;
-    const pad = 12;
+  if (!hasSiblings) {
     return (
       <rect
-        x={px - sw / 2 - pad}
-        y={py - sh / 2 - pad}
-        width={sw + pad * 2}
-        height={sh + pad * 2}
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
         fill="transparent"
         stroke={stroke}
-        strokeWidth={strokeOf(record.axes.a4, tokens)}
+        strokeWidth={sw}
         strokeDasharray={dashOf("dashed", tokens)}
         rx={6}
       />
     );
   }
 
-  // Compute bounding box of all sibling slots
-  const pad = 24;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const r of siblings) {
-    minX = Math.min(minX, r.px - r.sw / 2);
-    minY = Math.min(minY, r.py - r.sh / 2);
-    maxX = Math.max(maxX, r.px + r.sw / 2);
-    maxY = Math.max(maxY, r.py + r.sh / 2);
-  }
-
-  const sw = strokeOf(record.axes.a4, tokens);
-  const label = record.axes.a5 >= 1 ? record.slot.role : undefined;
-
   return (
     <g>
       <rect
-        x={minX - pad}
-        y={minY - pad}
-        width={maxX - minX + pad * 2}
-        height={maxY - minY + pad * 2}
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
         fill={fill}
         stroke={stroke}
         strokeWidth={sw}
@@ -246,8 +278,8 @@ function ContainerRect({ record, allRecords, tokens }: ContainerRectProps) {
       />
       {label && (
         <text
-          x={minX - pad + 8}
-          y={minY - pad + 13}
+          x={bounds.x + 8}
+          y={bounds.y + 13}
           fontSize={9}
           fontWeight={600}
           fill={tokens.ink}
