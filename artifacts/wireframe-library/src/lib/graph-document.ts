@@ -14,8 +14,8 @@ const AxisSchema = z.object({
 });
 
 const PositionSchema = z.object({
-  x: z.number().min(0).max(GRAPH_CANVAS.width),
-  y: z.number().min(0).max(GRAPH_CANVAS.height),
+  x: z.number().finite(),
+  y: z.number().finite(),
 });
 
 export const GraphNodeSchema = z.object({
@@ -33,8 +33,8 @@ export const GraphNodeSchema = z.object({
 
 export const GraphEdgeSchema = z.object({
   id: z.string().min(1),
-  source: z.string().min(1),
-  target: z.string().min(1),
+  source: z.string(),
+  target: z.string(),
   label: z.string(),
   componentId: z.string().min(1),
   axes: AxisSchema,
@@ -74,6 +74,13 @@ export const EditableGraphDocumentSchema = z.object({
     planTitle: z.string().optional(),
   }),
   updatedAt: z.string().min(1),
+  archived: z.boolean().optional(),
+});
+
+export const GraphWorkspaceCollectionSchema = z.object({
+  version: z.literal(1),
+  workspaces: z.array(EditableGraphDocumentSchema),
+  activeId: z.string().nullable(),
 });
 
 export type GraphNode = z.infer<typeof GraphNodeSchema>;
@@ -81,6 +88,12 @@ export type GraphEdge = z.infer<typeof GraphEdgeSchema>;
 export type GraphTemplate = z.infer<typeof GraphTemplateSchema>;
 export type GraphVisualSettings = z.infer<typeof GraphVisualSettingsSchema>;
 export type EditableGraphDocument = z.infer<typeof EditableGraphDocumentSchema>;
+export type GraphWorkspaceCollection = z.infer<typeof GraphWorkspaceCollectionSchema>;
+export type GraphWorkspaceCollectionRecovery = {
+  collection: GraphWorkspaceCollection;
+  rejectedCount: number;
+  malformed: boolean;
+};
 
 export type GraphValidationIssue = {
   severity: "error" | "warning";
@@ -391,5 +404,44 @@ export function parseStoredGraphDocument(value: string | null): EditableGraphDoc
     return parsed.success ? parsed.data : null;
   } catch {
     return null;
+  }
+}
+
+export function parseStoredWorkspaceCollection(value: string | null): GraphWorkspaceCollection | null {
+  if (!value) return null;
+  try {
+    const parsed = GraphWorkspaceCollectionSchema.safeParse(JSON.parse(value));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function recoverStoredWorkspaceCollection(value: string | null): GraphWorkspaceCollectionRecovery {
+  const empty: GraphWorkspaceCollection = { version: 1, workspaces: [], activeId: null };
+  if (!value) return { collection: empty, rejectedCount: 0, malformed: false };
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!parsed || typeof parsed !== "object" || !("workspaces" in parsed) || !Array.isArray(parsed.workspaces)) {
+      return { collection: empty, rejectedCount: 0, malformed: true };
+    }
+    const envelope = parsed as { version?: unknown; activeId?: unknown; workspaces: unknown[] };
+    const workspaces = envelope.workspaces.flatMap((workspace) => {
+      const result = EditableGraphDocumentSchema.safeParse(workspace);
+      return result.success ? [result.data] : [];
+    });
+    const rejectedCount = envelope.workspaces.length - workspaces.length;
+    const requestedActiveId = typeof envelope.activeId === "string" ? envelope.activeId : null;
+    return {
+      collection: {
+        version: 1,
+        workspaces,
+        activeId: workspaces.some((workspace) => workspace.id === requestedActiveId) ? requestedActiveId : null,
+      },
+      rejectedCount,
+      malformed: envelope.version !== 1 || rejectedCount > 0,
+    };
+  } catch {
+    return { collection: empty, rejectedCount: 0, malformed: true };
   }
 }

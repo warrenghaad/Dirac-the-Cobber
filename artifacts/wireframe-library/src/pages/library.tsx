@@ -513,7 +513,7 @@ export default function LibraryPage() {
         </TabsContent>
 
         <TabsContent value="workspace">
-          <GraphWorkspace seedDocument={workspaceSeed} />
+          <GraphWorkspace seedDocument={workspaceSeed} onSeedConsumed={() => setWorkspaceSeed(null)} />
         </TabsContent>
 
         <TabsContent value="playground">

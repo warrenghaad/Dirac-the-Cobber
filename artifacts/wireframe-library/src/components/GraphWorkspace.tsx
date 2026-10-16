@@ -13,18 +13,28 @@ import {
   hasExplicitGraphMapping,
   isGraphDocumentDiverged,
   parseStoredGraphDocument,
+  recoverStoredWorkspaceCollection,
   validateGraphDocument,
   type EditableGraphDocument,
+  type GraphWorkspaceCollection,
   type GraphEdge,
   type GraphNode,
 } from "@/lib/graph-document";
 import type { Composition, LibraryComponent } from "@/lib/library";
-import { AlertCircle, CheckCircle2, CirclePlus, Link2, MousePointer2, Move, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { AlertCircle, Archive, ArchiveRestore, CheckCircle2, CirclePlus, Copy, Link2, MousePointer2, Move, Plus, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 
-const STORAGE_KEY = "tiered-wireframe-library.graph-workspace.v1";
+const COLLECTION_KEY = "tiered-wireframe-library.workspaces.v1";
+const RECOVERY_KEY = "tiered-wireframe-library.workspaces.recovery.v1";
+const LEGACY_KEY = "tiered-wireframe-library.graph-workspace.v1";
 const PICK_CONNECTION_SOURCE = "__pick_connection_source__";
 const NODE_WIDTH = 138;
 const NODE_HEIGHT = 92;
+
+function storageFailureMessage(error: unknown) {
+  return error instanceof DOMException && (error.name === "QuotaExceededError" || error.name === "NS_ERROR_DOM_QUOTA_REACHED")
+    ? "Storage limit reached. Free browser storage, then try again."
+    : "Local saving is unavailable in this browser. Changes will only last until this tab closes.";
+}
 
 function updateDocument(
   setDocument: React.Dispatch<React.SetStateAction<EditableGraphDocument>>,
@@ -38,6 +48,27 @@ function firstComponent(components: LibraryComponent[], family: EditableGraphDoc
     ? family === "workflow" ? ["wf.flow-edge", "prim.edge.plain"] : ["kg.relation-edge", "kg.property-edge", "prim.edge.plain"]
     : family === "workflow" ? ["wf.task", "prim.node.generic"] : ["kg.entity", "prim.node.generic"];
   return preferred.map((id) => components.find((component) => component.id === id)).find(Boolean) ?? components.find((component) => component.family === family && !component.shape.includes("edge")) ?? components[0];
+}
+
+function EditableTitle({ title, onChange }: { title: string; onChange: (t: string) => void }) {
+  const [value, setValue] = useState(title);
+  useEffect(() => setValue(title), [title]);
+
+  return (
+    <input
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={() => {
+        if (value.trim() !== title) onChange(value.trim() || "Untitled workspace");
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") event.currentTarget.blur();
+      }}
+      className="mt-1 w-full max-w-3xl rounded bg-transparent px-1.5 py-0.5 -ml-1.5 text-xl font-bold border border-transparent outline-none focus:bg-background focus:border-input focus:ring-2 focus:ring-ring/20 transition-all hover:bg-muted/50"
+      aria-label="Workspace title"
+      data-testid="input-workspace-title"
+    />
+  );
 }
 
 function NodeVisual({
@@ -376,31 +407,203 @@ function EdgeTable({
   );
 }
 
-export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphDocument | null }) {
+export function GraphWorkspace({
+  seedDocument,
+  onSeedConsumed,
+}: {
+  seedDocument?: EditableGraphDocument | null;
+  onSeedConsumed?: () => void;
+}) {
   const { manifest } = useManifest();
-  const [document, setDocument] = useState<EditableGraphDocument>(() => {
-    const restored = typeof window !== "undefined" ? parseStoredGraphDocument(window.localStorage.getItem(STORAGE_KEY)) : null;
-    return restored ?? seedDocument ?? blankGraphDocument();
-  });
+
+  const initialState = useRef<{
+    collection: GraphWorkspaceCollection;
+    malformedCount: number;
+    recoveredCount: number;
+    recoverySource: string | null;
+    storageError: string | null;
+  } | null>(null);
+  if (!initialState.current) {
+    let collection: GraphWorkspaceCollection = { version: 1, workspaces: [], activeId: null };
+    let malformedCount = 0;
+    let recoveredCount = 0;
+    let recoverySource: string | null = null;
+    let initialStorageError: string | null = null;
+    if (typeof window !== "undefined") {
+      try {
+        const storedCollection = window.localStorage.getItem(COLLECTION_KEY);
+        const recovery = recoverStoredWorkspaceCollection(storedCollection);
+        collection = recovery.collection;
+        malformedCount = recovery.rejectedCount || (recovery.malformed ? 1 : 0);
+        recoveredCount = recovery.malformed ? recovery.collection.workspaces.length : 0;
+        recoverySource = recovery.malformed ? storedCollection : null;
+        if (collection.workspaces.length === 0) {
+          const legacySource = window.localStorage.getItem(LEGACY_KEY);
+          const legacy = parseStoredGraphDocument(legacySource);
+          if (legacy) collection = { version: 1, workspaces: [legacy], activeId: legacy.id };
+          else if (legacySource && !recoverySource) {
+            malformedCount = 1;
+            recoverySource = legacySource;
+          }
+        }
+      } catch (error) {
+        initialStorageError = storageFailureMessage(error);
+      }
+    }
+    if (seedDocument && !collection.workspaces.some((workspace) => workspace.id === seedDocument.id)) {
+      collection.workspaces.push(seedDocument);
+    }
+    if (collection.workspaces.length === 0) collection.workspaces.push(seedDocument ?? blankGraphDocument());
+    if (seedDocument) collection.activeId = seedDocument.id;
+    if (!collection.workspaces.some((workspace) => workspace.id === collection.activeId)) {
+      const active = collection.workspaces
+        .filter((workspace) => !workspace.archived)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0] ?? collection.workspaces[0];
+      collection.activeId = active.id;
+    }
+    initialState.current = { collection, malformedCount, recoveredCount, recoverySource, storageError: initialStorageError };
+  }
+
+  const [collection, setCollection] = useState<GraphWorkspaceCollection>(initialState.current.collection);
+  const [malformedCount, setMalformedCount] = useState(initialState.current.malformedCount);
+  const [recoveredCount] = useState(initialState.current.recoveredCount);
+  const [storageError, setStorageError] = useState<string | null>(initialState.current.storageError);
+  const pendingRecoverySource = useRef(initialState.current.recoverySource);
+
+  const document = useMemo(() => {
+    const docs = collection.workspaces;
+    if (collection.activeId) {
+      const match = docs.find(w => w.id === collection.activeId);
+      if (match) return match;
+    }
+    const nonArchived = docs.filter(w => !w.archived);
+    if (nonArchived.length > 0) return nonArchived.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+    return docs[0];
+  }, [collection]);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [templateChoice, setTemplateChoice] = useState("");
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    if (!seedDocument || seedDocument.id === document.id) return;
-    setDocument(seedDocument);
-    setSelectedId(null);
-    setStatus(`Loaded ${seedDocument.title} into the editable workspace.`);
-  }, [seedDocument?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const saveCollection = (newCollection: GraphWorkspaceCollection) => {
+    if (typeof window !== "undefined") {
+      try {
+        if (pendingRecoverySource.current) {
+          let backupKey = RECOVERY_KEY;
+          let suffix = 2;
+          while (window.localStorage.getItem(backupKey) !== null) {
+            backupKey = `${RECOVERY_KEY}.${suffix}`;
+            suffix += 1;
+          }
+          window.localStorage.setItem(backupKey, pendingRecoverySource.current);
+          pendingRecoverySource.current = null;
+        }
+        setCollection(newCollection);
+        window.localStorage.setItem(COLLECTION_KEY, JSON.stringify(newCollection));
+        window.localStorage.removeItem(LEGACY_KEY);
+        setStorageError(null);
+      } catch (error) {
+        setStorageError(storageFailureMessage(error));
+      }
+    } else {
+      setCollection(newCollection);
+    }
+  };
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(document));
-    } catch {
-      setStatus("This browser blocked local saving; your changes remain available until this tab closes.");
+    saveCollection(collection);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateDocument = (updater: (doc: EditableGraphDocument) => EditableGraphDocument) => {
+    if (collection.workspaces.length === 0) return;
+    const nextDoc = { ...updater(document), updatedAt: new Date().toISOString() };
+    saveCollection({
+      ...collection,
+      workspaces: collection.workspaces.map(w => w.id === document.id ? nextDoc : w)
+    });
+  };
+
+  useEffect(() => {
+    if (!seedDocument) return;
+
+    const exists = collection.workspaces.some(w => w.id === seedDocument.id);
+    if (!exists || collection.activeId !== seedDocument.id) {
+      saveCollection({
+        ...collection,
+        activeId: seedDocument.id,
+        workspaces: exists ? collection.workspaces : [...collection.workspaces, seedDocument],
+      });
     }
-  }, [document]);
+
+    setSelectedId(null);
+    setConnectingFrom(null);
+    setStatus(`Loaded ${seedDocument.title} into the editable workspace.`);
+    onSeedConsumed?.();
+  }, [seedDocument?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const switchWorkspace = (id: string) => {
+    saveCollection({ ...collection, activeId: id });
+    setSelectedId(null);
+    setConnectingFrom(null);
+    const doc = collection.workspaces.find(d => d.id === id);
+    if (doc) setStatus(`Switched to ${doc.title}.`);
+  };
+
+  const duplicateWorkspace = () => {
+    const clone: EditableGraphDocument = {
+      ...document,
+      id: `graph-dup-${Math.random().toString(36).substr(2, 9)}`,
+      title: `${document.title} (Copy)`,
+      updatedAt: new Date().toISOString(),
+      archived: false,
+      origin: { kind: "blank" },
+    };
+    saveCollection({ ...collection, activeId: clone.id, workspaces: [...collection.workspaces, clone] });
+    setSelectedId(null);
+    setConnectingFrom(null);
+    setStatus(`Duplicated into ${clone.title}.`);
+  };
+
+  const toggleArchiveWorkspace = () => {
+    const isArchiving = !document.archived;
+    const nextDocument = { ...document, archived: isArchiving, updatedAt: new Date().toISOString() };
+    let nextActiveId = document.id;
+    if (isArchiving) {
+      const remaining = collection.workspaces.filter(w => w.id !== document.id && !w.archived);
+      if (remaining.length > 0) {
+        remaining.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        nextActiveId = remaining[0].id;
+      }
+    }
+    saveCollection({
+      ...collection,
+      activeId: nextActiveId,
+      workspaces: collection.workspaces.map((workspace) => workspace.id === document.id ? nextDocument : workspace),
+    });
+    setSelectedId(null);
+    setConnectingFrom(null);
+    setStatus(isArchiving ? "Workspace archived." : "Workspace reopened.");
+  };
+
+  const resetBlank = () => {
+    const next = blankGraphDocument(document.family);
+    next.id = `graph-blank-${Math.random().toString(36).substr(2, 9)}`;
+    saveCollection({ ...collection, activeId: next.id, workspaces: [...collection.workspaces, next] });
+    setSelectedId(null);
+    setConnectingFrom(null);
+    setStatus("Started a blank workspace.");
+  };
+
+  const applyTemplate = (composition: Composition) => {
+    const next = graphDocumentFromComposition(composition);
+    next.id = `graph-tpl-${Math.random().toString(36).substr(2, 9)}`;
+    saveCollection({ ...collection, activeId: next.id, workspaces: [...collection.workspaces, next] });
+    setSelectedId(null);
+    setConnectingFrom(null);
+    setTemplateChoice(composition.id);
+    setStatus(`Loaded approved baseline ${composition.label}.`);
+  };
 
   const report = useMemo(() => validateGraphDocument(document, manifest.components), [document, manifest.components]);
   const diverged = isGraphDocumentDiverged(document);
@@ -414,7 +617,7 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
       hasExplicitGraphMapping(composition),
   );
 
-  const changeSettings = (settings: EditableGraphDocument["visualSettings"]) => updateDocument(setDocument, (current) => ({ ...current, visualSettings: settings }));
+  const changeSettings = (settings: EditableGraphDocument["visualSettings"]) => updateDocument((current) => ({ ...current, visualSettings: settings }));
   const select = (id: string) => setSelectedId(id);
 
   const addNode = () => {
@@ -428,9 +631,12 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
       properties: [],
       componentId: component?.id ?? "prim.node.generic",
       axes: component?.axes ?? DEFAULT_AXES,
-      position: { x: 150 + ((index - 1) % 4) * 200, y: 140 + Math.floor((index - 1) / 4) * 170 },
+      position: {
+        x: 150 + ((index - 1) % 4) * 200,
+        y: Math.min(GRAPH_CANVAS.height - 55, 140 + Math.floor((index - 1) / 4) * 170),
+      },
     };
-    updateDocument(setDocument, (current) => ({ ...current, nodes: [...current.nodes, node] }));
+    updateDocument((current) => ({ ...current, nodes: [...current.nodes, node] }));
     setSelectedId(node.id);
     setStatus(`Added ${node.id}.`);
   };
@@ -449,7 +655,7 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
       componentId: component?.id ?? "prim.edge.plain",
       axes: component?.axes ?? DEFAULT_AXES,
     };
-    updateDocument(setDocument, (current) => ({ ...current, edges: [...current.edges, edge] }));
+    updateDocument((current) => ({ ...current, edges: [...current.edges, edge] }));
     setSelectedId(edge.id);
     setConnectingFrom(null);
     setStatus(`Added ${edge.id}. Check its endpoints before continuing.`);
@@ -471,7 +677,7 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
 
   const deleteSelected = () => {
     if (!selectedId) return;
-    updateDocument(setDocument, (current) => ({
+    updateDocument((current) => ({
       ...current,
       nodes: current.nodes.filter((node) => node.id !== selectedId),
       edges: current.edges.filter((edge) => edge.id !== selectedId && edge.source !== selectedId && edge.target !== selectedId),
@@ -480,27 +686,42 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
     setSelectedId(null);
   };
 
-  const applyTemplate = (composition: Composition) => {
-    const next = graphDocumentFromComposition(composition);
-    setDocument(next);
-    setTemplateChoice(composition.id);
-    setSelectedId(null);
-    setStatus(`Loaded approved baseline ${composition.label}.`);
-  };
-
-  const resetBlank = () => {
-    const next = blankGraphDocument(document.family);
-    setDocument(next);
-    setSelectedId(null);
-    setStatus("Started a blank graph.");
-  };
+  const sortedDocs = [...collection.workspaces].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const activeDocs = sortedDocs.filter(d => !d.archived);
+  const archivedDocs = sortedDocs.filter(d => d.archived);
 
   return (
     <div className="space-y-5" data-testid="graph-workspace">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Editable graph workspace</div>
-          <h2 className="mt-1 text-xl font-bold">{document.title}</h2>
+        <div className="flex-1 min-w-[320px]">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Editable graph workspace</div>
+            <div className="flex items-center gap-1 rounded-md border border-input bg-background p-1 shadow-sm">
+              <select
+                value={collection.activeId ?? document.id}
+                onChange={(e) => switchWorkspace(e.target.value)}
+                className="w-52 rounded bg-transparent px-2 py-1 text-xs font-medium outline-none hover:bg-muted focus:bg-muted transition-colors cursor-pointer"
+                aria-label="Select workspace"
+                data-testid="select-workspace"
+              >
+                <optgroup label="Active Workspaces">
+                  {activeDocs.map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
+                </optgroup>
+                {archivedDocs.length > 0 && (
+                  <optgroup label="Archived Workspaces">
+                    {archivedDocs.map(d => <option key={d.id} value={d.id}>{d.title} (Archived)</option>)}
+                  </optgroup>
+                )}
+              </select>
+              <div className="mx-1 h-4 w-px bg-border"></div>
+              <button onClick={resetBlank} className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer" title="New blank workspace" aria-label="New blank workspace" data-testid="button-new-workspace"><Plus className="h-3.5 w-3.5" /></button>
+              <button onClick={duplicateWorkspace} className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer" title="Duplicate workspace" aria-label="Duplicate workspace" data-testid="button-duplicate-workspace"><Copy className="h-3.5 w-3.5" /></button>
+              <button onClick={toggleArchiveWorkspace} className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer" title={document.archived ? "Reopen workspace" : "Archive workspace"} aria-label={document.archived ? "Reopen workspace" : "Archive workspace"} data-testid="button-archive-workspace">
+                {document.archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+          <EditableTitle title={document.title} onChange={(title) => updateDocument(d => ({ ...d, title }))} />
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Edit graph data and layout independently from the Librarian plan. Changes are saved in this browser.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -526,7 +747,14 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
           <span>Active template: <strong className="font-medium text-foreground">{document.template.label}</strong></span>
           <span>Source: <strong className="font-medium text-foreground">{source?.label ?? document.template.sourceId ?? "Local fallback"}</strong></span>
           <span>Mapping: <strong className="font-medium text-foreground capitalize">{document.template.mappingStatus ?? "approved"}</strong></span>
-          <span data-testid="text-persistence-status"><CheckCircle2 className="mr-1 inline h-3 w-3 text-green-600" />Saved locally</span>
+
+          {storageError ? (
+            <span data-testid="text-persistence-status" className="text-destructive font-medium"><AlertCircle className="mr-1 inline h-3 w-3" />{storageError}</span>
+          ) : malformedCount > 0 ? (
+            <span data-testid="text-persistence-status" className="text-amber-700 font-medium"><AlertCircle className="mr-1 inline h-3 w-3" />{recoveredCount > 0 ? `Recovered ${recoveredCount} valid ${recoveredCount === 1 ? "workspace" : "workspaces"}; skipped ${malformedCount} damaged ${malformedCount === 1 ? "entry" : "entries"}.` : "Workspace storage was damaged; opened a new blank workspace."} Original data was preserved.</span>
+          ) : (
+            <span data-testid="text-persistence-status"><CheckCircle2 className="mr-1 inline h-3 w-3 text-green-600" />Saved locally</span>
+          )}
         </div>
       </Card>
 
@@ -554,7 +782,7 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
             </div>
             <span className="text-[11px] text-muted-foreground">{document.nodes.length} nodes · {document.edges.length} relationships</span>
           </div>
-          <GraphCanvas document={document} components={manifest.components} selectedId={selectedId} connectingFrom={connectingFrom} onSelect={select} onConnect={connectNode} onMoveNode={(id, x, y) => updateDocument(setDocument, (current) => ({ ...current, nodes: current.nodes.map((node) => node.id === id ? { ...node, position: { x, y } } : node) }))} onViewportChange={changeSettings} />
+          <GraphCanvas document={document} components={manifest.components} selectedId={selectedId} connectingFrom={connectingFrom} onSelect={select} onConnect={connectNode} onMoveNode={(id, x, y) => updateDocument((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === id ? { ...node, position: { x, y } } : node) }))} onViewportChange={changeSettings} />
           <p className="min-h-5 text-xs text-muted-foreground" aria-live="polite" data-testid="graph-status">{status || "Select a node to inspect it, or drag the canvas background to pan."}</p>
         </div>
 
@@ -568,8 +796,8 @@ export function GraphWorkspace({ seedDocument }: { seedDocument?: EditableGraphD
         </Card>
       </div>
 
-      <NodeTable document={document} components={manifest.components} selectedId={selectedId} onSelect={select} onAdd={addNode} onUpdate={(id, patch) => updateDocument(setDocument, (current) => ({ ...current, nodes: current.nodes.map((node) => node.id === id ? { ...node, ...patch } : node) }))} onDelete={(id) => { updateDocument(setDocument, (current) => ({ ...current, nodes: current.nodes.filter((node) => node.id !== id), edges: current.edges.filter((edge) => edge.source !== id && edge.target !== id) })); if (selectedId === id) setSelectedId(null); }} />
-      <EdgeTable document={document} selectedId={selectedId} onSelect={select} onAdd={() => addEdge()} onUpdate={(id, patch) => updateDocument(setDocument, (current) => ({ ...current, edges: current.edges.map((edge) => edge.id === id ? { ...edge, ...patch } : edge) }))} onDelete={(id) => { updateDocument(setDocument, (current) => ({ ...current, edges: current.edges.filter((edge) => edge.id !== id) })); if (selectedId === id) setSelectedId(null); }} />
+      <NodeTable document={document} components={manifest.components} selectedId={selectedId} onSelect={select} onAdd={addNode} onUpdate={(id, patch) => updateDocument((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === id ? { ...node, ...patch } : node) }))} onDelete={(id) => { updateDocument((current) => ({ ...current, nodes: current.nodes.filter((node) => node.id !== id), edges: current.edges.filter((edge) => edge.source !== id && edge.target !== id) })); if (selectedId === id) setSelectedId(null); }} />
+      <EdgeTable document={document} selectedId={selectedId} onSelect={select} onAdd={() => addEdge()} onUpdate={(id, patch) => updateDocument((current) => ({ ...current, edges: current.edges.map((edge) => edge.id === id ? { ...edge, ...patch } : edge) }))} onDelete={(id) => { updateDocument((current) => ({ ...current, edges: current.edges.filter((edge) => edge.id !== id) })); if (selectedId === id) setSelectedId(null); }} />
 
       {report.issues.length > 0 && (
         <Card className="border-amber-300/50 bg-amber-50/40 p-4" data-testid="panel-graph-validation">

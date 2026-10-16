@@ -3,3 +3,4 @@
 - [API codegen exports](api-codegen-exports.md) — Orval may append duplicate barrel exports; remove duplicates after regeneration before running typechecks.
 - [Nested pnpm arguments](nested-pnpm-arguments.md) — wrapper scripts may forward the `--` separator, so CLI parsers should ignore a standalone separator.
 - [Source catalog offline mirror](source-catalog-offline-mirror.md) — retain the complete baseline during API outages without bloating the initial bundle.
+- [Editable persistence schemas](editable-persistence-schemas.md) — persisted drafts must accept every intermediate state the editor can create, not only final valid output.
