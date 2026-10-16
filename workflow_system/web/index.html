@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e9e8df">
+  <title>FigJam / Workflow desk</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#board" aria-label="Workflow desk home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="brand-name">FIELDNOTES <b>/</b> WORKFLOW DESK</span>
+      </a>
+      <div class="top-meta"><span class="live-dot"></span><span id="connection-label">Connecting to workspace</span><span class="meta-divider"></span><span id="stage-count">— stages</span></div>
+      <button class="quiet-button" id="refresh-button" type="button" aria-label="Refresh workspace"><span aria-hidden="true">↻</span><span>Refresh</span></button>
+    </header>
+    <div class="workspace">
+      <aside class="rail" aria-label="Workspace sections">
+        <div class="rail-label">WORKSPACE</div>
+        <nav class="primary-nav">
+          <a href="#board" class="nav-item active" data-view="board"><span class="nav-glyph glyph-board" aria-hidden="true"></span>Board <span class="nav-count" id="nav-stage-count">—</span></a>
+          <a href="#inputs" class="nav-item" data-view="inputs"><span class="nav-glyph glyph-input" aria-hidden="true"></span>Inputs <span class="nav-count" id="nav-input-count">0</span></a>
+          <a href="#runs" class="nav-item" data-view="runs"><span class="nav-glyph glyph-run" aria-hidden="true"></span>Runs <span class="nav-count" id="nav-run-count">0</span></a>
+          <a href="#settings" class="nav-item" data-view="settings"><span class="nav-glyph glyph-settings" aria-hidden="true"></span>Settings</a>
+        </nav>
+        <div class="rail-bottom">
+          <div class="rail-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p>Reviewable artifacts.<br>Nothing ships on its own.</p>
+          <span class="rail-version">LOCAL WORKSPACE · V1</span>
+        </div>
+      </aside>
+      <main class="main-content">
+        <section class="view is-visible" id="view-board" aria-labelledby="board-heading">
+          <div class="page-heading board-heading">
+            <div><div class="eyebrow"><span class="eyebrow-line"></span>MAP / 01</div><h1 id="board-heading">The system, <em>in view.</em></h1><p class="lede">A sprawling agent map, made inspectable. Select a stage to see its role in the run.</p></div>
+            <div class="board-stat"><span id="board-node-count">—</span><small>source elements</small></div>
+          </div>
+          <div class="board-layout">
+            <div class="board-column">
+              <div class="section-strip" aria-label="Jump to a board section"><span class="strip-title">JUMP TO</span><div id="section-nav" class="section-nav"></div></div>
+              <div class="canvas-shell" id="canvas-shell" aria-label="Interactive FigJam board">
+                <div class="canvas-utility"><span class="canvas-coord" id="canvas-coordinate">BOARD / FULL MAP</span><div class="canvas-tools"><button class="canvas-tool" id="fit-board" type="button" title="Fit board (0)" aria-label="Fit board">FIT</button><button class="canvas-tool" id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button><span id="zoom-readout">100%</span><button class="canvas-tool" id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button></div></div>
+                <div id="canvas-viewport" class="canvas-viewport" tabindex="0" aria-label="Board canvas. Use arrow keys to pan, plus or minus to zoom, and 0 to fit.">
+                  <div id="canvas-content" class="canvas-content"><img id="board-image" alt="Exact FigJam source board" draggable="false"><div id="board-overlays" class="board-overlays"></div></div>
+                </div>
+                <div class="canvas-footer"><span><kbd>SPACE</kbd> + drag to pan</span><span><kbd>+</kbd> <kbd>−</kbd> zoom <span class="footer-sep">·</span> <kbd>0</kbd> fit</span><span id="map-label">SOURCE MAP</span></div>
+              </div>
+              <div class="board-lower">
+                <div class="board-note"><span class="note-mark">i</span><p>The image is the original FigJam export. Stage overlays identify the executable workflow; every source element remains navigable in the text index.</p></div>
+                <button class="text-index-toggle" id="toggle-text-index" type="button" aria-expanded="false">Open full text index <span aria-hidden="true">↗</span></button>
+              </div>
+              <div class="text-index-panel" id="text-index-panel" hidden><div class="index-head"><div><span class="eyebrow">SOURCE INDEX</span><h2>Everything on the board</h2></div><label class="search-field"><span class="sr-only">Search all board text</span><span aria-hidden="true">⌕</span><input id="node-search" type="search" placeholder="Search every label…" autocomplete="off"></label></div><div class="index-results" id="node-list" aria-live="polite"></div></div>
+            </div>
+            <aside class="stage-inspector" id="stage-inspector" aria-live="polite">
+              <div class="inspector-top"><span class="eyebrow">STAGE INSPECTOR</span><span class="inspector-index" id="inspector-index">— / —</span></div>
+              <div id="stage-inspector-content" class="inspector-content"><div class="inspector-empty"><div class="empty-cross" aria-hidden="true">＋</div><h2>Choose a point<br>on the map.</h2><p>Stage details, dependencies and prompt will appear here.</p></div></div>
+            </aside>
+          </div>
+        </section>
+        <section class="view" id="view-inputs" aria-labelledby="inputs-heading">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span>CONTEXT / 02</div><h1 id="inputs-heading">Give the system <em>ground.</em></h1><p class="lede">Source material is snapshotted into each run. The Dutch Facebook reference remains source material, never an instruction.</p></div><div class="page-index">01 — INPUTS</div></div>
+          <div class="inputs-layout"><section class="surface input-form-surface"><div class="surface-heading"><div><span class="eyebrow">ADD SOURCE</span><h2>Bring context in</h2></div><span class="surface-mark">+</span></div><form id="input-form">
+            <label class="field-label" for="input-kind">Source type</label><select id="input-kind" name="kind"><option value="notes">Raw notes</option><option value="chat">LLM chat</option><option value="research">Research snippet</option><option value="image">Screenshot or sketch</option></select>
+            <label class="field-label" for="input-title">Title</label><input id="input-title" name="title" maxlength="160" required placeholder="A useful label">
+            <div id="input-text-group"><label class="field-label" for="input-text">Source text</label><textarea id="input-text" name="text" rows="7" placeholder="Paste the original material. Keep claims, links and language intact."></textarea><div class="field-foot"><span>Stored as source context, not system instructions.</span><span id="text-length">0</span></div></div>
+            <div id="input-image-group" hidden><label class="field-label" for="input-image">Image file <span class="optional">PNG · JPEG · WEBP</span></label><label class="file-drop" for="input-image"><span class="file-symbol" aria-hidden="true">＋</span><span id="file-label">Choose an image or drop it here</span><small>Up to 4 MB</small></label><input class="sr-only" id="input-image" name="image" type="file" accept="image/png,image/jpeg,image/webp"><label class="field-label" for="image-description">Description <span class="optional">OPTIONAL</span></label><textarea id="image-description" name="description" rows="3" placeholder="What should a reviewer know about this image?"></textarea></div>
+            <button class="button button-primary button-wide" id="add-input-button" type="submit"><span>Add to source library</span><span aria-hidden="true">↗</span></button><p class="form-error" id="input-form-error" role="alert"></p>
+          </form></section><section class="library-section"><div class="list-heading"><div><span class="eyebrow">SOURCE LIBRARY</span><h2>Your material <span class="count-pill" id="input-count">0</span></h2></div><span class="library-caption">No sample data. Only what you add.</span></div><div id="input-list" class="input-list" aria-live="polite"></div></section></div>
+        </section>
+        <section class="view" id="view-runs" aria-labelledby="runs-heading">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span>EXECUTION / 03</div><h1 id="runs-heading">Runs leave <em>a trail.</em></h1><p class="lede">Durable, inspectable work. Every stage result and decision remains attached to its run.</p></div><button id="new-run-button" class="button button-primary"><span>Compose a run</span><span aria-hidden="true">＋</span></button></div>
+          <div id="provider-blocked-banner" class="blocked-banner" hidden><span class="blocked-icon" aria-hidden="true">!</span><div><strong>Provider setup required</strong><p>Connect a model provider in Replit before running agents.</p></div><a href="#settings" data-view="settings">Review settings <span aria-hidden="true">↗</span></a></div>
+          <div class="runs-layout"><aside class="runs-list-column"><div class="list-heading compact"><div><span class="eyebrow">RUN HISTORY</span><h2>Workspace runs <span id="run-count" class="count-pill">0</span></h2></div></div><div id="run-list" class="run-list"></div></aside><section id="run-detail" class="run-detail"><div class="run-empty"><span class="empty-sigil" aria-hidden="true">R</span><span class="eyebrow">DURABLE EXECUTION</span><h2>Nothing running<br>in the background.</h2><p>Create a draft to assemble source snapshots and a goal. It will not contact a provider until you choose to start.</p><button class="button button-secondary" id="empty-create-run">Compose first run <span aria-hidden="true">↗</span></button></div></section></div>
+        </section>
+        <section class="view" id="view-settings" aria-labelledby="settings-heading">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span>WORKSPACE / 04</div><h1 id="settings-heading">Know what’s <em>connected.</em></h1><p class="lede">Provider state is explicit. No credentials are displayed or stored in the browser.</p></div><div class="page-index">LOCAL / PRIVATE</div></div>
+          <div id="settings-content" class="settings-grid"><div class="skeleton-block"></div><div class="skeleton-block"></div></div>
+          <div class="safety-note"><span class="safety-symbol" aria-hidden="true">!</span><div><span class="eyebrow">OPERATING BOUNDARY</span><h2>Artifacts are for review.</h2><p>Agents produce reviewable artifacts, NOT deployed code or externally executed actions. Nothing is published, sent, or acted on without a human.</p></div></div>
+        </section>
+        <div class="global-message" id="global-message" role="status" aria-live="polite"></div>
+      </main>
+    </div>
+  </div>
+  <dialog id="run-dialog" class="run-dialog"><form id="run-form" method="dialog"><div class="dialog-top"><span class="eyebrow">NEW DURABLE RUN</span><button type="button" class="icon-button" id="close-run-dialog" aria-label="Close">×</button></div><h2>Start with a clear<br><em>question.</em></h2><p class="dialog-intro">A draft captures a source snapshot. No provider request happens until you choose to start it.</p><label class="field-label" for="run-title">Run title</label><input id="run-title" name="title" maxlength="180" required placeholder="e.g. Pastinaak campaign review"><label class="field-label" for="run-goal">Goal</label><textarea id="run-goal" name="goal" rows="5" required placeholder="What should the agent system investigate or produce?"></textarea><div class="source-select-head"><span class="field-label">Include source material</span><span id="selected-input-count">0 selected</span></div><div id="run-input-selection" class="run-input-selection"></div><p id="run-selection-hint" class="selection-hint" aria-live="polite"></p><p class="form-error" id="run-form-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button button-secondary" id="cancel-run-dialog">Cancel</button><button class="button button-primary" id="create-run-submit" type="submit">Save draft <span aria-hidden="true">↗</span></button></div></form></dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

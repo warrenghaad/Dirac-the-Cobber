@@ -1,0 +1,405 @@
+<canvas id="0:1" name="Page 1" x="0" y="0" width="0" height="0">
+  <section id="34:488" name="Section 1" x="-3667" y="-16098" width="63391.4140625" height="19215">
+    <section id="2:15" name="Inputs" x="6601" y="113" width="1580.05859375" height="3950.146484375">
+      <shape-with-text id="2:3" x="237.00881958007812" y="3081.114501953125" width="1106.041015625" height="632.0234375" name="SQUARE">Raw notes</shape-with-text>
+      <shape-with-text id="2:6" x="237.00881958007812" y="1185.044189453125" width="1106.041015625" height="632.0234375" name="SQUARE">LLM chats</shape-with-text>
+      <shape-with-text id="2:9" x="237.00881958007812" y="2133.079345703125" width="1106.041015625" height="632.0234375" name="SQUARE">Research snippets</shape-with-text>
+      <shape-with-text id="2:12" x="237.0087890625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Screenshots and sketches</shape-with-text>
+    </section>
+    <section id="2:28" name="Truth Spine" x="9163" y="113" width="6794.251953125" height="1964.210205078125">
+      <shape-with-text id="2:16" x="711.0263671875" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Intake and normalization</shape-with-text>
+      <shape-with-text id="2:19" x="2291.0849609375" y="411.1435546875" width="1106.041015625" height="632.0234375" name="SQUARE">Claim reconciliation</shape-with-text>
+      <connector id="2:111" x="1825.0673828125" y="553.0209350585938" connectorStart="2:16" connectorStartCap="NONE" connectorEnd="2:19" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:22" x="3871.1435546875" y="534.7509765625" width="1106.041015625" height="632.0234375" name="SQUARE">Canonical truths</shape-with-text>
+      <connector id="2:115" x="3405.12548828125" y="727.1556396484375" connectorStart="2:19" connectorStartCap="NONE" connectorEnd="2:22" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:25" x="5451.2021484375" y="1095.1776123046875" width="1106.041015625" height="632.0234375" name="SQUARE">Decision log</shape-with-text>
+      <connector id="2:119" x="4985.18505859375" y="1040.369873046875" connectorStart="2:22" connectorStartCap="NONE" connectorEnd="2:25" connectorEndCap="ARROW_LINES"></connector>
+    </section>
+    <section id="2:38" name="Research and Planning" x="16939" y="113" width="4582.169921875" height="1661.5303955078125">
+      <shape-with-text id="2:29" x="237.0087890625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Trends and signals agent</shape-with-text>
+      <shape-with-text id="2:32" x="1817.0677490234375" y="792.4981079101562" width="1106.041015625" height="632.0234375" name="SQUARE">Product strategy agent</shape-with-text>
+      <connector id="2:135" x="1351.049560546875" y="658.3585205078125" connectorStart="2:29" connectorStartCap="NONE" connectorEnd="2:32" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:35" x="3239.120361328125" y="792.4981079101562" width="1106.041015625" height="632.0234375" name="SQUARE">Domain architecture agent</shape-with-text>
+      <connector id="2:139" x="2931.10791015625" y="1108.51025390625" connectorStart="2:32" connectorStartCap="NONE" connectorEnd="2:35" connectorEndCap="ARROW_LINES"></connector>
+    </section>
+    <section id="2:48" name="Design Core" x="22503" y="113" width="4582.169921875" height="1584.9962158203125">
+      <shape-with-text id="2:39" x="237.009765625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Design system agent</shape-with-text>
+      <shape-with-text id="2:42" x="1817.068359375" y="715.9638671875" width="1106.041015625" height="632.0234375" name="SQUARE">UI orchestrator agent</shape-with-text>
+      <connector id="2:147" x="1351.05126953125" y="711.02685546875" connectorStart="2:39" connectorStartCap="NONE" connectorEnd="2:42" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:45" x="3239.12109375" y="715.9638671875" width="1106.041015625" height="632.0234375" name="SQUARE">Wireframe and spec outputs</shape-with-text>
+      <connector id="2:151" x="2931.10986328125" y="1031.9755859375" connectorStart="2:42" connectorStartCap="NONE" connectorEnd="2:45" connectorEndCap="ARROW_LINES"></connector>
+    </section>
+    <section id="2:58" name="Build and Review" x="404.42919921875" y="113" width="5214.193359375" height="1584.9962158203125">
+      <shape-with-text id="2:49" x="237.00889587402344" y="344.81439208984375" width="1106.041015625" height="632.0234375" name="SQUARE">Builder agent</shape-with-text>
+      <shape-with-text id="2:52" x="1817.0675048828125" y="636.9607543945312" width="1106.041015625" height="632.0234375" name="SQUARE">Stress test agent</shape-with-text>
+      <connector id="2:159" x="1351.0498046875" y="766.1629028320312" connectorStart="2:49" connectorStartCap="NONE" connectorEnd="2:52" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:55" x="3397.1259765625" y="399.95196533203125" width="1106.041015625" height="632.0234375" name="SQUARE">Scale and efficiency review</shape-with-text>
+      <connector id="2:163" x="2931.1083984375" y="715.963623046875" connectorStart="2:52" connectorStartCap="NONE" connectorEnd="2:55" connectorEndCap="ARROW_LINES"></connector>
+    </section>
+    <section id="2:68" name="Embedded Intelligence" x="28067" y="6318" width="4424.1640625" height="1106.041015625">
+      <shape-with-text id="2:59" x="237.009765625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">LLM governance agent</shape-with-text>
+      <shape-with-text id="2:62" x="1659.0625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Copilot rules</shape-with-text>
+      <connector id="2:171" x="1351.051025390625" y="553.0209350585938" connectorStart="2:59" connectorStartCap="NONE" connectorEnd="2:62" connectorEndCap="ARROW_LINES"></connector>
+      <shape-with-text id="2:65" x="3081.114501953125" y="237.00860595703125" width="1106.041015625" height="632.0234375" name="SQUARE">Intervention map</shape-with-text>
+      <connector id="2:175" x="2773.103515625" y="553.0209350585938" connectorStart="2:62" connectorStartCap="NONE" connectorEnd="2:65" connectorEndCap="ARROW_LINES"></connector>
+    </section>
+    <section id="2:81" name="Operations" x="29490" y="113" width="1580.05859375" height="3950.146484375">
+      <shape-with-text id="2:69" x="237.0078125" y="1185.0439453125" width="1106.041015625" height="632.0234375" name="SQUARE">Notion CMS and docs</shape-with-text>
+      <shape-with-text id="2:72" x="237.0078125" y="3081.1142578125" width="1106.041015625" height="632.0234375" name="SQUARE">Figma maps and UI</shape-with-text>
+      <shape-with-text id="2:75" x="237.0078125" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Automations</shape-with-text>
+      <shape-with-text id="2:78" x="237.0078125" y="2133.0791015625" width="1106.041015625" height="632.0234375" name="SQUARE">Hiring and finance</shape-with-text>
+    </section>
+    <section id="2:94" name="Outputs" x="33473" y="113" width="1580.05859375" height="3950.146484375">
+      <shape-with-text id="2:82" x="237.009765625" y="3081.1142578125" width="1106.041015625" height="632.0234375" name="SQUARE">Admin UI</shape-with-text>
+      <shape-with-text id="2:85" x="237.009765625" y="2133.0791015625" width="1106.041015625" height="632.0234375" name="SQUARE">Design system</shape-with-text>
+      <shape-with-text id="2:88" x="237.009765625" y="237.0087890625" width="1106.041015625" height="632.0234375" name="SQUARE">Prototype and handoff</shape-with-text>
+      <shape-with-text id="2:91" x="237.009765625" y="1185.0439453125" width="1106.041015625" height="632.0234375" name="SQUARE">Contractor-ready packets</shape-with-text>
+    </section>
+    <connector id="2:95" x="7952.0498046875" y="855.6279296875" connectorStart="2:3" connectorStartCap="NONE" connectorEnd="2:16" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:99" x="7952.0498046875" y="666.0205078125" connectorStart="2:6" connectorStartCap="NONE" connectorEnd="2:16" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:103" x="7952.0498046875" y="666.0205078125" connectorStart="2:9" connectorStartCap="NONE" connectorEnd="2:16" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:107" x="7952.0498046875" y="476.4130859375" connectorStart="2:12" connectorStartCap="NONE" connectorEnd="2:16" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:123" x="14140.1845703125" y="666.0205078125" connectorStart="2:22" connectorStartCap="NONE" connectorEnd="2:29" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:127" x="14140.1845703125" y="963.7626953125" connectorStart="2:22" connectorStartCap="NONE" connectorEnd="2:32" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:131" x="15728.2431640625" y="1221.509765625" connectorStart="2:25" connectorStartCap="NONE" connectorEnd="2:32" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:143" x="21292.162109375" y="666.0205078125" connectorStart="2:35" connectorStartCap="NONE" connectorEnd="2:39" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:155" x="2.29296875" y="773.826171875" connectorStart="2:45" connectorStartCap="NONE" connectorEnd="2:49" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:167" x="21292.162109375" y="1326.84765625" connectorStart="2:35" connectorStartCap="NONE" connectorEnd="2:59" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:179" x="14140.1845703125" y="774.15625" connectorStart="2:22" connectorStartCap="NONE" connectorEnd="2:69" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:183" x="23624.16796875" y="508.0146484375" connectorStart="2:39" connectorStartCap="NONE" connectorEnd="2:72" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:187" x="18290.05078125" y="560.68359375" connectorStart="2:29" connectorStartCap="NONE" connectorEnd="2:75" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:191" x="4915.59619140625" y="723.6259765625" connectorStart="2:55" connectorStartCap="NONE" connectorEnd="2:78" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:195" x="26856.162109375" y="1039.638671875" connectorStart="2:45" connectorStartCap="NONE" connectorEnd="2:82" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:199" x="23854.05078125" y="666.0205078125" connectorStart="2:39" connectorStartCap="NONE" connectorEnd="2:85" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:203" x="1755.47900390625" y="2" connectorStart="2:49" connectorStartCap="NONE" connectorEnd="2:88" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:207" x="30841.048828125" y="1614.0556640625" connectorStart="2:78" connectorStartCap="NONE" connectorEnd="2:91" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:211" x="32262.15625" y="3615.4638671875" connectorStart="2:65" connectorStartCap="NONE" connectorEnd="2:82" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="2:215" x="3335.53759765625" y="945.4921875" connectorStart="2:52" connectorStartCap="NONE" connectorEnd="2:19" connectorEndCap="ARROW_LINES">finds issues</connector>
+    <connector id="2:219" x="4915.59619140625" y="934.30078125" connectorStart="2:55" connectorStartCap="NONE" connectorEnd="2:32" connectorEndCap="ARROW_LINES">refactor requests</connector>
+    <connector id="2:223" x="8455.6064453125" y="144.443359375" connectorStart="2:69" connectorStartCap="NONE" connectorEnd="2:22" connectorEndCap="ARROW_LINES">feeds memory</connector>
+    <connector id="2:227" x="21728.09765625" y="1250.3134765625" connectorStart="2:72" connectorStartCap="NONE" connectorEnd="2:42" connectorEndCap="ARROW_LINES">visualizes system</connector>
+    <section id="28:258" name="About this template" x="37308.671875" y="98" width="7979.2958984375" height="3871.1435546875">
+      <text id="28:259" name="Engineering diagram" x="395.015625" y="438.1083984375" width="3116" height="480" />
+      <text id="28:260" name="Model and design software at ease." x="395.015625" y="965.0908203125" width="5600" height="300" />
+      <connector id="28:261" x="384.36669921875" y="1580.0589599609375" connectorStart="28:258" connectorStartCap="NONE" connectorEnd="28:258" connectorEndCap="NONE"></connector>
+      <text id="28:262" name="GOOD FOR" x="395.015625" y="2014.5751953125" width="837" height="180" />
+      <text id="28:263" name="PEOPLE" x="3056.42626953125" y="2014.574951171875" width="637" height="180" />
+      <text id="28:264" name="MORE TEMPLATES" x="5451.20263671875" y="2014.574951171875" width="1496" height="180" />
+      <text id="28:265" name="Collaborating with designers Breaking down data Walking the board in a standup" x="395.015625" y="2291.962890625" width="2160" height="1200" />
+      <text id="28:266" name="1 to as many as you want!" x="3056.42626953125" y="2291.962890625" width="1886" height="240" />
+      <text id="28:267" name="Diagram basics UML diagram Concept map" x="5451.20263671875" y="2291.962890625" width="2000.0001220703125" height="720" />
+    </section>
+    <section id="28:268" name="Tools" x="37308.671875" y="4206.15234375" width="7979.2958984375" height="14959.876953125">
+      <frame id="28:269" name="Toolbar" x="701.15234375" y="1088.984375" width="2839.167724609375" height="995.647216796875">
+        <frame id="28:270" name="content" x="138.6112518310547" y="138.6112518310547" width="1200.863037109375" height="773.9168701171875">
+          <text id="28:271" name="Toolbar" x="0" y="0" width="1200.863037109375" height="138" />
+          <text id="28:272" name="It’s at the bottom of your screen, with stickies, stamps, and anything you need." x="0" y="207.30563354492188" width="1071.1368408203125" height="428" />
+        </frame>
+        <frame id="28:273" name="Frame 14253" x="1454.983642578125" y="138.6112518310547" width="4198.34375" height="857.0360107421875">
+          <rounded-rectangle id="28:274" name="Screen Shot 2022-09-19 at 4.37 1" x="0" y="0" width="4198.34375" height="369.9979248046875" />
+          <rounded-rectangle id="28:275" name="Screen Shot 2022-09-19 at 4.37 2" x="0" y="487.0380859375" width="4198.34375" height="369.9979248046875" />
+        </frame>
+      </frame>
+      <connector id="28:276" x="4365.7236328125" y="11110.5341796875" connectorStart="28:268" connectorStartCap="NONE" connectorEnd="28:268" connectorEndCap="NONE"></connector>
+      <frame id="28:277" name="Move and Zoom " x="701.15234375" y="2407.3447265625" width="2839.167724609375" height="1235.108154296875">
+        <frame id="28:278" name="content" x="149.87606811523438" y="138.6112518310547" width="1600.8074951171875" height="1096.4969482421875">
+          <text id="28:279" name="Move and Zoom" x="0" y="0" width="1349.3333740234375" height="138" />
+          <text id="28:280" name="Holding Spacebar, use the hand tool to pan around. Zoom controls are in the top right corner." x="0" y="207.30563354492188" width="1320.0001220703125" height="428" />
+          <frame id="28:281" name="shortcuts" x="0" y="704.6112670898438" width="481.5093994140625" height="253.27447509765625">
+            <instance id="28:282" name="Key" x="0.000139519470394589" y="69.30563354492188" width="481.5093994140625" height="183.96884155273438" />
+          </frame>
+        </frame>
+        <frame id="28:283" name="Frame 14254" x="1866.1929931640625" y="343.98931884765625" width="886.2001953125" height="685.7407836914062">
+          <frame id="28:284" name="Group 2204" x="0" y="0" width="523.2113037109375" height="247.78395080566406">
+            <frame id="28:285" name="Group 2202" x="0.001139972941018641" y="0.00036438010283745825" width="215.81182861328125" height="247.78395080566406" />
+            <rounded-rectangle id="28:288" name="Rectangle 555" x="285.3572692871094" y="90.61366271972656" width="237.8558349609375" height="11.326467514038086" />
+            <rounded-rectangle id="28:289" name="Rectangle 556" x="285.3572692871094" y="139.69363403320312" width="139.69309997558594" height="11.326467514038086" />
+            <rounded-rectangle id="28:290" name="Rectangle 557" x="285.3572692871094" y="188.77511596679688" width="215.202880859375" height="11.326467514038086" />
+          </frame>
+          <rounded-rectangle id="28:291" name="Screen Shot 2022-09-19 at 4.47 1" x="0" y="364.8241271972656" width="886.2001953125" height="320.9165954589844" />
+        </frame>
+      </frame>
+      <frame id="28:292" name="Share" x="701.15234375" y="3977.5283203125" width="2839.167724609375" height="1166.0587158203125">
+        <frame id="28:293" name="content" x="135.9176025390625" y="181.22348022460938" width="1536.6240234375" height="984.835205078125">
+          <text id="28:294" name="Auto Connectors" x="0" y="0" width="1379.388427734375" height="392" />
+          <text id="28:295" name="FigJam’s better with others. Click the Share button above to invite your team." x="0" y="482.61175537109375" width="1235.666748046875" height="321" />
+        </frame>
+        <frame id="28:296" name="image" x="1672.5416259765625" y="181.22348022460938" width="1083.5653076171875" height="966.5252075195312">
+          <rounded-rectangle id="28:297" name="image 21" x="-45.305782318115234" y="64.1852035522461" width="1128.8712158203125" height="721.6201782226562" />
+          <frame id="28:298" name="Share" x="463.64202880859375" y="-45.304542541503906" width="484.6449279785156" height="230.9723663330078">
+            <frame id="28:299" name="Icon" x="76.8370361328125" y="67.4630355834961" width="76.83704376220703" height="96.04629516601562" />
+            <text id="28:301" name="title" x="204.89877319335938" y="44.82160186767578" width="202.9091339111328" height="141.32916259765625" />
+          </frame>
+        </frame>
+      </frame>
+      <frame id="28:302" name="Rectangles" x="4340.2236328125" y="1318.361572265625" width="2793.1904296875" height="1629.4691162109375">
+        <frame id="28:303" name="content" x="179.5616455078125" y="179.5616455078125" width="1540" height="1449.907470703125">
+          <text id="28:304" name="Rectangles" x="0" y="0" width="1540" height="176" />
+          <text id="28:305" name="Press “R” to quickly place a rectangle onto the canvas. Other shapes can be selected from the toolbar or swapped from the shape menu." x="0" y="265.78082275390625" width="1400.428466796875" height="587" />
+          <frame id="28:306" name="shortcuts" x="0" y="942.5616455078125" width="217.6346893310547" height="327.78424072265625">
+            <instance id="28:307" name="Key" x="0" y="89.78082275390625" width="217.6346893310547" height="238.00341796875" />
+          </frame>
+        </frame>
+        <frame id="28:308" name="image" x="1869.1964111328125" y="179.5616455078125" width="923.9942016601562" height="1449.907470703125">
+          <frame id="28:309" name="Lines" x="-235.67578125" y="-190.51637268066406" width="1159.6688232421875" height="1178.3731689453125">
+            <rounded-rectangle id="28:310" name="Rectangle 516" x="115.96562957763672" y="-82.2994155883789" width="927.735107421875" height="441.42236328125" />
+            <rounded-rectangle id="28:311" name="Rectangle 516" x="620.9835815429688" y="448.9044494628906" width="422.7179870605469" height="935.216796875" />
+            <rounded-rectangle id="28:312" name="Rectangle 516" x="115.96562957763672" y="448.9044494628906" width="422.7179870605469" height="160.85728454589844" />
+            <rounded-rectangle id="28:313" name="Rectangle 516" x="115.96562957763672" y="654.6520385742188" width="422.7179870605469" height="235.67465209960938" />
+            <rounded-rectangle id="28:314" name="Rectangle 516" x="115.96562957763672" y="946.4390258789062" width="422.7179870605469" height="437.68145751953125" />
+          </frame>
+        </frame>
+      </frame>
+      <rounded-rectangle id="28:315" name="image 22" x="4256.28125" y="3189.744140625" width="3021.862060546875" height="1842.324951171875" />
+      <text id="28:316" name="Title" x="715.96484375" y="508.58203125" width="2860" height="300" />
+      <text id="28:317" name="Title" x="715.96484375" y="6004.22265625" width="2860" height="300" />
+      <text id="28:318" name="Title" x="4364.9140625" y="11376.421875" width="2860" height="300" />
+      <text id="28:319" name="Title" x="4340.22265625" y="508.58203125" width="2860" height="600" />
+      <rounded-rectangle id="28:320" name="Screen Shot 2023-06-09 at 10.08 1" x="715.96484375" y="6574.72314453125" width="2824.354736328125" height="2167.075439453125" />
+      <rounded-rectangle id="28:321" name="Screen Shot 2023-06-09 at 10.08 2" x="715.96484375" y="10802.26171875" width="2824.354736328125" height="2155.4345703125" />
+      <text id="28:322" name="Get specific" x="715.96484375" y="9004.0625" width="1127" height="300" />
+      <text id="28:323" name="Make it feel real" x="839.40625" y="13240.5947265625" width="1465" height="300" />
+      <text id="28:324" name="Find just the right hue with a color picker. Plus, choose from drag-and-drop shapes—or custom shapes made by our community—to convey exactly what you mean." x="715.96484375" y="9460.125" width="2778.285888671875" height="816" />
+      <text id="28:325" name="Add screens, code blocks, and other components into your diagrams from your Figma libraries to add realism and context." x="839.40625" y="13696.6572265625" width="2972.571533203125" height="612" />
+      <frame id="28:326" name="Lines" x="4340.2236328125" y="5248.75732421875" width="2793.1904296875" height="1864.4691162109375">
+        <frame id="28:327" name="content" x="179.56163024902344" y="179.56163024902344" width="1540" height="1684.907470703125">
+          <text id="28:328" name="Lines" x="0" y="0" width="1540" height="176" />
+          <text id="28:329" name="Press “L” to quickly select the line tool to draw a line.   Also, hovering over objects will reveal connection points if you want to draw lines between two objects." x="0" y="265.78082275390625" width="1400.4285888671875" height="822" />
+          <frame id="28:330" name="shortcuts" x="0" y="1177.5616455078125" width="209.6346893310547" height="327.78424072265625">
+            <instance id="28:331" name="Key" x="0" y="89.78081512451172" width="209.6346893310547" height="238.00341796875" />
+          </frame>
+        </frame>
+        <frame id="28:332" name="image" x="1869.1962890625" y="179.56163024902344" width="923.9942016601562" height="1684.907470703125">
+          <frame id="28:333" name="Lines" x="-235.67428588867188" y="-179.55299377441406" width="1159.6688232421875" height="1395.343505859375">
+            <frame id="28:334" name="lines" x="-157.98748779296875" y="0.00023232890816871077" width="1708.782470703125" height="1537.49658203125">
+              <rounded-rectangle id="28:335" name="image 3" x="-157.98669434455223" y="0.00046465781633742154" width="1708.782470703125" height="1537.49658203125" />
+              <line id="28:336" name="Line 46" x="264.1104736328125" y="827.8832889695332" width="265.08560189337004" height="293.633284636544" />
+              <ellipse id="28:337" name="Ellipse 227" x="243.7208251953125" y="793.2182499070332" width="20.391197204589844" height="20.391197204589844" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="28:339" name="Auto connectors" x="4340.2236328125" y="7480.58984375" width="2793.1904296875" height="1358.904052734375">
+        <frame id="28:340" name="content" x="179.56163024902344" y="179.56163024902344" width="1540" height="1179.3424072265625">
+          <text id="28:341" name="Auto Connectors" x="0" y="0" width="1540" height="176" />
+          <text id="28:342" name="Quickly add an adjacent object that is connected to the one you’ve selected by clicking on the + icon in the desired direction." x="0" y="265.78082275390625" width="1400.4285888671875" height="734" />
+        </frame>
+        <frame id="28:343" name="image" x="1869.1962890625" y="179.56163024902344" width="923.994140625" height="1179.3424072265625">
+          <frame id="28:344" name="auto connector" x="-179.56118774414062" y="-179.5618133544922" width="1103.5557861328125" height="1227.00439453125">
+            <frame id="28:345" name="Group 2131" x="-278.8066101074219" y="-552.9075927734375" width="1510.5826416015625" height="1926.5828857421875">
+              <rounded-rectangle id="28:346" name="image 9" x="-278.8085204284871" y="-552.9074653950083" width="1510.5826416015625" height="1926.5828857421875" />
+              <rounded-rectangle id="28:347" name="image 8" x="-0.0006103515625" y="447.26385498046875" width="888.057373046875" height="719.8870849609375" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="28:349" name="Connector Labels" x="4340.2236328125" y="9223.591796875" width="2849.043212890625" height="1362.2578125">
+        <frame id="28:350" name="content" x="181.1312255859375" y="181.1312255859375" width="1610" height="1073.69677734375">
+          <text id="28:351" name="Auto Connectors" x="0" y="0" width="1610" height="215" />
+          <text id="28:352" name="Add text to your connections. Select the +T button on the connector menu to add in text. Once made, you can move the placement of your label." x="0" y="305.56561279296875" width="1400.428466796875" height="587" />
+        </frame>
+        <instance id="28:353" name="_connector-labels" x="1791.1312255859375" y="181.1312255859375" width="1128.296630859375" height="1181.1265869140625" />
+      </frame>
+      <connector id="28:354" x="775.21533203125" y="5584.51953125" connectorStart="28:268" connectorStartCap="NONE" connectorEnd="28:317" connectorEndCap="NONE"></connector>
+      <widget id="28:355" name="Link preview" x="879" y="2408" width="480" height="84">
+        <frame id="28:356" name="Frame" x="0" y="0" width="480" height="84">
+          <frame id="28:357" name="Frame" x="0" y="0" width="1" height="1" />
+          <frame id="28:358" name="Frame" x="1" y="0" width="479" height="84">
+            <frame id="28:359" name="service-name-autolayout" x="20" y="20" width="439" height="44">
+              <frame id="28:360" name="Frame" x="0" y="0" width="16" height="19">
+                <frame id="28:361" name="Frame" x="0" y="3" width="16" height="16" />
+              </frame>
+              <text id="28:363" name="https:​​/​/help​.figma​.com​/hc​/en​-us​/articles​/1500004362321​-Guide​-to​-FigJam" x="24" y="0" width="415" height="44" />
+            </frame>
+          </frame>
+        </frame>
+      </widget>
+    </section>
+    <frame id="28:364" name="Group 632514" x="36034.75" y="112.8134765625" width="1275.941650390625" height="1749.9609375">
+      <frame id="28:365" name="Group 2205" x="36034.750104689025" y="112.81335048022447" width="1040" height="913.0205078125">
+        <shape-with-text id="28:366" x="36429.765729689025" y="481.77624110522447" width="237.0087890625" height="162.94354248046875" name="SQUARE">DEL</shape-with-text>
+        <text id="28:367" name="to remove instructions" x="36034.75020937805" y="665.833736222412" width="1040" height="360" />
+        <text id="28:368" name="Click each section and press" x="36034.75020937805" y="112.81322439794894" width="960.0000610351562" height="540" />
+      </frame>
+      <instance id="28:369" name="Curvy arrow" x="36959.33203125" y="1862.7744140625" width="959.932195431611" height="959.932195431611" />
+    </frame>
+    <shape-with-text id="28:370" x="52487.109375" y="6595.9912109375" width="2923.1083984375" height="1264.046875" name="SQUARE"></shape-with-text>
+    <text id="28:371" name="Facebook" x="53173.44921875" y="7034.1416015625" width="1569" height="480" />
+    <connector id="28:372" x="50653.046875" y="5201.380859375" connectorStart="28:370" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:373" x="53497.15234375" y="4964.3720703125" connectorStart="28:371" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:374" x="54065.5078125" y="5991.41015625" connectorStart="28:371" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:375" x="52783.109375" y="6851.9912109375" connectorStart="28:370" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:376" name="online advertenties" x="49959.015625" y="5007.419921875" width="1920.0001220703125" height="180" />
+    <connector id="28:377" x="50574.04296875" y="4569.357421875" connectorStart="28:376" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:378" name="onderzoek: pastinaak promoten" x="49722.0078125" y="4428.3486328125" width="2320" height="180" />
+    <text id="28:379" name="doelgroep: geslacht, interesses, gescheiden, welke telefoon,.." x="49405.99609375" y="3638.3193359375" width="3360.000244140625" height="360" />
+    <connector id="28:380" x="49592.40234375" y="3710.3193359375" connectorStart="28:378" connectorStartCap="NONE" connectorEnd="28:379" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:381" x="49230.9921875" y="4421.2265625" connectorStart="28:378" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:382" name="campagne van 550 euro" x="47904.94140625" y="4340.8330078125" width="1360" height="360" />
+    <connector id="28:383" x="47729.9375" y="3937.333984375" connectorStart="28:382" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:384" name="in 1 jaar tijd: +16%, +300%, +158% verkoop van pastinaak" x="46561.890625" y="3595.2431640625" width="1920.0001220703125" height="540" />
+    <connector id="28:385" x="52617.8359375" y="6149.416015625" connectorStart="28:370" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:386" name="2,2 miljard gebruikers" x="52013.09375" y="6034.4580078125" width="1600.0001220703125" height="180" />
+    <connector id="28:387" x="51680.08203125" y="6678.6396484375" connectorStart="28:370" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:388" name="Sillicon Valley" x="50670.04296875" y="6617.1044921875" width="1840.0001220703125" height="180" />
+    <connector id="28:389" x="49942.01953125" y="6465.427734375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:390" name="gebied met veel grote technologische bedrijven" x="49010.98046875" y="6167.775390625" width="960.0000610351562" height="720" />
+    <connector id="28:391" x="50416.03515625" y="6860.4423828125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:392" name="Californie" x="49959.015625" y="7333.068359375" width="1280" height="180" />
+    <text id="28:393" name="San francisco en San José" x="47825.9375" y="7728.0830078125" width="1779" height="180" />
+    <connector id="28:394" x="49626.0078125" y="7513.978515625" connectorStart="28:392" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:395" x="51014.203125" y="4016.3369140625" connectorStart="28:378" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:396" name="Dieter: adverteerder" x="51855.0859375" y="3954.3310546875" width="1120" height="360" />
+    <connector id="28:397" x="47887.94140625" y="4703.4462890625" connectorStart="28:382" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:398" name="som van deze bedragen gaan naar Facebook zelf" x="46640.89453125" y="5218.3779296875" width="1680.0001220703125" height="360" />
+    <text id="28:399" name="Data" x="53380.83203125" y="4829.6630859375" width="1360" height="180" />
+    <connector id="28:400" x="53995.85546875" y="4944.62109375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:401" name="Foto’s, adressen, likes, vrienden, nummers,..." x="53277.140625" y="3559.31640625" width="1465.0001220703125" height="540" />
+    <connector id="28:402" x="53339.14453125" y="4095.33984375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:403" x="54146.65625" y="4332.3486328125" connectorStart="28:399" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:404" name="hoe meer data, hoe gerichter de advertenties" x="54723.87890625" y="4029.7587890625" width="1200" height="540" />
+    <connector id="28:405" x="51816.0390625" y="4885.369140625" connectorStart="28:376" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:406" name="GDPR" x="55331.21484375" y="4874.1025390625" width="960.0000610351562" height="180" />
+    <connector id="28:407" x="55971.5546875" y="4569.357421875" connectorStart="28:406" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:408" name="transparanter omgaan met data" x="56753.26953125" y="4507.3515625" width="1040" height="540" />
+    <text id="28:409" name="website" x="56516.2578125" y="4177.8896484375" width="880.0000610351562" height="180" />
+    <connector id="28:410" x="55709.234375" y="4332.3486328125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:411" x="55788.234375" y="4964.3720703125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:412" name="mail: datarequests@support.facebook.com" x="56555.76171875" y="5219.740234375" width="1440.0001220703125" height="540" />
+    <connector id="28:413" x="55156.2109375" y="6307.421875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:414" x="57637.9453125" y="4885.369140625" connectorStart="28:412" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:415" name="Facebook: wettelijk binnen 1 maand terugsturen" x="58254.32421875" y="4730.91015625" width="1600.0001220703125" height="540" />
+    <connector id="28:416" x="55836.65234375" y="4174.3427734375" connectorStart="28:406" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:417" name="privacy/ veiligheid" x="55671.9140625" y="3916.1923828125" width="1400.0001220703125" height="180" />
+    <connector id="28:418" x="56025.24609375" y="3384.3134765625" connectorStart="28:417" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:419" name="van klantenkaart tot facebook" x="55568.22265625" y="3096.537109375" width="1320" height="360" />
+    <text id="28:420" name="wet:" x="54911.51171875" y="4908.666015625" width="1625.0001220703125" height="180" />
+    <text id="28:421" name="Baas: Marc Zuchterberg" x="54462.18359375" y="5692.3955078125" width="880.0000610351562" height="360" />
+    <text id="28:422" name="afluisteren?" x="55987.92578125" y="6306.0302734375" width="1080" height="180" />
+    <connector id="28:423" x="57071.8984375" y="6298.9091796875" connectorStart="28:422" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:424" name="neen." x="57543.296875" y="6324.4189453125" width="1680.0001220703125" height="180" />
+    <connector id="28:425" x="57842.3125" y="5912.4072265625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:426" x="57842.3125" y="6465.427734375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:427" name="zien geen linken tussen conversaties van de microfoon en advertenties" x="58846.84765625" y="5550.5654296875" width="1120" height="900" />
+    <text id="28:428" name="niet nodig" x="59281.36328125" y="6640.4306640625" width="960.0000610351562" height="180" />
+    <connector id="28:429" x="56499.26171875" y="6465.427734375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:430" name="onderzoek: Kobe en Philiph" x="57148.28125" y="6798.4365234375" width="1240" height="360" />
+    <connector id="28:431" x="57684.3046875" y="7176.4541015625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:432" name="6 gsm’s in geluidloos lokaal" x="57148.28125" y="7825.474609375" width="1920.0001220703125" height="180" />
+    <connector id="28:433" x="58048.71875" y="7160.615234375" connectorStart="28:430" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:434" name="40 dagen" x="58491.33203125" y="7510.8251953125" width="800.0000610351562" height="180" />
+    <connector id="28:435" x="57052.28125" y="7176.4541015625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:436" name="profiel levend houden, liken, chatten,.." x="56215.0625" y="7298.5048828125" width="945.0000610351562" height="720" />
+    <connector id="28:437" x="56420.2578125" y="8045.4853515625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:438" name="ontwikkelen van agloritme" x="56753.26953125" y="8562.5517578125" width="1120" height="360" />
+    <connector id="28:439" x="57289.29296875" y="8045.4853515625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:440" name="Nelson William Josefien Clara Patrik Marijke" x="58649.33984375" y="8378.494140625" width="1120" height="1080" />
+    <connector id="28:441" x="57842.3125" y="6465.427734375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:442" name="fenomeen: Frequention illusion" x="59755.37890625" y="7430.4599609375" width="1280" height="360" />
+    <connector id="28:443" x="60212.3984375" y="7887.4794921875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:444" name="nieuws leren/ zien? --&gt; overal opeens dat tegenkomen" x="59755.37890625" y="8335.41796875" width="1200" height="720" />
+    <connector id="28:445" x="53059.6328125" y="6723.9912109375" connectorStart="28:370" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:446" name="account aanmaken?" x="55133.70703125" y="8271.228515625" width="1440.0001220703125" height="180" />
+    <connector id="28:447" x="55235.21484375" y="8440.5" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:448" name="profielschets" x="54699.19140625" y="9247.52734375" width="1535.0001220703125" height="180" />
+    <connector id="28:449" x="55469.1796875" y="9431.525390625" connectorStart="28:448" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:450" name="naam e-mail woon/ werk likes ..." x="55410.21875" y="9688.34375" width="880.0000610351562" height="1080" />
+    <connector id="28:451" x="55788.234375" y="8440.5" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:452" name="locatie" x="55987.92578125" y="9248.8896484375" width="1760.0001220703125" height="180" />
+    <connector id="28:453" x="56341.2578125" y="9467.5380859375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:454" name="onderweg vakantie psycholoog ziekenhuis ..." x="56437.2578125" y="9821.6611328125" width="1305" height="900" />
+    <connector id="28:455" x="57289.29296875" y="9467.5380859375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:456" name="uitschakelen= nog altijd zichtbaar" x="57721.0546875" y="9545.150390625" width="2356" height="180" />
+    <connector id="28:457" x="57210.2890625" y="9546.541015625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:458" name="apps verwijderen= niet zichtbaar" x="58372.828125" y="10088.2958984375" width="2183" height="180" />
+    <text id="28:459" name="niet meer zien?" x="56713.765625" y="9445.9423828125" width="1680" height="120" />
+    <connector id="28:461" x="58553.33984375" y="10336.5703125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:462" name="Facebook" x="58017.31640625" y="10906.587890625" width="1455.0001220703125" height="180" />
+    <connector id="28:463" x="58948.3515625" y="10336.5703125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:464" name="messenger" x="58491.33203125" y="11380.60546875" width="1580.0001220703125" height="180" />
+    <connector id="28:465" x="59422.37109375" y="10415.5732421875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:466" name="whattsap" x="59454.1796875" y="11307.904296875" width="1265" height="180" />
+    <connector id="28:467" x="59975.390625" y="10336.5703125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:468" name="instagram" x="60071.390625" y="10985.591796875" width="1360" height="180" />
+    <connector id="28:469" x="60054.39453125" y="9546.541015625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:470" name="via pixel" x="60703.4140625" y="9599.46484375" width="2640" height="180" />
+    <connector id="28:471" x="58158.32421875" y="11126.599609375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:472" x="58948.3515625" y="11600.6171875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:473" x="59343.3671875" y="11600.6171875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:474" x="59817.38671875" y="11521.6142578125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:475" name="toegang tot: contactenlijst met wie je chat hoelang gesprekken duren over wat gesprekken gaan" x="58649.33984375" y="12601.576171875" width="2640" height="900" />
+    <connector id="28:476" x="54603.19140625" y="8519.5029296875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:477" name="algoritmes" x="53988.1640625" y="9958.552734375" width="1160" height="180" />
+    <connector id="28:478" x="53892.1640625" y="10099.5615234375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:479" name="herkent patronen" x="53222.82421875" y="10809.197265625" width="1520.0001220703125" height="180" />
+    <connector id="28:480" x="54287.1796875" y="10257.5673828125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:481" name="slimmer dan de mens" x="54541.1875" y="10898.076171875" width="1305" height="360" />
+    <connector id="28:482" x="54208.17578125" y="10178.564453125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:483" name="waarom doet Facebook al die moeite?" x="53988.1640625" y="11459.609375" width="960.0000610351562" height="540" />
+    <connector id="28:484" x="53418.1484375" y="10099.5615234375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:485" name="ingrediënten: stukjes info" x="52487.109375" y="10399.3701171875" width="960.0000610351562" height="360" />
+    <connector id="28:486" x="54952.140625" y="11630.2431640625" connectorStart="28:483" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:487" name="kennis delen aan mensen die bereid zijn hen te betalen" x="55587.9765625" y="11594.2890625" width="2160" height="360" />
+    <text id="28:488" name="interessant voor" x="53435.14453125" y="8931.515625" width="1305" height="180" />
+    <connector id="28:489" x="53576.15234375" y="9151.5263671875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:490" x="52865.12890625" y="9112.4326171875" connectorStart="28:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:491" name="bedrijven" x="53222.82421875" y="9604.40234375" width="1960.0001220703125" height="180" />
+    <text id="28:492" name="politieke partijen" x="51776.08203125" y="9372.33203125" width="1680.0001220703125" height="180" />
+    <connector id="28:493" x="51443.07421875" y="9554.05078125" connectorStart="28:492" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:494" x="53576.15234375" y="10178.564453125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:495" name="onderzoek van Kosinski" x="52329.10546875" y="11772.0458984375" width="2105" height="180" />
+    <connector id="28:496" x="52707.12109375" y="11995.6318359375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:497" name="tool uitgevonden die gedrag van mens kan analyseren obv Facebook likes" x="52645.1171875" y="12486.646484375" width="1455.0001220703125" height="720" />
+    <connector id="28:498" x="54104.1171875" y="12746.16015625" connectorStart="28:497" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:499" name="digitale voetafdruk" x="54936.19921875" y="12723.65625" width="1945.0001220703125" height="180" />
+    <connector id="28:500" x="54101.4609375" y="13208.4248046875" connectorStart="28:497" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:501" name="Facebook kent je beter dan jezelf" x="54857.19921875" y="13608.8642578125" width="1440.0001220703125" height="360" />
+    <connector id="28:502" x="54524.1875" y="10178.564453125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:503" name="gedrag beter voorspellen" x="54911.51171875" y="10552.4375" width="1360" height="360" />
+    <text id="28:504" name="NVA" x="51065.05859375" y="10093.2333984375" width="1280" height="180" />
+    <connector id="28:505" x="50969.05859375" y="10336.5703125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:506" name="Facebookgebruik om samenleving te overtuigen van standpunten" x="50512.03515625" y="10804.259765625" width="1520.0001220703125" height="720" />
+    <connector id="28:507" x="49942.01953125" y="10968.59375" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:508" name="komt hip over bij jonge mensen" x="48773.97265625" y="11238.775390625" width="1280" height="360" />
+    <connector id="28:509" x="50811.05078125" y="9388.53515625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:510" name="Maraakech crisis" x="49722.0078125" y="9505.6494140625" width="1280" height="180" />
+    <connector id="28:511" x="49468" y="9625.5439453125" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:512" name="partijen lanceren vollop filmpjes en posts op sociale media" x="48536.96484375" y="10037.556640625" width="1760.0001220703125" height="540" />
+    <connector id="28:513" x="51048.05859375" y="8756.51171875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:514" name="politieke rechter" x="50512.03515625" y="8602.052734375" width="1280" height="180" />
+    <connector id="28:515" x="51048.05859375" y="8203.4912109375" connectorStart="28:514" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:516" name="Dancing de versus Huis van de rechten in Leuven Robin van Persie The fast and the furious Karlsberg Serie ‘Dani Lowinski’" x="50842.86328125" y="7510.37109375" width="3280" height="720" />
+    <connector id="28:517" x="52154.1015625" y="8756.51171875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:518" name="Psychiater Auteur Paul Verhagen 500 days of summer ..." x="52171.09765625" y="7930.07421875" width="2160" height="480" />
+    <text id="28:519" name="linkse rechter" x="52013.09375" y="8606.9912109375" width="2815.000244140625" height="180" />
+    <connector id="28:520" x="52115.37109375" y="8282.494140625" connectorStart="28:519" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:521" name="250 likes halen" x="56674.265625" y="10863.0576171875" width="1040" height="120" />
+    <connector id="28:522" x="56275.484375" y="10813.78515625" connectorStart="28:503" connectorStartCap="NONE" connectorEnd="28:521" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:523" x="53102.13671875" y="9783.5498046875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:524" name="promotie" x="52724.1171875" y="9998.962890625" width="1120" height="120" />
+    <text id="28:525" name="21 grote schandalen in 2018" x="50670.04296875" y="7179.5458984375" width="2105" height="120" />
+    <connector id="28:526" x="51838.08984375" y="7175.150390625" connectorStart="28:371" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <connector id="28:527" x="49151.98828125" y="7552.37109375" connectorStart="28:516" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:528" name="kracht van Facebook" x="47509.92578125" y="9089.521484375" width="1520.0001220703125" height="180" />
+    <connector id="28:529" x="47255.91796875" y="9309.5322265625" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:530" name="voorspellen" x="46877.90234375" y="9800.546875" width="960.0000610351562" height="180" />
+    <connector id="28:531" x="46781.90234375" y="9151.5263671875" connectorStart="34:488" connectorStartCap="NONE" connectorEnd="34:488" connectorEndCap="ARROW_LINES"></connector>
+    <text id="28:532" name="informatie kennen" x="46008.87109375" y="9089.521484375" width="880.0000610351562" height="360" />
+    <text id="28:533" name="waar" x="50670.04296875" y="6459.0986328125" width="960.0000610351562" height="180" />
+    <text id="28:534" name="account aanmaken?" x="55331.21484375" y="8220.48828125" width="1120" height="360" />
+    <instance id="28:535" name="data" x="53593.15234375" y="4546.8525390625" width="316.01171875" height="316.01171875" />
+    <instance id="28:536" name="person" x="54936.19921875" y="8259.990234375" width="291.32330322265625" height="291.32330322265625" />
+    <instance id="28:537" name="email" x="56200.24609375" y="5391.1962890625" width="316.01171875" height="316.01171875" />
+    <instance id="28:538" name="Politics" x="52645.1171875" y="9089.521484375" width="301.1986999511719" height="301.1986999511719" />
+    <instance id="28:539" name="Thumbs Up" x="56674.265625" y="11030.03125" width="241.94647216796875" height="241.94647216796875" />
+    <instance id="28:540" name="Line chart" x="54985.578125" y="9504.287109375" width="217.258056640625" height="217.258056640625" />
+    <instance id="28:541" name="Bar chart" x="54985.578125" y="9721.544921875" width="246.8841552734375" height="246.8841552734375" />
+    <instance id="28:542" name="Pie chart" x="54995.453125" y="10042.494140625" width="256.759521484375" height="256.759521484375" />
+    <instance id="28:543" name="Streaming" x="48102.44921875" y="9914.1142578125" width="434.51611328125" height="434.51611328125" />
+    <instance id="28:544" name="chat" x="59923.26171875" y="12674.279296875" width="316.01171875" height="316.01171875" />
+    <instance id="28:545" name="search" x="52106.91015625" y="11790.43359375" width="222.19573974609375" height="222.19573974609375" />
+    <instance id="28:546" name="search" x="56911.2734375" y="6694.7451171875" width="237.0087890625" height="237.0087890625" />
+    <instance id="28:547" name="search" x="49529.4375" y="4324.6572265625" width="192.56964111328125" height="192.56964111328125" />
+    <instance id="28:548" name="Link" x="60051.640625" y="5549.2021484375" width="296.260986328125" height="296.260986328125" />
+  </section>
+</canvas>

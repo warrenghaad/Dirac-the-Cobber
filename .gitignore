@@ -1,3 +1,8 @@
+# Workflow data contains user inputs and must not be committed.
+/workflow_system/data/
+__pycache__/
+*.pyc
+/generated-artifacts/
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
