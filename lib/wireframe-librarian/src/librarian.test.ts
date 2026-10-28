@@ -6,7 +6,17 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { buildPlan, classifyFamily, KG_NODE_COMPONENT, KG_EDGE_COMPONENT, WF_NODE_COMPONENT, WF_EDGE_COMPONENT } from "./librarian";
+import {
+  buildPlan,
+  classifyFamily,
+  classifyVisualLanguage,
+  classifyVisualLanguageFromManifest,
+  VISUAL_LANGUAGE_DEFINITIONS,
+  KG_NODE_COMPONENT,
+  KG_EDGE_COMPONENT,
+  WF_NODE_COMPONENT,
+  WF_EDGE_COMPONENT,
+} from "./librarian";
 import { validatePlan } from "./validate";
 import type { Manifest, DiagramPlan, Placement, PlanRequest, StructuredNode, StructuredEdge } from "./types";
 
@@ -26,6 +36,27 @@ const MANIFEST: Manifest = {
     strokeScale: [1, 2, 3, 4],
     dashVocabulary: { solid: [], dashed: [6, 4], dotted: [2, 3], double: "double" },
   },
+  visualLanguages: VISUAL_LANGUAGE_DEFINITIONS,
+  componentFamilies: [
+    {
+      id: "tier1",
+      label: "Tier 1",
+      visualLanguages: VISUAL_LANGUAGE_DEFINITIONS.map((language) => language.id),
+      semanticRoles: ["node", "edge", "container", "component", "page", "section", "group"],
+    },
+    {
+      id: "knowledge-graph",
+      label: "Relational",
+      visualLanguages: ["knowledge-graph", "uml", "database", "information-architecture", "mind-map"],
+      semanticRoles: ["entity", "class", "literal", "actor", "table", "column", "page", "section", "topic", "relation", "association", "property", "foreign-key", "subclass", "contains", "navigation", "branch", "group"],
+    },
+    {
+      id: "workflow",
+      label: "Sequential",
+      visualLanguages: ["workflow", "flowchart"],
+      semanticRoles: ["start", "end", "task", "process", "decision", "parallel", "data", "flow", "conditional", "branch", "lane"],
+    },
+  ],
   components: [
     { id: "prim.node.generic", family: "tier1", tier: 1, shape: "rounded-rect",    axes: { a1: 0, a2: 0, a3: 2, a4: 0, a5: 0 }, maxAxes: { a1: 0, a2: 4, a3: 4, a4: 4, a5: 4 }, figmaNodeId: null },
     { id: "prim.node.round",   family: "tier1", tier: 1, shape: "ellipse",         axes: { a1: 1, a2: 0, a3: 2, a4: 0, a5: 0 }, maxAxes: { a1: 1, a2: 4, a3: 4, a4: 4, a5: 4 }, figmaNodeId: null },
@@ -82,6 +113,59 @@ describe("classifyFamily", () => {
 
   it("defaults to knowledge-graph on a tie / no cues", () => {
     expect(classifyFamily("diagram")).toBe("knowledge-graph");
+  });
+});
+
+describe("classifyVisualLanguage", () => {
+  const cases = [
+    ["draw a UML class inheritance diagram", "uml"],
+    ["show database tables with foreign keys", "database"],
+    ["outline a MUI dashboard with cards and dialogs", "mui-ui"],
+    ["make a flowchart with a yes or no decision", "flowchart"],
+    ["show the approval workflow and handoffs", "workflow"],
+    ["create a sitemap and navigation hierarchy", "information-architecture"],
+    ["brainstorm a mind map around a central idea", "mind-map"],
+    ["map entities and relationships", "knowledge-graph"],
+  ] as const;
+
+  for (const [need, expected] of cases) {
+    it(`selects ${expected} for "${need}"`, () => {
+      expect(classifyVisualLanguage(need)).toBe(expected);
+    });
+  }
+
+  it("uses the loaded manifest cues and their declared order", () => {
+    const manifest: Manifest = {
+      ...MANIFEST,
+      visualLanguages: MANIFEST.visualLanguages!.map((language) =>
+        language.id === "database"
+          ? { ...language, cues: ["constellation"] }
+          : { ...language, cues: [] },
+      ),
+    };
+
+    expect(classifyVisualLanguageFromManifest("show a constellation", manifest)).toBe("database");
+  });
+});
+
+describe("buildPlan – visual language selection", () => {
+  it("honors an explicit language override and keeps component selection deterministic", () => {
+    const request: PlanRequest = {
+      need: "show classes and relationships",
+      visualLanguage: "database",
+      nodes: [{ id: "users", label: "Users", className: "User", kind: "table" }],
+      edges: [],
+    };
+    const first = build(request);
+    const second = build(request);
+
+    expect(first.visualLanguage).toBe("database");
+    expect(first.family).toBe("knowledge-graph");
+    expect(first.placements[0]?.componentId).toBe("kg.class");
+    expect(first.placements[0]?.content.role).toBe("table");
+    expect(first.placements[0]?.content.className).toBe("User");
+    expect(first.compositionIds).toBeUndefined();
+    expect(second).toEqual(first);
   });
 });
 
@@ -382,6 +466,7 @@ describe("validatePlan – constraint: axis-range", () => {
       family: "knowledge-graph",
       nodes: [{ id: "n1", label: "N1", className: "X", kind: "entity" }],
       edges: [],
+      compositionIds: ["org.uml-workflow-bridge"],
     });
     // Mutate to push a5 out of range.
     const p = plan.placements.find((pp) => pp.id === "n1")!;
@@ -534,6 +619,75 @@ describe("validatePlan – constraint: manifest-id", () => {
     });
     const rules = violationRules(plan);
     expect(rules).toContain("manifest-id");
+  });
+});
+
+describe("validatePlan – visual-language compatibility", () => {
+  it("rejects a component family outside the selected visual language", () => {
+    const plan = build({
+      need: "UML classes",
+      visualLanguage: "uml",
+      nodes: [{ id: "class-a", label: "Class A", className: "Class", kind: "class" }],
+      edges: [],
+    });
+    plan.placements[0] = {
+      id: "class-a",
+      componentId: "wf.task",
+      axes: { ...MANIFEST.components.find((component) => component.id === "wf.task")!.axes },
+      content: { label: "Class A", role: "class" },
+    };
+
+    expect(violationRules(plan)).toContain("visual-language");
+  });
+
+  it("allows the mix when a declared cross-family composition contains the component", () => {
+    const manifest: Manifest = {
+      ...MANIFEST,
+      compositions: [
+        {
+          id: "org.uml-workflow-bridge",
+          atomicLevel: "organism",
+          label: "UML workflow bridge",
+          family: "cross-family",
+          visualLanguages: ["uml"],
+          slots: [
+            {
+              componentId: "wf.task",
+              role: "behavior",
+              position: { x: 0.5, y: 0.5 },
+            },
+          ],
+        },
+      ],
+    };
+    const task = MANIFEST.components.find((component) => component.id === "wf.task")!;
+    const plan = buildPlan({
+      need: "UML behavior",
+      visualLanguage: "uml",
+      compositionIds: ["org.uml-workflow-bridge"],
+      nodes: [{ id: "behavior", label: "Behavior", className: "Behavior", kind: "class" }],
+      edges: [],
+    }, manifest);
+    plan.placements[0] = {
+      id: "behavior",
+      componentId: task.id,
+      axes: { ...task.axes },
+      content: { label: "Behavior", role: "behavior" },
+    };
+
+    expect(validatePlan(plan, manifest).valid).toBe(true);
+  });
+
+  it("rejects semantic roles outside the selected language vocabulary", () => {
+    const plan = build({
+      need: "database tables",
+      visualLanguage: "database",
+      nodes: [{ id: "users", label: "Users", className: "Users", kind: "table" }],
+      edges: [],
+    });
+    plan.placements[0]!.content.role = "decision";
+
+    expect(violationRules(plan)).toContain("semantic-role");
   });
 });
 

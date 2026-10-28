@@ -49,6 +49,7 @@ export interface AxisCoords {
 export interface PlacementContent {
   label?: string;
   typeTag?: string;
+  className?: string;
   properties?: string[];
   /** @minimum 0 */
   hueIndex?: number;
@@ -82,14 +83,31 @@ export const DiagramPlanFamily = {
   workflow: 'workflow',
 } as const;
 
+export type DiagramPlanVisualLanguage = typeof DiagramPlanVisualLanguage[keyof typeof DiagramPlanVisualLanguage];
+
+
+export const DiagramPlanVisualLanguage = {
+  'knowledge-graph': 'knowledge-graph',
+  uml: 'uml',
+  database: 'database',
+  'mui-ui': 'mui-ui',
+  flowchart: 'flowchart',
+  workflow: 'workflow',
+  'information-architecture': 'information-architecture',
+  'mind-map': 'mind-map',
+} as const;
+
 export type DiagramPlanAxisMeanings = {[key: string]: string};
 
 export interface DiagramPlan {
   need: string;
   title: string;
   family: DiagramPlanFamily;
+  visualLanguage?: DiagramPlanVisualLanguage;
+  compositionIds?: string[];
   axisMeanings: DiagramPlanAxisMeanings;
   tier1Draft: DraftPlacement[];
+  /** @minItems 1 */
   placements: Placement[];
   notes: string[];
 }
@@ -107,6 +125,14 @@ export const StructuredNodeKind = {
   decision: 'decision',
   parallel: 'parallel',
   data: 'data',
+  actor: 'actor',
+  table: 'table',
+  column: 'column',
+  component: 'component',
+  page: 'page',
+  section: 'section',
+  topic: 'topic',
+  process: 'process',
 } as const;
 
 export interface StructuredNode {
@@ -128,6 +154,11 @@ export const StructuredEdgeKind = {
   subclass: 'subclass',
   flow: 'flow',
   conditional: 'conditional',
+  association: 'association',
+  'foreign-key': 'foreign-key',
+  contains: 'contains',
+  navigation: 'navigation',
+  branch: 'branch',
 } as const;
 
 export interface StructuredEdge {
@@ -160,6 +191,23 @@ export const PlanRequestFamily = {
   workflow: 'workflow',
 } as const;
 
+/**
+ * Explicit visual-language override; omitted to infer from the need.
+ */
+export type PlanRequestVisualLanguage = typeof PlanRequestVisualLanguage[keyof typeof PlanRequestVisualLanguage];
+
+
+export const PlanRequestVisualLanguage = {
+  'knowledge-graph': 'knowledge-graph',
+  uml: 'uml',
+  database: 'database',
+  'mui-ui': 'mui-ui',
+  flowchart: 'flowchart',
+  workflow: 'workflow',
+  'information-architecture': 'information-architecture',
+  'mind-map': 'mind-map',
+} as const;
+
 export type PlanRequestView = typeof PlanRequestView[keyof typeof PlanRequestView];
 
 
@@ -175,6 +223,9 @@ export interface PlanRequest {
      */
   need: string;
   family?: PlanRequestFamily;
+  /** Explicit visual-language override; omitted to infer from the need. */
+  visualLanguage?: PlanRequestVisualLanguage;
+  compositionIds?: string[];
   nodes?: StructuredNode[];
   edges?: StructuredEdge[];
   groups?: StructuredGroup[];
@@ -204,5 +255,127 @@ export interface ValidationReport {
 export interface PlanResult {
   plan: DiagramPlan;
   validation: ValidationReport;
+}
+
+export type PromotedCompositionAtomicLevel = typeof PromotedCompositionAtomicLevel[keyof typeof PromotedCompositionAtomicLevel];
+
+
+export const PromotedCompositionAtomicLevel = {
+  molecule: 'molecule',
+  organism: 'organism',
+  template: 'template',
+} as const;
+
+export type PromotedCompositionFamily = typeof PromotedCompositionFamily[keyof typeof PromotedCompositionFamily];
+
+
+export const PromotedCompositionFamily = {
+  tier1: 'tier1',
+  'knowledge-graph': 'knowledge-graph',
+  workflow: 'workflow',
+  'cross-family': 'cross-family',
+} as const;
+
+export type PromotedCompositionSlotsItemPosition = {
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  x: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  y: number;
+};
+
+export type PromotedCompositionSlotsItemAxes = {
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  a1?: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  a2?: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  a3?: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  a4?: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  a5?: number;
+};
+
+export type PromotedCompositionSlotsItem = {
+  /** @minLength 1 */
+  componentId: string;
+  /** @minLength 1 */
+  role: string;
+  position: PromotedCompositionSlotsItemPosition;
+  axes?: PromotedCompositionSlotsItemAxes;
+};
+
+export interface PromotedComposition {
+  /**
+     * @minLength 1
+     * @pattern ^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$
+     */
+  id: string;
+  atomicLevel: PromotedCompositionAtomicLevel;
+  /** @minLength 1 */
+  label: string;
+  description?: string;
+  family: PromotedCompositionFamily;
+  /** @minItems 1 */
+  slots: PromotedCompositionSlotsItem[];
+}
+
+export type PromoteDiagramPlanRequestFamily = typeof PromoteDiagramPlanRequestFamily[keyof typeof PromoteDiagramPlanRequestFamily];
+
+
+export const PromoteDiagramPlanRequestFamily = {
+  tier1: 'tier1',
+  'knowledge-graph': 'knowledge-graph',
+  workflow: 'workflow',
+  'cross-family': 'cross-family',
+} as const;
+
+export type PromoteDiagramPlanRequestAtomicLevel = typeof PromoteDiagramPlanRequestAtomicLevel[keyof typeof PromoteDiagramPlanRequestAtomicLevel];
+
+
+export const PromoteDiagramPlanRequestAtomicLevel = {
+  molecule: 'molecule',
+  organism: 'organism',
+  template: 'template',
+} as const;
+
+export interface PromoteDiagramPlanRequest {
+  plan: DiagramPlan;
+  /**
+     * @minLength 1
+     * @pattern ^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$
+     */
+  id: string;
+  /** @minLength 1 */
+  label: string;
+  /** @maxLength 500 */
+  description?: string;
+  family: PromoteDiagramPlanRequestFamily;
+  atomicLevel: PromoteDiagramPlanRequestAtomicLevel;
+}
+
+export interface PromoteDiagramPlanResult {
+  composition: PromotedComposition;
 }
 

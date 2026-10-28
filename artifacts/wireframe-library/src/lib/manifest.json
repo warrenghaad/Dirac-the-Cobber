@@ -1,7 +1,7 @@
 {
   "$schema": "./manifest.schema.json",
   "name": "tiered-wireframe-library",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "spec": "./SPEC.md",
   "tokens": {
     "ink": "#1A1D23",
@@ -136,21 +136,124 @@
       "rule": "max one Tier-4 hero component per view"
     }
   ],
+  "visualLanguages": [
+    {
+      "id": "knowledge-graph",
+      "label": "Knowledge Graph",
+      "description": "Entities, classes, properties, and relationships",
+      "cues": ["map", "graph", "entity", "entities", "relation", "relationship", "ontology", "schema", "property", "properties", "taxonomy"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["entity", "class", "literal", "relation", "property", "subclass", "group"],
+      "componentFamilies": ["knowledge-graph", "tier1"]
+    },
+    {
+      "id": "uml",
+      "label": "UML",
+      "description": "Classes, actors, associations, and inheritance",
+      "cues": ["uml", "class", "classes", "object", "objects", "actor", "actors", "inheritance", "association", "sequence"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["class", "entity", "actor", "association", "subclass", "group"],
+      "componentFamilies": ["knowledge-graph", "tier1"]
+    },
+    {
+      "id": "database",
+      "label": "Database Diagram",
+      "description": "Tables, columns, keys, and data relationships",
+      "cues": ["database", "databases", "db", "table", "tables", "column", "columns", "sql", "erd", "primary", "foreign", "key"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["table", "column", "entity", "foreign-key", "property", "contains", "group"],
+      "componentFamilies": ["knowledge-graph", "tier1"]
+    },
+    {
+      "id": "mui-ui",
+      "label": "MUI UI Structure",
+      "description": "React and Material UI screens, components, and sections",
+      "cues": ["mui", "material", "react", "ui", "interface", "screen", "screens", "component", "components", "card", "dialog", "dashboard"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["component", "page", "section", "contains", "navigation", "group"],
+      "componentFamilies": ["tier1"]
+    },
+    {
+      "id": "flowchart",
+      "label": "Flowchart",
+      "description": "Processes, decisions, inputs, and outputs",
+      "cues": ["flowchart", "flowcharts", "flow", "algorithm", "decision", "branch", "yes", "no", "start", "end"],
+      "baseFamily": "workflow",
+      "semanticRoles": ["start", "end", "process", "task", "decision", "parallel", "data", "branch", "flow", "group"],
+      "componentFamilies": ["workflow", "tier1"]
+    },
+    {
+      "id": "workflow",
+      "label": "Workflow",
+      "description": "Ordered steps, handoffs, approvals, and stages",
+      "cues": ["workflow", "process", "step", "steps", "pipeline", "procedure", "approve", "approval", "review", "onboard", "checkout", "then", "sequence", "task", "stage", "handoff"],
+      "baseFamily": "workflow",
+      "semanticRoles": ["start", "end", "task", "decision", "parallel", "data", "flow", "conditional", "lane"],
+      "componentFamilies": ["workflow", "tier1"]
+    },
+    {
+      "id": "information-architecture",
+      "label": "Information Architecture",
+      "description": "Pages, sections, navigation, and content hierarchy",
+      "cues": ["information", "architecture", "sitemap", "site", "navigation", "nav", "content", "hierarchy", "website", "websites"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["page", "section", "navigation", "contains", "group"],
+      "componentFamilies": ["knowledge-graph", "tier1"]
+    },
+    {
+      "id": "mind-map",
+      "label": "Mind Map",
+      "description": "A central topic with branching ideas and associations",
+      "cues": ["mind", "map", "mindmap", "brainstorm", "idea", "ideas", "branch", "branches", "radial", "central"],
+      "baseFamily": "knowledge-graph",
+      "semanticRoles": ["topic", "entity", "branch", "relation", "group"],
+      "componentFamilies": ["knowledge-graph", "tier1"]
+    }
+  ],
+  "componentFamilies": [
+    {
+      "id": "tier1",
+      "label": "Tier 1 Primitives",
+      "visualLanguages": ["knowledge-graph", "uml", "database", "mui-ui", "flowchart", "workflow", "information-architecture", "mind-map"],
+      "semanticRoles": ["node", "edge", "container", "anchor", "component", "page", "section", "group"]
+    },
+    {
+      "id": "knowledge-graph",
+      "label": "Relational Vocabulary",
+      "visualLanguages": ["knowledge-graph", "uml", "database", "information-architecture", "mind-map"],
+      "semanticRoles": ["entity", "class", "literal", "actor", "table", "column", "page", "section", "topic", "relation", "association", "property", "foreign-key", "subclass", "contains", "navigation", "branch", "group"]
+    },
+    {
+      "id": "workflow",
+      "label": "Sequential Vocabulary",
+      "visualLanguages": ["workflow", "flowchart"],
+      "semanticRoles": ["start", "end", "task", "process", "decision", "parallel", "data", "flow", "conditional", "branch", "lane"]
+    }
+  ],
   "figmaSources": [
     {
       "fileKey": "dpWgseUU58TAk7wAVl55yt",
       "url": "https://www.figma.com/file/dpWgseUU58TAk7wAVl55yt/MUI-Material-Design-Component-Figma-Library-For-React",
       "kind": "design",
       "label": "MUI Material Design Component Library (Community)",
-      "intakeStatus": "done — 8 component(s) matched",
+      "intakeStatus": "audited — 1 component(s) verified",
       "addedAt": "2026-08-04"
+    },
+    {
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD",
+      "url": "https://www.figma.com/board/nOEamjKEXw6oXF9Clp8PGD/Visual-Logic-Primitives",
+      "kind": "figjam",
+      "intakeMode": "semantic-primitives",
+      "label": "Visual Logic Primitives",
+      "intakeStatus": "audited — 25 primitive(s) verified",
+      "addedAt": "2026-08-19"
     },
     {
       "fileKey": "fxyEtWUCgZrA2MsraKSjKe",
       "url": "https://www.figma.com/design/fxyEtWUCgZrA2MsraKSjKe/Figma-Draw-Playground--Community-",
       "kind": "design",
       "label": "Figma Draw Playground (Community)",
-      "intakeStatus": "done — 0 component(s) matched",
+      "intakeStatus": "audited — 0 component(s) verified",
       "addedAt": "2026-07-27",
       "scanResult": {
         "componentNodes": 0,
@@ -164,11 +267,19 @@
       "scannedAt": "2026-07-27"
     },
     {
+      "fileKey": "CSXebcFtI1JyEq07xCJ3ko",
+      "url": "https://www.figma.com/board/CSXebcFtI1JyEq07xCJ3ko/Design-Foundry-Orchestration-Map",
+      "kind": "figjam",
+      "label": "Design Foundry Orchestration Map",
+      "intakeStatus": "audited — 0 component(s) verified",
+      "addedAt": "2026-08-19"
+    },
+    {
       "fileKey": "jVY2CNS79i0bsdrVgC5Bfs",
       "url": "https://www.figma.com/board/jVY2CNS79i0bsdrVgC5Bfs/mindmap--Community-",
       "kind": "figjam",
       "label": "Mindmap (Community FigJam)",
-      "intakeStatus": "done — 0 component(s) matched",
+      "intakeStatus": "audited — 0 component(s) verified",
       "addedAt": "2026-07-27",
       "scanResult": {
         "componentNodes": 0,
@@ -181,13 +292,665 @@
     },
     {
       "fileKey": "5JebW1QtNsfn9eQ9aPYPJD",
-      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect--Design-System--Component-Library-Community",
+      "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect-%E2%80%93-Design-System---Component-Library--Free---Community-?m=dev&ready-for-dev=1&node-id=1-14",
       "kind": "design",
+      "nodeId": "1:14",
       "label": "Dialect – Design System & Component Library (Community)",
-      "intakeStatus": "done — 0 component(s) matched",
+      "intakeStatus": "audited — 0 component(s) verified",
       "addedAt": "2026-08-19"
     }
   ],
+  "sourceCatalog": {
+    "catalogVersion": "2026-08-24",
+    "capabilityClasses": [
+      "graph-primitive",
+      "graph-template",
+      "data-surface",
+      "ui-building-block",
+      "reference-only"
+    ],
+    "sources": [
+      {
+        "id": "local.graph-visualization-kit",
+        "label": "Graph Visualization UI Kit (Community)",
+        "kind": "local-fig",
+        "status": "local-only",
+        "accessNote": "Supplied as a local .fig export and token packages; it is catalogued as source material, not claimed as a readable remote Figma file.",
+        "provenance": {
+          "localPath": "attached_assets/graphic_viz/Graphic Visualization/Graph Visualization UI Kit (Community).fig",
+          "previewRef": "thumbnail.png"
+        },
+        "capabilityClasses": [
+          "graph-primitive",
+          "graph-template",
+          "data-surface",
+          "ui-building-block"
+        ],
+        "visualLanguages": [
+          "graph visualization",
+          "Material 3",
+          "wireframe"
+        ],
+        "tokenModes": [
+          "Light",
+          "Light High Contrast",
+          "Light Medium Contrast",
+          "Dark",
+          "Dark High Contrast",
+          "Dark Medium Contrast",
+          "Monochrome LT",
+          "Monochrome DT",
+          "Pink LT",
+          "Pink DT",
+          "Rose LT",
+          "Rose DT",
+          "Red LT",
+          "Red DT",
+          "Orange LT",
+          "Orange DT",
+          "Yellow LT",
+          "Yellow DT",
+          "Chartreuse LT",
+          "Chartreuse DT",
+          "Green LT",
+          "Green DT",
+          "Teal LT",
+          "Teal DT",
+          "Cyan LT",
+          "Cyan DT",
+          "Blue LT",
+          "Blue DT",
+          "Indigo LT",
+          "Indigo DT",
+          "Purple LT",
+          "Purple DT",
+          "Graph Light",
+          "Graph Dark",
+          "Font Baseline",
+          "Font Wireframe"
+        ],
+        "inventory": {
+          "pages": [
+            "canvas.fig (local export)"
+          ],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 36,
+          "tokenBundles": 7
+        },
+        "coverage": {
+          "total": 8,
+          "approved": 7,
+          "unmatched": 1,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.mui",
+        "label": "MUI Material Design Component Library (Community)",
+        "kind": "figma-design",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "dpWgseUU58TAk7wAVl55yt",
+          "url": "https://www.figma.com/file/dpWgseUU58TAk7wAVl55yt/MUI-Material-Design-Component-Figma-Library-For-React"
+        },
+        "capabilityClasses": [
+          "ui-building-block",
+          "data-surface"
+        ],
+        "visualLanguages": [
+          "Material UI"
+        ],
+        "inventory": {
+          "pages": [
+            "Button ✅",
+            "Button Group ✅",
+            "Checkbox ✅",
+            "Floating Action Button ✅",
+            "Radio button ✅",
+            "Selects ✅",
+            "Sliders, range sliders ✅",
+            "Switch ✅",
+            "Text field ✅",
+            "Avatar ✅",
+            "Badge ✅",
+            "Chip ✅",
+            "Divider ✅",
+            "Material Icons ✅",
+            "List ✅",
+            "Table",
+            "Tooltip ✅",
+            "Alerts ✅",
+            "Progress ✅",
+            "Snackbar ✅",
+            "Accordion ✅",
+            "App Bar ✅",
+            "Card ✅",
+            "Bottom navigation ✅",
+            "Breadcrumbs ✅",
+            "Drawer ✅",
+            "Pagination ✅",
+            "Speed Dial ✅",
+            "Stepper ✅",
+            "Tabs ✅",
+            "Components ✅",
+            "Date Time Pickers ✅",
+            "Footers ✅",
+            "Images ✅",
+            "Calendars ✅",
+            "📌 Thumbnail",
+            "🎨 Styles",
+            "🛠UI Components Preview",
+            "INPUTS ----------------------------",
+            "Ratings ✅",
+            "Transfer List ✅",
+            "Toggle Buttons ✅",
+            "DATA DISPLAY ----------------------------",
+            "Icons ✅",
+            "FEEDBACK ----------------------------",
+            "Backdrop ✅",
+            "Dialog ✅",
+            "Skeleton ✅",
+            "SURFACES ----------------------------",
+            "Paper ✅",
+            "NAVIGATION ----------------------------",
+            "Link ✅",
+            "Menu ✅",
+            "LAYOUT ----------------------------",
+            "Box ✅",
+            "Container ✅",
+            "Grid ✅",
+            "Stack ✅",
+            "Image List ✅",
+            "DATA GRID ----------------------------",
+            "LAB ----------------------------",
+            "Masonry ✅",
+            "Timeline ✅",
+            "Tree View ✅",
+            "Bootom sheets ✅",
+            "Carousels ✅",
+            "Lazy ✅",
+            "Parallax ✅",
+            "Headers ✅"
+          ],
+          "components": 577,
+          "componentSets": 52,
+          "variants": 116,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 7001,
+          "approved": 1,
+          "unmatched": 7000,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.visual-logic-primitives",
+        "label": "Visual Logic Primitives",
+        "kind": "figjam",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "nOEamjKEXw6oXF9Clp8PGD",
+          "url": "https://www.figma.com/board/nOEamjKEXw6oXF9Clp8PGD/Visual-Logic-Primitives"
+        },
+        "capabilityClasses": [
+          "graph-primitive",
+          "graph-template"
+        ],
+        "visualLanguages": [
+          "knowledge graph",
+          "workflow",
+          "flowchart"
+        ],
+        "inventory": {
+          "pages": [
+            "Page 1"
+          ],
+          "components": 20,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 21,
+          "approved": 20,
+          "unmatched": 1,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.dialect",
+        "label": "Dialect Design System & Component Library (Community)",
+        "kind": "figma-design",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "5JebW1QtNsfn9eQ9aPYPJD",
+          "nodeId": "1:14",
+          "url": "https://www.figma.com/design/5JebW1QtNsfn9eQ9aPYPJD/Dialect-%E2%80%93-Design-System---Component-Library--Free---Community-?node-id=1-14"
+        },
+        "capabilityClasses": [
+          "ui-building-block",
+          "data-surface",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "Dialect"
+        ],
+        "inventory": {
+          "pages": [
+            "👩‍🏫 Documentation & Tutorials",
+            "❖ Components",
+            "▶️ Preview",
+            "🤝 Introduction",
+            "Page 9",
+            "C O M P O N E N T S  - - - - - - - - - - - - - - - - - - -",
+            "🗒 Index",
+            "Y O U R   D E S I G N S - - - - - - - - - - - - - - - - - - ",
+            "Design"
+          ],
+          "components": 2696,
+          "componentSets": 16,
+          "variants": 48,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 67882,
+          "approved": 0,
+          "unmatched": 67882,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.figma-draw",
+        "label": "Figma Draw Playground (Community)",
+        "kind": "figma-design",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "fxyEtWUCgZrA2MsraKSjKe",
+          "url": "https://www.figma.com/design/fxyEtWUCgZrA2MsraKSjKe/Figma-Draw-Playground--Community-"
+        },
+        "capabilityClasses": [
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "freeform drawing"
+        ],
+        "inventory": {
+          "pages": [
+            "Page 1"
+          ],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 4860,
+          "approved": 0,
+          "unmatched": 4860,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.mindmap",
+        "label": "Mindmap (Community FigJam)",
+        "kind": "figjam",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "jVY2CNS79i0bsdrVgC5Bfs",
+          "url": "https://www.figma.com/board/jVY2CNS79i0bsdrVgC5Bfs/mindmap--Community-"
+        },
+        "capabilityClasses": [
+          "graph-template",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "mind map",
+          "information architecture"
+        ],
+        "inventory": {
+          "pages": [
+            "Page 1"
+          ],
+          "components": 16,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 373,
+          "approved": 0,
+          "unmatched": 373,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.design-foundry-orchestration-map",
+        "label": "Design Foundry Orchestration Map",
+        "kind": "figjam",
+        "status": "accessible",
+        "provenance": {
+          "fileKey": "CSXebcFtI1JyEq07xCJ3ko",
+          "url": "https://www.figma.com/board/CSXebcFtI1JyEq07xCJ3ko/Design-Foundry-Orchestration-Map"
+        },
+        "capabilityClasses": [
+          "graph-template",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "orchestration map",
+          "workflow"
+        ],
+        "inventory": {
+          "pages": [
+            "Page 1"
+          ],
+          "components": 16,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 442,
+          "approved": 0,
+          "unmatched": 442,
+          "excluded": 0,
+          "blocked": 0
+        }
+      },
+      {
+        "id": "figma.advanced-spreadsheet",
+        "label": "Advanced Spreadsheet",
+        "kind": "reference",
+        "status": "pending-registration",
+        "accessNote": "Named in the approved baseline brief, but no Figma file key or local export is present in this workspace. It remains visible as an uninspected data-surface source.",
+        "provenance": {},
+        "capabilityClasses": [
+          "data-surface",
+          "ui-building-block"
+        ],
+        "visualLanguages": [
+          "spreadsheet",
+          "data entry",
+          "data table"
+        ],
+        "inventory": {
+          "pages": [],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 0,
+          "approved": 0,
+          "unmatched": 0,
+          "excluded": 0,
+          "blocked": 1
+        }
+      },
+      {
+        "id": "figma.course-site",
+        "label": "Course-site",
+        "kind": "reference",
+        "status": "pending-registration",
+        "accessNote": "Named in the approved baseline brief, but no Figma file key or local export is present in this workspace. It remains visible as an uninspected application-layout source.",
+        "provenance": {},
+        "capabilityClasses": [
+          "ui-building-block",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "course site",
+          "application layout"
+        ],
+        "inventory": {
+          "pages": [],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 0,
+          "approved": 0,
+          "unmatched": 0,
+          "excluded": 0,
+          "blocked": 1
+        }
+      },
+      {
+        "id": "figma.component-properties-playground",
+        "label": "Component Properties Playground",
+        "kind": "reference",
+        "status": "pending-registration",
+        "accessNote": "Named in the approved baseline brief, but no Figma file key or local export is present in this workspace. It remains visible so variant/property coverage cannot be mistaken for complete.",
+        "provenance": {},
+        "capabilityClasses": [
+          "ui-building-block",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "component properties",
+          "variants"
+        ],
+        "inventory": {
+          "pages": [],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 0,
+          "approved": 0,
+          "unmatched": 0,
+          "excluded": 0,
+          "blocked": 1
+        }
+      },
+      {
+        "id": "figma.tailwind",
+        "label": "Tailwind",
+        "kind": "reference",
+        "status": "pending-registration",
+        "accessNote": "Named in the approved baseline brief, but no Figma file key or local export is present in this workspace. It remains visible as a pending utility-first UI reference.",
+        "provenance": {},
+        "capabilityClasses": [
+          "ui-building-block",
+          "data-surface"
+        ],
+        "visualLanguages": [
+          "utility-first UI",
+          "application layout"
+        ],
+        "inventory": {
+          "pages": [],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 0,
+          "approved": 0,
+          "unmatched": 0,
+          "excluded": 0,
+          "blocked": 1
+        }
+      },
+      {
+        "id": "figma.untitled-ui-pro-variables",
+        "label": "Untitled UI Pro Variables",
+        "kind": "reference",
+        "status": "inaccessible",
+        "accessNote": "Do not use this source until the connected Figma account has edit access. No asset, template, token, or component is claimed from it.",
+        "provenance": {},
+        "capabilityClasses": [
+          "ui-building-block",
+          "reference-only"
+        ],
+        "visualLanguages": [
+          "Untitled UI"
+        ],
+        "inventory": {
+          "pages": [],
+          "components": 0,
+          "componentSets": 0,
+          "variants": 0,
+          "tokenBundles": 0
+        },
+        "coverage": {
+          "total": 0,
+          "approved": 0,
+          "unmatched": 0,
+          "excluded": 0,
+          "blocked": 1
+        }
+      }
+    ],
+    "templateCandidates": [
+      {
+        "id": "candidate.tpl.simple-workflow",
+        "label": "Simple Workflow",
+        "sourceId": "figma.visual-logic-primitives",
+        "capabilityClasses": [
+          "graph-template"
+        ],
+        "capabilityTags": [
+          "workflow",
+          "decision",
+          "conditional branch"
+        ],
+        "mappingStatus": "approved",
+        "provenance": {
+          "sourceId": "figma.visual-logic-primitives",
+          "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
+        }
+      },
+      {
+        "id": "candidate.tpl.knowledge-graph-overview",
+        "label": "Knowledge Graph Overview",
+        "sourceId": "figma.visual-logic-primitives",
+        "capabilityClasses": [
+          "graph-template"
+        ],
+        "capabilityTags": [
+          "knowledge graph",
+          "entity",
+          "relation",
+          "group"
+        ],
+        "mappingStatus": "approved",
+        "provenance": {
+          "sourceId": "figma.visual-logic-primitives",
+          "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
+        }
+      },
+      {
+        "id": "candidate.graph-kit.data-surface",
+        "label": "Graph-kit data surface inventory",
+        "sourceId": "local.graph-visualization-kit",
+        "capabilityClasses": [
+          "data-surface",
+          "graph-template"
+        ],
+        "capabilityTags": [
+          "node",
+          "link",
+          "combo",
+          "timeline",
+          "annotation"
+        ],
+        "mappingStatus": "unmatched",
+        "provenance": {
+          "sourceId": "local.graph-visualization-kit",
+          "localPath": "attached_assets/graphic_viz/Graphic Visualization/figma_graph0-variablesall.zip"
+        }
+      },
+      {
+        "id": "candidate.mindmap",
+        "label": "Mindmap template candidates",
+        "sourceId": "figma.mindmap",
+        "capabilityClasses": [
+          "graph-template"
+        ],
+        "capabilityTags": [
+          "mind map",
+          "hierarchy"
+        ],
+        "mappingStatus": "unmatched",
+        "provenance": {
+          "sourceId": "figma.mindmap",
+          "fileKey": "jVY2CNS79i0bsdrVgC5Bfs"
+        }
+      }
+    ],
+    "mappings": [
+      {
+        "assetId": "asset.graph-kit.primitives",
+        "targetType": "token",
+        "targetId": "tokens",
+        "status": "approved",
+        "rationale": "The graph-kit primitive export is a source-backed token layer; it does not replace the tiered renderer palette without a later visual-language decision."
+      },
+      {
+        "assetId": "asset.graph-kit.m3-themes",
+        "targetType": "token",
+        "targetId": "sourceCatalog.sources.local.graph-visualization-kit.tokenModes",
+        "status": "approved",
+        "rationale": "All 32 exported M3 modes are retained for later deterministic visual-language selection."
+      },
+      {
+        "assetId": "asset.graph-kit.graph-variables",
+        "targetType": "token",
+        "targetId": "sourceCatalog.templateCandidates.candidate.graph-kit.data-surface",
+        "status": "pending-review",
+        "rationale": "The Light and Dark graph-variable exports establish data-surface capability but are not yet mapped to a renderer template."
+      },
+      {
+        "assetId": "asset.figma-draw.artwork",
+        "targetType": "component",
+        "targetId": "reference-only.figma-draw",
+        "status": "pending-review",
+        "rationale": "Artwork and freeform shapes remain catalogued without being misrepresented as reusable diagram primitives."
+      },
+      {
+        "assetId": "asset.untitled-ui.access-blocker",
+        "targetType": "component",
+        "targetId": "reference-only.untitled-ui",
+        "status": "pending-review",
+        "rationale": "No mapping may be approved until the connected account has edit access."
+      }
+    ],
+    "coverage": {
+      "total": 80587,
+      "approved": 28,
+      "unmatched": 80559,
+      "excluded": 0,
+      "blocked": 5
+    },
+    "intakeReport": {
+      "generatedAt": "2026-08-24",
+      "sourcesInspected": 7,
+      "accessFailures": [
+        "Advanced Spreadsheet: file key or local export not registered",
+        "Course-site: file key or local export not registered",
+        "Component Properties Playground: file key or local export not registered",
+        "Tailwind: file key or local export not registered",
+        "Untitled UI Pro Variables: edit access required"
+      ],
+      "unmatchedAssetIds": [],
+      "excludedAssetIds": []
+    }
+  },
   "librarianRules": {
     "start": "draft topology at Tier 1 only (equal consequence) for structure review",
     "axisPriority": [
@@ -202,7 +965,8 @@
       "never skip a level on an axis",
       "max 5 distinct hues per view",
       "max 2 size steps of spread per view",
-      "max one Tier-4 component per view"
+      "max one Tier-4 component per view",
+      "one visual language per plan unless a declared cross-family composition permits the mix"
     ]
   },
   "components": [
@@ -225,7 +989,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:13",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.sharp",
@@ -246,7 +1011,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:16",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.round",
@@ -267,8 +1033,7 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": "86:47",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": null
     },
     {
       "id": "prim.node.pill",
@@ -289,7 +1054,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:19",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.diamond",
@@ -310,7 +1076,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:3",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.hexagon",
@@ -331,7 +1098,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:9",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.parallelogram",
@@ -352,7 +1120,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:22",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.node.cylinder",
@@ -373,7 +1142,8 @@
         "a4": 4,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:25",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.edge.plain",
@@ -394,8 +1164,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": "49:549",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": "1:39",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.edge.undirected",
@@ -416,7 +1186,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:43",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.edge.bidirectional",
@@ -437,7 +1208,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:47",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.container.plain",
@@ -458,8 +1230,8 @@
         "a4": 2,
         "a5": 2
       },
-      "figmaNodeId": "523:3725",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": "1:36",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "prim.anchor.point",
@@ -502,7 +1274,8 @@
         "a4": 3,
         "a5": 4
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:30",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.class",
@@ -523,8 +1296,7 @@
         "a4": 3,
         "a5": 4
       },
-      "figmaNodeId": "31:77",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": null
     },
     {
       "id": "kg.literal",
@@ -545,7 +1317,8 @@
         "a4": 1,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:33",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.property-edge",
@@ -566,7 +1339,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:51",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.relation-edge",
@@ -587,7 +1361,8 @@
         "a4": 4,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:55",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.subclass-edge",
@@ -608,7 +1383,8 @@
         "a4": 3,
         "a5": 1
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:59",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "kg.group",
@@ -629,7 +1405,8 @@
         "a4": 2,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:36",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.start-end",
@@ -650,8 +1427,8 @@
         "a4": 2,
         "a5": 1
       },
-      "figmaNodeId": "516:2333",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": "1:19",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.task",
@@ -672,8 +1449,8 @@
         "a4": 3,
         "a5": 4
       },
-      "figmaNodeId": "120:1439",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": "1:6",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.decision",
@@ -694,7 +1471,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:3",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.parallel",
@@ -715,7 +1493,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:9",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.data",
@@ -736,8 +1515,8 @@
         "a4": 2,
         "a5": 3
       },
-      "figmaNodeId": "525:3811",
-      "fileKey": "dpWgseUU58TAk7wAVl55yt"
+      "figmaNodeId": "1:22",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.flow-edge",
@@ -758,7 +1537,8 @@
         "a4": 4,
         "a5": 1
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:63",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.cond-edge",
@@ -779,7 +1559,8 @@
         "a4": 3,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:67",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     },
     {
       "id": "wf.lane",
@@ -800,7 +1581,8 @@
         "a4": 1,
         "a5": 2
       },
-      "figmaNodeId": null
+      "figmaNodeId": "1:12",
+      "fileKey": "nOEamjKEXw6oXF9Clp8PGD"
     }
   ],
   "compositions": [

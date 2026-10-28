@@ -1,8 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Manifest } from "@workspace/wireframe-librarian";
+import type { Manifest, SourceCatalog } from "@workspace/wireframe-librarian";
 
 const MANIFEST_REL = path.join("docs", "wireframe-library", "manifest.json");
+const SOURCE_CATALOG_FILENAME = "source-catalog.json";
+let catalogCache: { mtimeMs: number; catalog: SourceCatalog } | undefined;
 
 /** Walk up from cwd to find the repo-root manifest (single source of truth). */
 export function findManifestPath(): string {
@@ -43,4 +45,14 @@ export function loadManifest(): Manifest {
   const manifest = JSON.parse(raw) as Manifest;
   assertCompositionIntegrity(manifest);
   return manifest;
+}
+
+/** Load the complete source inventory only for catalog-specific routes. */
+export function loadSourceCatalog(): SourceCatalog {
+  const catalogPath = path.join(path.dirname(findManifestPath()), SOURCE_CATALOG_FILENAME);
+  const mtimeMs = fs.statSync(catalogPath).mtimeMs;
+  if (catalogCache?.mtimeMs === mtimeMs) return catalogCache.catalog;
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8")) as SourceCatalog;
+  catalogCache = { mtimeMs, catalog };
+  return catalog;
 }

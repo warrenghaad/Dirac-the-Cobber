@@ -14,6 +14,7 @@ export interface AxisCoords {
 export interface PlacementContent {
   label?: string;
   typeTag?: string;
+  className?: string;
   properties?: string[];
   hueIndex?: number;
   from?: string;
@@ -42,6 +43,16 @@ export interface DiagramPlan {
   need: string;
   title: string;
   family: "knowledge-graph" | "workflow";
+  visualLanguage?:
+    | "knowledge-graph"
+    | "uml"
+    | "database"
+    | "mui-ui"
+    | "flowchart"
+    | "workflow"
+    | "information-architecture"
+    | "mind-map";
+  compositionIds?: string[];
   axisMeanings: Record<string, string>;
   tier1Draft: DraftPlacement[];
   placements: Placement[];

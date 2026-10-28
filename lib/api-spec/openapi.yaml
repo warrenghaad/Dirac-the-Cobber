@@ -67,6 +67,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationReport"
+  /librarian/compositions/promote:
+    post:
+      operationId: promoteDiagramPlan
+      tags: [librarian]
+      summary: Save a valid generated diagram as a reusable composition
+      description: >
+        Development-only maintainer action. The server validates the generated
+        plan and complete next manifest before atomically updating the
+        source-controlled manifest. Production deployments are read-only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoteDiagramPlanRequest"
+      responses:
+        "201":
+          description: Composition was added to the manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromoteDiagramPlanResult"
+        "400":
+          description: Invalid plan or composition metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Manifest writes are disabled outside development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: A composition with this id already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /healthz:
     get:
       operationId: healthCheck
@@ -112,6 +152,7 @@ components:
       properties:
         label: { type: string }
         typeTag: { type: string }
+        className: { type: string }
         properties:
           type: array
           items: { type: string }
@@ -149,6 +190,12 @@ components:
         family:
           type: string
           enum: [knowledge-graph, workflow]
+        visualLanguage:
+          type: string
+          enum: [knowledge-graph, uml, database, mui-ui, flowchart, workflow, information-architecture, mind-map]
+        compositionIds:
+          type: array
+          items: { type: string }
         axisMeanings:
           type: object
           additionalProperties: { type: string }
@@ -158,6 +205,7 @@ components:
             $ref: "#/components/schemas/DraftPlacement"
         placements:
           type: array
+          minItems: 1
           items:
             $ref: "#/components/schemas/Placement"
         notes:
@@ -172,7 +220,7 @@ components:
         className: { type: string }
         kind:
           type: string
-          enum: [entity, class, literal, task, start, end, decision, parallel, data]
+          enum: [entity, class, literal, task, start, end, decision, parallel, data, actor, table, column, component, page, section, topic, process]
         focal: { type: boolean }
         properties:
           type: array
@@ -188,7 +236,7 @@ components:
         label: { type: string }
         kind:
           type: string
-          enum: [relation, property, subclass, flow, conditional]
+          enum: [relation, property, subclass, flow, conditional, association, foreign-key, contains, navigation, branch]
     StructuredGroup:
       type: object
       required: [id, label]
@@ -209,6 +257,13 @@ components:
         family:
           type: string
           enum: [knowledge-graph, workflow]
+        visualLanguage:
+          type: string
+          description: Explicit visual-language override; omitted to infer from the need.
+          enum: [knowledge-graph, uml, database, mui-ui, flowchart, workflow, information-architecture, mind-map]
+        compositionIds:
+          type: array
+          items: { type: string }
         nodes:
           type: array
           items:
@@ -251,4 +306,67 @@ components:
           $ref: "#/components/schemas/DiagramPlan"
         validation:
           $ref: "#/components/schemas/ValidationReport"
+    PromotedComposition:
+      type: object
+      required: [id, atomicLevel, label, family, slots]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          pattern: '^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$'
+        atomicLevel:
+          type: string
+          enum: [molecule, organism, template]
+        label: { type: string, minLength: 1 }
+        description: { type: string }
+        family:
+          type: string
+          enum: [tier1, knowledge-graph, workflow, cross-family]
+        slots:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [componentId, role, position]
+            properties:
+              componentId: { type: string, minLength: 1 }
+              role: { type: string, minLength: 1 }
+              position:
+                type: object
+                required: [x, y]
+                properties:
+                  x: { type: number, minimum: 0, maximum: 1 }
+                  y: { type: number, minimum: 0, maximum: 1 }
+              axes:
+                type: object
+                properties:
+                  a1: { type: integer, minimum: 0, maximum: 4 }
+                  a2: { type: integer, minimum: 0, maximum: 4 }
+                  a3: { type: integer, minimum: 0, maximum: 4 }
+                  a4: { type: integer, minimum: 0, maximum: 4 }
+                  a5: { type: integer, minimum: 0, maximum: 4 }
+    PromoteDiagramPlanRequest:
+      type: object
+      required: [plan, id, label, family, atomicLevel]
+      properties:
+        plan:
+          $ref: "#/components/schemas/DiagramPlan"
+        id:
+          type: string
+          minLength: 1
+          pattern: '^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$'
+        label: { type: string, minLength: 1 }
+        description: { type: string, maxLength: 500 }
+        family:
+          type: string
+          enum: [tier1, knowledge-graph, workflow, cross-family]
+        atomicLevel:
+          type: string
+          enum: [molecule, organism, template]
+    PromoteDiagramPlanResult:
+      type: object
+      required: [composition]
+      properties:
+        composition:
+          $ref: "#/components/schemas/PromotedComposition"
 

@@ -1,3 +1,6 @@
+// The fallback retains renderer-critical primitives only. The full catalog is
+// deliberately loaded from the canonical API so the browser does not bundle
+// tens of thousands of Figma nodes into its initial JavaScript payload.
 import manifest from "./manifest.json";
 
 export type AxisCoords = { a1: number; a2: number; a3: number; a4: number; a5: number };
@@ -10,8 +13,23 @@ export type LibraryComponent = {
   axes: AxisCoords;
   maxAxes: AxisCoords;
   figmaNodeId: string | null;
+  fileKey?: string | null;
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
+  mappingStatus?: "approved" | "reference-fallback" | "pending-review";
+  visualLanguages?: VisualLanguage[];
+  semanticRoles?: string[];
 };
 
+export type VisualLanguage =
+  | "knowledge-graph"
+  | "uml"
+  | "database"
+  | "mui-ui"
+  | "flowchart"
+  | "workflow"
+  | "information-architecture"
+  | "mind-map";
 export type Axis = { id: keyof AxisCoords; name: string; levels: string[] };
 
 export type CompositionSlot = {
@@ -28,6 +46,91 @@ export type Composition = {
   description: string;
   family: string;
   slots: CompositionSlot[];
+  sourceMetadata?: SourceMetadata;
+  capabilityTags?: string[];
+};
+
+export type SourceMetadata = {
+  sourceId?: string;
+  fileKey?: string;
+  url?: string;
+  localPath?: string;
+  nodeId?: string;
+  page?: string;
+  variant?: string;
+  properties?: Record<string, string | number | boolean | null>;
+  tokenMode?: string;
+  previewRef?: string;
+};
+
+export type SourceAsset = {
+  id: string;
+  sourceId: string;
+  label: string;
+  assetType: string;
+  capabilityClasses: string[];
+  capabilityTags?: string[];
+  mappingStatus: "approved" | "unmatched" | "excluded" | "blocked" | "reference-only";
+  tokenCount?: number;
+  previewRef?: string;
+  provenance: SourceMetadata;
+};
+
+export type SourceCoverage = {
+  total: number;
+  approved: number;
+  unmatched: number;
+  excluded: number;
+  blocked: number;
+};
+
+export type SourceCatalogEntry = {
+  id: string;
+  label: string;
+  kind: string;
+  status: "accessible" | "local-only" | "pending-registration" | "inaccessible" | "reference-only";
+  accessNote?: string;
+  provenance: SourceMetadata;
+  capabilityClasses: string[];
+  visualLanguages?: string[];
+  tokenModes?: string[];
+  inventory: { pages: string[]; components: number; componentSets: number; variants: number; tokenBundles: number };
+  coverage: SourceCoverage;
+};
+
+export type SourceTemplateCandidate = {
+  id: string;
+  label: string;
+  sourceId: string;
+  capabilityClasses: string[];
+  capabilityTags?: string[];
+  mappingStatus: SourceAsset["mappingStatus"];
+  provenance: SourceMetadata;
+};
+
+export type SourceMapping = {
+  assetId: string;
+  targetType: "component" | "composition" | "token";
+  targetId: string;
+  status: "approved" | "reference-fallback" | "pending-review";
+  rationale: string;
+};
+
+export type SourceCatalog = {
+  catalogVersion: string;
+  capabilityClasses: string[];
+  sources: SourceCatalogEntry[];
+  assets?: SourceAsset[];
+  templateCandidates: SourceTemplateCandidate[];
+  mappings?: SourceMapping[];
+  coverage: SourceCoverage;
+  intakeReport?: {
+    generatedAt: string;
+    sourcesInspected: number;
+    accessFailures: string[];
+    unmatchedAssetIds: string[];
+    excludedAssetIds: string[];
+  };
 };
 
 /** Full shape of the wireframe-library manifest. */
@@ -42,31 +145,57 @@ export type ManifestData = {
     tintSteps: number[];
     sizeScale: { widths: number[]; aspect: number; ratio: number };
     strokeScale: number[];
+    dashVocabulary: {
+      solid: number[];
+      dashed: number[];
+      dotted: number[];
+      double: string;
+    };
   };
   axes: Axis[];
   tiers: { tier: number; rule: string; profile?: Record<string, unknown> }[];
   librarianRules: { start: string; axisPriority: string[]; constraints: string[] };
+  visualLanguages: VisualLanguageDefinition[];
+  componentFamilies: ComponentFamilyDefinition[];
   components: LibraryComponent[];
   compositions: Composition[];
+  sourceCatalog?: SourceCatalog;
 };
 
 /**
- * Bundled static copy of the manifest — used as initial/fallback data and for
- * pure token utilities (INK, PAPER, sizeOf, tint, …) that are evaluated at
- * module load time.  For live data prefer the `useManifest()` hook which
- * fetches from GET /api/librarian/manifest.
+ * Bundled static copy of the manifest — used as initial/fallback data.
+ * Components should pass `useManifest().manifest.tokens` to token-aware
+ * utilities so a refreshed API manifest is reflected without a rebuild.
  */
 export const MANIFEST = manifest as unknown as ManifestData;
 
-export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = MANIFEST.tokens;
-export const SIZE_WIDTHS = MANIFEST.tokens.sizeScale.widths;
-export const ASPECT = MANIFEST.tokens.sizeScale.aspect;
+export type DesignTokens = ManifestData["tokens"];
+
+/** Static token defaults retained for non-React callers and the loading state. */
+export const STATIC_TOKENS = MANIFEST.tokens;
+
+export const { ink: INK, paper: PAPER, accent: ACCENT, palette: PALETTE } = STATIC_TOKENS;
+export const SIZE_WIDTHS = STATIC_TOKENS.sizeScale.widths;
+export const ASPECT = STATIC_TOKENS.sizeScale.aspect;
 
 export const AXIS_IDS = ["a1", "a2", "a3", "a4", "a5"] as const;
 
-export function sizeOf(level: number) {
-  const w = SIZE_WIDTHS[level] ?? SIZE_WIDTHS[2];
-  return { w, h: Math.round(w * ASPECT) };
+export function sizeOf(level: number, tokens: DesignTokens = STATIC_TOKENS) {
+  const widths = tokens.sizeScale.widths;
+  const w = widths[level] ?? widths[2];
+  return { w, h: Math.round(w * tokens.sizeScale.aspect) };
+}
+
+export function strokeOf(level: number, tokens: DesignTokens = STATIC_TOKENS) {
+  return tokens.strokeScale[level] ?? tokens.strokeScale.at(-1);
+}
+
+export function dashOf(
+  kind: "solid" | "dashed" | "dotted",
+  tokens: DesignTokens = STATIC_TOKENS,
+) {
+  const pattern = tokens.dashVocabulary[kind];
+  return pattern.length > 0 ? pattern.join(" ") : undefined;
 }
 
 export function tint(hex: string, alpha: number) {
@@ -100,3 +229,20 @@ export const FAMILIES = [
 export function componentsByFamily(components: LibraryComponent[], family: string) {
   return components.filter((c) => c.family === family);
 }
+
+export type VisualLanguageDefinition = {
+  id: VisualLanguage;
+  label: string;
+  description: string;
+  cues: string[];
+  baseFamily: "knowledge-graph" | "workflow";
+  semanticRoles: string[];
+  componentFamilies: string[];
+};
+
+export type ComponentFamilyDefinition = {
+  id: string;
+  label: string;
+  visualLanguages: VisualLanguage[];
+  semanticRoles: string[];
+};

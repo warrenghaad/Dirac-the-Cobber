@@ -1,3 +1,26 @@
 export * from "./types";
-export { buildPlan, classifyFamily, KG_NODE_COMPONENT, KG_EDGE_COMPONENT, WF_NODE_COMPONENT, WF_EDGE_COMPONENT } from "./librarian";
+export {
+  buildPlan,
+  classifyFamily,
+  classifyVisualLanguage,
+  classifyVisualLanguageFromManifest,
+  visualLanguageFamily,
+  VISUAL_LANGUAGE_DEFINITIONS,
+  KG_NODE_COMPONENT,
+  KG_EDGE_COMPONENT,
+  WF_NODE_COMPONENT,
+  WF_EDGE_COMPONENT,
+  UML_NODE_COMPONENT,
+  UML_EDGE_COMPONENT,
+  DATABASE_NODE_COMPONENT,
+  DATABASE_EDGE_COMPONENT,
+  MUI_NODE_COMPONENT,
+  MUI_EDGE_COMPONENT,
+  FLOWCHART_NODE_COMPONENT,
+  FLOWCHART_EDGE_COMPONENT,
+  IA_NODE_COMPONENT,
+  IA_EDGE_COMPONENT,
+  MIND_MAP_NODE_COMPONENT,
+  MIND_MAP_EDGE_COMPONENT,
+} from "./librarian";
 export { validatePlan } from "./validate";

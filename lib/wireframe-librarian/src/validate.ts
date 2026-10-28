@@ -14,6 +14,21 @@ export function validatePlan(plan: DiagramPlan, manifest: Manifest): ValidationR
   const issues: ValidationIssue[] = [];
   const byId = new Map(manifest.components.map((c) => [c.id, c]));
   const placementIds = new Set(plan.placements.map((p) => p.id));
+  const selectedLanguage = plan.visualLanguage;
+  const selectedDefinition = selectedLanguage
+    ? manifest.visualLanguages?.find((language) => language.id === selectedLanguage)
+    : undefined;
+  const declaredCompositions = new Set(plan.compositionIds ?? []);
+
+  const compositionAllows = (componentId: string, role?: string) =>
+    (manifest.compositions ?? []).some((composition) =>
+      declaredCompositions.has(composition.id)
+      && composition.family === "cross-family"
+      && (!composition.visualLanguages?.length || composition.visualLanguages.includes(selectedLanguage!))
+      && composition.slots.some((slot) =>
+        slot.componentId === componentId && (!role || slot.role === role),
+      ),
+    );
 
   const hues = new Set<number>();
   const sizeLevels: number[] = [];
@@ -29,6 +44,41 @@ export function validatePlan(plan: DiagramPlan, manifest: Manifest): ValidationR
         placementId: p.id,
       });
       continue;
+    }
+    if (selectedLanguage && selectedDefinition) {
+      const familyDefinition = manifest.componentFamilies?.find(
+        (family) => family.id === comp.family,
+      );
+      const supportsLanguage =
+        selectedDefinition.componentFamilies.includes(comp.family)
+        && (
+          comp.visualLanguages?.includes(selectedLanguage)
+          ?? familyDefinition?.visualLanguages.includes(selectedLanguage)
+          ?? (comp.family === "tier1" || comp.family === selectedDefinition.baseFamily)
+        );
+      if (!supportsLanguage && !compositionAllows(comp.id)) {
+        issues.push({
+          severity: "error",
+          rule: "visual-language",
+          message: `Component family "${comp.family}" is not compatible with visual language "${selectedLanguage}"`,
+          placementId: p.id,
+        });
+      }
+      const role = p.content.role;
+      if (role) {
+        const familyRoles = familyDefinition?.semanticRoles ?? comp.semanticRoles;
+        const roleSupported =
+          selectedDefinition.semanticRoles.includes(role)
+          && (!familyRoles?.length || familyRoles.includes(role));
+        if (!roleSupported && !compositionAllows(comp.id, role)) {
+          issues.push({
+            severity: "error",
+            rule: "semantic-role",
+            message: `Role "${role}" is not compatible with ${comp.family} in visual language "${selectedLanguage}"`,
+            placementId: p.id,
+          });
+        }
+      }
     }
     for (const axis of AXIS_IDS) {
       const v = p.axes[axis];

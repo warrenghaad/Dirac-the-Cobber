@@ -1,12 +1,14 @@
 # Tiered Wireframe Library — Design Logic Spec
 
-Version 0.1.0 · Machine-readable companion: `manifest.json` (same directory)
+Version 0.2.0 · Machine-readable companion: `manifest.json` (same directory)
 
 ## 1. Purpose
 
 This spec is the "design logic" hub for a hub-and-spoke system in which LLM agents
-(the **librarian** and its spokes) auto-design **knowledge/property graphs** and
-**workflow diagrams** from a conversation about user need. It defines:
+(the **librarian** and its spokes) auto-design diagrams from a conversation
+about user need. The supported visual languages are knowledge graphs, UML,
+database diagrams, MUI-based UI structures, flowcharts, workflows, information
+architecture, and mind maps. It defines:
 
 1. A **tiered visual hierarchy** whose Tier 1 primitives are *equal-consequence*:
    one general shape, one ink color, uniform weight — so a selector's choice among
@@ -98,15 +100,60 @@ Every vocabulary item's default and maximum axis coordinates are declared in
 `figmaNodeId` is populated during Figma intake; `null` means the React reference
 render in the mockup sandbox is the source of truth.
 
+
+### 5.4 Visual languages and semantic roles
+
+`manifest.json` declares every selectable language in `visualLanguages`. Each
+record provides deterministic classification cues, a legacy `baseFamily` used
+by existing layout engines, supported semantic roles, and compatible component
+families. `componentFamilies` declares the inverse relationship: which visual
+languages and roles a family may serve.
+
+The current library deliberately reuses proven relational, sequential, and
+Tier-1 primitive families across several languages. A database table can
+therefore reuse the relational class shape while retaining the selected
+`database` language in the plan. This keeps component selection deterministic
+without treating the visual language and the renderer's layout family as the
+same concept.
+
+### 5.4 Source-backed baseline
+
+The complete approved baseline lives in `source-catalog.json`; the renderer
+`manifest.json` keeps the matching source summary, coverage, and access
+blockers so ordinary planning stays lightweight. The catalog records each
+Figma, FigJam, local `.fig`, and token export source with provenance, access
+state, capability classes, visual language, pages, component/component-set/
+variant inventory, token modes, and coverage. Its five capability classes are `graph-primitive`,
+`graph-template`, `data-surface`, `ui-building-block`, and `reference-only`.
+
+Catalog assets and template candidates retain Figma file/node/page/property
+details, local paths, token modes, preview references, and mapping state.
+`approved` mappings are deliberate source-and-node decisions; `unmatched`,
+`blocked`, and `excluded` items remain visible for review. The catalog can
+therefore be substantially broader than the renderer's `components` array.
+No planner or renderer may treat an inaccessible, pending-registration, or
+reference-only asset as a production component.
+
+Catalog summaries are loaded on the Sources view, and source assets are fetched
+in pages only when a user expands that source. The full artifact mirror is
+reserved for the same view's API-outage path and is validated against
+`source-catalog.json`.
+
 ## 6. Librarian selection rules (need → tier → axes)
 
 The librarian converts a user-need conversation into a **diagram plan** with this
 procedure:
 
 ### 6.1 Classify
-1. Detect diagram family: entities-with-relations → `kg.*`; steps-with-order →
-   `wf.*`. Mixed needs split into linked views, never mixed vocabularies.
-2. Extract the semantic roles present (e.g., 3 entity classes, 2 relation
+1. Infer a visual language from the manifest cues unless the caller supplies a
+   `visualLanguage` override. Ties use a fixed priority order, so the same need
+   and manifest always select the same language.
+2. Resolve the language's `baseFamily`: relational layouts use
+   `knowledge-graph`; sequential layouts use `workflow`.
+3. Select components only from families declared compatible with the chosen
+   language. Mixed vocabularies are invalid unless the plan names a declared
+   `cross-family` composition that contains the mixed slots.
+4. Extract the semantic roles present (e.g., 3 entity classes, 2 relation
    families, 1 focal entity).
 
 ### 6.2 Start at Tier 1
@@ -139,10 +186,18 @@ For each component pulled from the user's Figma library: catalog it, screenshot
 it, assign its manifest id and axis coordinates, and record `figmaNodeId` +
 `fileKey`. A Figma component may only be admitted to Tier 1 if it can render in
 the locked equal-consequence profile; otherwise it enters at its measured tier.
-Gaps (ids with `figmaNodeId: null`) are served by the React reference set in
+Intake inventories the full source first, including unmatched components,
+component sets, variant/property metadata, and page provenance. A name or shape
+similarity can identify a review candidate but cannot create a mapping: only
+pre-approved exact file + node references may populate renderer roles. Gaps
+(ids with `figmaNodeId: null`) are served by the React reference set in
 `artifacts/mockup-sandbox/src/components/mockups/wireframe-library/`.
+
+Local token bundles are catalogued with their native modes and counts; they do
+not silently replace the renderer's canonical token layer. Unavailable sources
+must state their access blocker and remain excluded from planning and rendering.
 
 ## 8. Out of scope (this version)
 
-Librarian runtime, data-visualization vocabulary (charts / GeoGebra / Wolfram
-spokes), HITL orchestration tooling.
+Data-visualization vocabulary (charts / GeoGebra / Wolfram spokes), HITL
+orchestration tooling.

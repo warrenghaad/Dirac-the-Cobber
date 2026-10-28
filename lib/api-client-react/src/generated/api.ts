@@ -26,6 +26,8 @@ import type {
   LibraryManifest,
   PlanRequest,
   PlanResult,
+  PromoteDiagramPlanRequest,
+  PromoteDiagramPlanResult,
   ValidationReport
 } from './api.schemas';
 
@@ -273,6 +275,78 @@ export const useValidateDiagramPlan = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getValidateDiagramPlanMutationOptions(options));
+    }
+
+export const getPromoteDiagramPlanUrl = () => {
+
+
+
+
+  return `/api/librarian/compositions/promote`
+}
+
+/**
+ * Development-only maintainer action. The server validates the generated plan and complete next manifest before atomically updating the source-controlled manifest. Production deployments are read-only.
+ * @summary Save a valid generated diagram as a reusable composition
+ */
+export const promoteDiagramPlan = async (promoteDiagramPlanRequest: PromoteDiagramPlanRequest, options?: RequestInit): Promise<PromoteDiagramPlanResult> => {
+
+  return customFetch<PromoteDiagramPlanResult>(getPromoteDiagramPlanUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(promoteDiagramPlanRequest)
+  }
+);}
+
+
+
+
+
+export const getPromoteDiagramPlanMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoteDiagramPlan>>, TError,{data: BodyType<PromoteDiagramPlanRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof promoteDiagramPlan>>, TError,{data: BodyType<PromoteDiagramPlanRequest>}, TContext> => {
+
+const mutationKey = ['promoteDiagramPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof promoteDiagramPlan>>, {data: BodyType<PromoteDiagramPlanRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  promoteDiagramPlan(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PromoteDiagramPlanMutationResult = NonNullable<Awaited<ReturnType<typeof promoteDiagramPlan>>>
+    export type PromoteDiagramPlanMutationBody = BodyType<PromoteDiagramPlanRequest>
+    export type PromoteDiagramPlanMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Save a valid generated diagram as a reusable composition
+ */
+export const usePromoteDiagramPlan = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoteDiagramPlan>>, TError,{data: BodyType<PromoteDiagramPlanRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof promoteDiagramPlan>>,
+        TError,
+        {data: BodyType<PromoteDiagramPlanRequest>},
+        TContext
+      > => {
+      return useMutation(getPromoteDiagramPlanMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {

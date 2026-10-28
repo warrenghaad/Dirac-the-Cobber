@@ -6,5 +6,7 @@ export const modules: ModuleMap = {
   "./components/mockups/wireframe-library/LibrarianPlanDemo.tsx": () => import("../components/mockups/wireframe-library/LibrarianPlanDemo.tsx"),
   "./components/mockups/wireframe-library/PlanRenderer.tsx": () => import("../components/mockups/wireframe-library/PlanRenderer.tsx"),
   "./components/mockups/wireframe-library/TierLadder.tsx": () => import("../components/mockups/wireframe-library/TierLadder.tsx"),
-  "./components/mockups/wireframe-library/WorkflowExample.tsx": () => import("../components/mockups/wireframe-library/WorkflowExample.tsx")
+  "./components/mockups/wireframe-library/WorkflowExample.tsx": () => import("../components/mockups/wireframe-library/WorkflowExample.tsx"),
+  "./components/mockups/templates/JapandiFestivalLineupPoster-g3MI6E/App.tsx": () => import("../components/mockups/templates/JapandiFestivalLineupPoster-g3MI6E/App.tsx"),
+  "./components/mockups/templates/MissionControlBentoDashboard-aICn6c/Dashboard.tsx": () => import("../components/mockups/templates/MissionControlBentoDashboard-aICn6c/Dashboard.tsx")
 };

@@ -23,11 +23,13 @@ export const GetLibraryManifestResponse = zod.record(zod.string(), zod.unknown()
 export const CreateDiagramPlanBody = zod.object({
   "need": zod.string().min(1).describe('Natural-language description, e.g. \"map who works where\"'),
   "family": zod.enum(['knowledge-graph', 'workflow']).optional(),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional().describe('Explicit visual-language override; omitted to infer from the need.'),
+  "compositionIds": zod.array(zod.string()).optional(),
   "nodes": zod.array(zod.object({
   "id": zod.string(),
   "label": zod.string(),
   "className": zod.string(),
-  "kind": zod.enum(['entity', 'class', 'literal', 'task', 'start', 'end', 'decision', 'parallel', 'data']).optional(),
+  "kind": zod.enum(['entity', 'class', 'literal', 'task', 'start', 'end', 'decision', 'parallel', 'data', 'actor', 'table', 'column', 'component', 'page', 'section', 'topic', 'process']).optional(),
   "focal": zod.boolean().optional(),
   "properties": zod.array(zod.string()).optional(),
   "parent": zod.string().optional()
@@ -37,7 +39,7 @@ export const CreateDiagramPlanBody = zod.object({
   "from": zod.string(),
   "to": zod.string(),
   "label": zod.string().optional(),
-  "kind": zod.enum(['relation', 'property', 'subclass', 'flow', 'conditional']).optional()
+  "kind": zod.enum(['relation', 'property', 'subclass', 'flow', 'conditional', 'association', 'foreign-key', 'contains', 'navigation', 'branch']).optional()
 })).optional(),
   "groups": zod.array(zod.object({
   "id": zod.string(),
@@ -66,11 +68,14 @@ export const createDiagramPlanResponsePlanPlacementsItemContentHueIndexMin = 0;
 
 
 
+
 export const CreateDiagramPlanResponse = zod.object({
   "plan": zod.object({
   "need": zod.string(),
   "title": zod.string(),
   "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
   "axisMeanings": zod.record(zod.string(), zod.string()),
   "tier1Draft": zod.array(zod.object({
   "id": zod.string(),
@@ -92,6 +97,7 @@ export const CreateDiagramPlanResponse = zod.object({
   "content": zod.object({
   "label": zod.string().optional(),
   "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(createDiagramPlanResponsePlanPlacementsItemContentHueIndexMin).optional(),
   "from": zod.string().optional(),
@@ -100,7 +106,7 @@ export const CreateDiagramPlanResponse = zod.object({
   "role": zod.string().optional(),
   "focal": zod.boolean().optional()
 })
-})),
+})).min(1),
   "notes": zod.array(zod.string())
 }),
   "validation": zod.object({
@@ -137,10 +143,13 @@ export const validateDiagramPlanBodyPlacementsItemContentHueIndexMin = 0;
 
 
 
+
 export const ValidateDiagramPlanBody = zod.object({
   "need": zod.string(),
   "title": zod.string(),
   "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
   "axisMeanings": zod.record(zod.string(), zod.string()),
   "tier1Draft": zod.array(zod.object({
   "id": zod.string(),
@@ -162,6 +171,7 @@ export const ValidateDiagramPlanBody = zod.object({
   "content": zod.object({
   "label": zod.string().optional(),
   "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
   "properties": zod.array(zod.string()).optional(),
   "hueIndex": zod.number().min(validateDiagramPlanBodyPlacementsItemContentHueIndexMin).optional(),
   "from": zod.string().optional(),
@@ -170,7 +180,7 @@ export const ValidateDiagramPlanBody = zod.object({
   "role": zod.string().optional(),
   "focal": zod.boolean().optional()
 })
-})),
+})).min(1),
   "notes": zod.array(zod.string())
 })
 
@@ -182,6 +192,139 @@ export const ValidateDiagramPlanResponse = zod.object({
   "message": zod.string(),
   "placementId": zod.string().optional()
 }))
+})
+
+
+/**
+ * Development-only maintainer action. The server validates the generated plan and complete next manifest before atomically updating the source-controlled manifest. Production deployments are read-only.
+ * @summary Save a valid generated diagram as a reusable composition
+ */
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA1Min = 0;
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA1Max = 4;
+
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA2Min = 0;
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA2Max = 4;
+
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA3Min = 0;
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA3Max = 4;
+
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA4Min = 0;
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA4Max = 4;
+
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA5Min = 0;
+export const promoteDiagramPlanBodyPlanPlacementsItemAxesA5Max = 4;
+
+export const promoteDiagramPlanBodyPlanPlacementsItemContentHueIndexMin = 0;
+
+
+
+
+export const promoteDiagramPlanBodyIdRegExp = new RegExp('^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$');
+
+export const promoteDiagramPlanBodyDescriptionMax = 500;
+
+
+
+export const PromoteDiagramPlanBody = zod.object({
+  "plan": zod.object({
+  "need": zod.string(),
+  "title": zod.string(),
+  "family": zod.enum(['knowledge-graph', 'workflow']),
+  "visualLanguage": zod.enum(['knowledge-graph', 'uml', 'database', 'mui-ui', 'flowchart', 'workflow', 'information-architecture', 'mind-map']).optional(),
+  "compositionIds": zod.array(zod.string()).optional(),
+  "axisMeanings": zod.record(zod.string(), zod.string()),
+  "tier1Draft": zod.array(zod.object({
+  "id": zod.string(),
+  "componentId": zod.string(),
+  "from": zod.string().optional(),
+  "to": zod.string().optional(),
+  "label": zod.string().optional()
+})),
+  "placements": zod.array(zod.object({
+  "id": zod.string(),
+  "componentId": zod.string(),
+  "axes": zod.object({
+  "a1": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemAxesA1Min).max(promoteDiagramPlanBodyPlanPlacementsItemAxesA1Max),
+  "a2": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemAxesA2Min).max(promoteDiagramPlanBodyPlanPlacementsItemAxesA2Max),
+  "a3": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemAxesA3Min).max(promoteDiagramPlanBodyPlanPlacementsItemAxesA3Max),
+  "a4": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemAxesA4Min).max(promoteDiagramPlanBodyPlanPlacementsItemAxesA4Max),
+  "a5": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemAxesA5Min).max(promoteDiagramPlanBodyPlanPlacementsItemAxesA5Max)
+}),
+  "content": zod.object({
+  "label": zod.string().optional(),
+  "typeTag": zod.string().optional(),
+  "className": zod.string().optional(),
+  "properties": zod.array(zod.string()).optional(),
+  "hueIndex": zod.number().min(promoteDiagramPlanBodyPlanPlacementsItemContentHueIndexMin).optional(),
+  "from": zod.string().optional(),
+  "to": zod.string().optional(),
+  "parent": zod.string().optional(),
+  "role": zod.string().optional(),
+  "focal": zod.boolean().optional()
+})
+})).min(1),
+  "notes": zod.array(zod.string())
+}),
+  "id": zod.string().min(1).regex(promoteDiagramPlanBodyIdRegExp),
+  "label": zod.string().min(1),
+  "description": zod.string().max(promoteDiagramPlanBodyDescriptionMax).optional(),
+  "family": zod.enum(['tier1', 'knowledge-graph', 'workflow', 'cross-family']),
+  "atomicLevel": zod.enum(['molecule', 'organism', 'template'])
+})
+
+
+
+export const promoteDiagramPlanResponseCompositionIdRegExp = new RegExp('^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$');
+
+
+
+export const promoteDiagramPlanResponseCompositionSlotsItemPositionXMin = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemPositionXMax = 1;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemPositionYMin = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemPositionYMax = 1;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA1Min = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA1Max = 4;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA2Min = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA2Max = 4;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA3Min = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA3Max = 4;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA4Min = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA4Max = 4;
+
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA5Min = 0;
+export const promoteDiagramPlanResponseCompositionSlotsItemAxesA5Max = 4;
+
+
+
+
+export const PromoteDiagramPlanResponse = zod.object({
+  "composition": zod.object({
+  "id": zod.string().min(1).regex(promoteDiagramPlanResponseCompositionIdRegExp),
+  "atomicLevel": zod.enum(['molecule', 'organism', 'template']),
+  "label": zod.string().min(1),
+  "description": zod.string().optional(),
+  "family": zod.enum(['tier1', 'knowledge-graph', 'workflow', 'cross-family']),
+  "slots": zod.array(zod.object({
+  "componentId": zod.string().min(1),
+  "role": zod.string().min(1),
+  "position": zod.object({
+  "x": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemPositionXMin).max(promoteDiagramPlanResponseCompositionSlotsItemPositionXMax),
+  "y": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemPositionYMin).max(promoteDiagramPlanResponseCompositionSlotsItemPositionYMax)
+}),
+  "axes": zod.object({
+  "a1": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemAxesA1Min).max(promoteDiagramPlanResponseCompositionSlotsItemAxesA1Max).optional(),
+  "a2": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemAxesA2Min).max(promoteDiagramPlanResponseCompositionSlotsItemAxesA2Max).optional(),
+  "a3": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemAxesA3Min).max(promoteDiagramPlanResponseCompositionSlotsItemAxesA3Max).optional(),
+  "a4": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemAxesA4Min).max(promoteDiagramPlanResponseCompositionSlotsItemAxesA4Max).optional(),
+  "a5": zod.number().min(promoteDiagramPlanResponseCompositionSlotsItemAxesA5Min).max(promoteDiagramPlanResponseCompositionSlotsItemAxesA5Max).optional()
+}).optional()
+})).min(1)
+})
 })
 
 

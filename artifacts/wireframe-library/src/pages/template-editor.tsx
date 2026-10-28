@@ -74,13 +74,17 @@ function parseAxesParam(param: string): AxesOverrideMap {
  * Invalid slot indices (out of range) are dropped; axis values are clamped
  * to each component's maxAxes so restored state is always legal.
  */
-function normalizeAxesOverrides(raw: AxesOverrideMap, composition: Composition): AxesOverrideMap {
+function normalizeAxesOverrides(
+  raw: AxesOverrideMap,
+  composition: Composition,
+  components: LibraryComponent[],
+): AxesOverrideMap {
   const clamped: AxesOverrideMap = {};
   for (const [idxStr, partial] of Object.entries(raw)) {
     const idx = Number(idxStr);
     const slot = composition.slots[idx];
     if (!slot) continue; // index out of range — discard
-    const component = MANIFEST.components.find((c) => c.id === slot.componentId) ?? null;
+    const component = components.find((c) => c.id === slot.componentId) ?? null;
     const base = resolveSlotAxes(slot, component);
     const merged: AxisCoords = {
       a1: partial?.a1 ?? base.a1,
@@ -264,7 +268,7 @@ export default function TemplateEditorPage() {
     // is always valid. If composition is undefined (unknown id) the not-found
     // guard below renders before any slots are accessed.
     if (!composition) return raw;
-    return normalizeAxesOverrides(raw, composition);
+    return normalizeAxesOverrides(raw, composition, manifest.components);
   });
 
   // Keep the URL in sync whenever overrides change (replaceState so Back still works).
@@ -297,7 +301,13 @@ export default function TemplateEditorPage() {
   }
 
   const viewport = { w: 640, h: 480 };
-  const records = layoutSlots(composition, viewport, axesOverrides, manifest.components);
+  const records = layoutSlots(
+    composition,
+    viewport,
+    axesOverrides,
+    manifest.components,
+    manifest.tokens,
+  );
 
   const handleAxesChange = (slotIndex: number, newAxes: AxisCoords) => {
     setAxesOverrides((prev) => ({ ...prev, [slotIndex]: newAxes }));

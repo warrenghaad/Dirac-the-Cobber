@@ -15,6 +15,8 @@ import type {
   PlanRequest,
   StructuredEdge,
   StructuredNode,
+  VisualLanguage,
+  VisualLanguageDefinition,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -32,10 +34,130 @@ const KG_CUES = [
   "belongs", "owns", "works", "concept", "taxonomy",
 ];
 
-export function classifyFamily(need: string): DiagramFamily {
+const VISUAL_LANGUAGE_DEFINITIONS: VisualLanguageDefinition[] = [
+  {
+    id: "knowledge-graph",
+    label: "Knowledge Graph",
+    description: "Entities, classes, properties, and relationships",
+    cues: KG_CUES,
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["entity", "class", "literal", "relation", "property", "subclass", "group"],
+    componentFamilies: ["knowledge-graph", "tier1"],
+  },
+  {
+    id: "uml",
+    label: "UML",
+    description: "Classes, actors, associations, and inheritance",
+    cues: ["uml", "class", "classes", "object", "objects", "actor", "actors", "inheritance", "association", "sequence"],
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["class", "entity", "actor", "association", "subclass", "group"],
+    componentFamilies: ["knowledge-graph", "tier1"],
+  },
+  {
+    id: "database",
+    label: "Database Diagram",
+    description: "Tables, columns, keys, and data relationships",
+    cues: ["database", "databases", "db", "table", "tables", "column", "columns", "sql", "erd", "primary", "foreign", "key"],
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["table", "column", "entity", "foreign-key", "property", "contains", "group"],
+    componentFamilies: ["knowledge-graph", "tier1"],
+  },
+  {
+    id: "mui-ui",
+    label: "MUI UI Structure",
+    description: "React and Material UI screens, components, and sections",
+    cues: ["mui", "material", "react", "ui", "interface", "screen", "screens", "component", "components", "card", "dialog", "dashboard"],
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["component", "page", "section", "contains", "navigation", "group"],
+    componentFamilies: ["tier1"],
+  },
+  {
+    id: "flowchart",
+    label: "Flowchart",
+    description: "Processes, decisions, inputs, and outputs",
+    cues: ["flowchart", "flowcharts", "flow", "algorithm", "decision", "branch", "yes", "no", "start", "end"],
+    baseFamily: "workflow",
+    semanticRoles: ["start", "end", "process", "task", "decision", "data", "branch", "flow", "group"],
+    componentFamilies: ["workflow", "tier1"],
+  },
+  {
+    id: "workflow",
+    label: "Workflow",
+    description: "Ordered steps, handoffs, approvals, and stages",
+    cues: WF_CUES,
+    baseFamily: "workflow",
+    semanticRoles: ["start", "end", "task", "decision", "parallel", "data", "flow", "conditional", "lane"],
+    componentFamilies: ["workflow", "tier1"],
+  },
+  {
+    id: "information-architecture",
+    label: "Information Architecture",
+    description: "Pages, sections, navigation, and content hierarchy",
+    cues: ["information", "architecture", "sitemap", "site", "navigation", "nav", "content", "hierarchy", "website", "websites"],
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["page", "section", "navigation", "contains", "group"],
+    componentFamilies: ["knowledge-graph", "tier1"],
+  },
+  {
+    id: "mind-map",
+    label: "Mind Map",
+    description: "A central topic with branching ideas and associations",
+    cues: ["mind", "map", "mindmap", "brainstorm", "idea", "ideas", "branch", "branches", "radial", "central"],
+    baseFamily: "knowledge-graph",
+    semanticRoles: ["topic", "entity", "branch", "relation", "group"],
+    componentFamilies: ["knowledge-graph", "tier1"],
+  },
+];
+
+export { VISUAL_LANGUAGE_DEFINITIONS };
+
+const LANGUAGE_PRIORITY: VisualLanguage[] = [
+  "database",
+  "uml",
+  "mui-ui",
+  "information-architecture",
+  "mind-map",
+  "flowchart",
+  "workflow",
+  "knowledge-graph",
+];
+
+const VISUAL_LANGUAGE_BY_ID = new Map(
+  VISUAL_LANGUAGE_DEFINITIONS.map((definition) => [definition.id, definition]),
+);
+
+export function classifyVisualLanguage(need: string): VisualLanguage {
+  return classifyVisualLanguageFromManifest(need);
+}
+
+export function classifyVisualLanguageFromManifest(
+  need: string,
+  manifest?: Manifest,
+): VisualLanguage {
   const words = tokenize(need);
-  const score = (cues: string[]) => words.filter((w) => cues.includes(w)).length;
-  return score(WF_CUES) > score(KG_CUES) ? "workflow" : "knowledge-graph";
+  const score = (definition: VisualLanguageDefinition) =>
+    words.filter((word) => definition.cues.includes(word)).length;
+  const definitions = manifest?.visualLanguages?.length
+    ? manifest.visualLanguages
+    : LANGUAGE_PRIORITY.map((id) => VISUAL_LANGUAGE_BY_ID.get(id)!);
+  let selected: VisualLanguage = "knowledge-graph";
+  let bestScore = 0;
+  for (const definition of definitions) {
+    const currentScore = score(definition);
+    if (currentScore > bestScore) {
+      bestScore = currentScore;
+      selected = definition.id;
+    }
+  }
+  return selected;
+}
+
+export function visualLanguageFamily(language: VisualLanguage): DiagramFamily {
+  return VISUAL_LANGUAGE_BY_ID.get(language)?.baseFamily ?? "knowledge-graph";
+}
+
+export function classifyFamily(need: string): DiagramFamily {
+  return visualLanguageFamily(classifyVisualLanguage(need));
 }
 
 function tokenize(text: string): string[] {
@@ -65,13 +187,13 @@ const KG_RELATION_CUES: [string, string, string, string][] = [
 const WF_DECISION_CUES = ["if", "decide", "decision", "whether"];
 
 /** Derive a schematic structure from bare text when no explicit nodes given. */
-function deriveStructure(need: string, family: DiagramFamily): {
+function deriveStructure(need: string, language: VisualLanguage): {
   nodes: StructuredNode[];
   edges: StructuredEdge[];
   notes: string[];
 } {
   const notes: string[] = [];
-  if (family === "workflow") {
+  if (visualLanguageFamily(language) === "workflow") {
     // Split the need into step phrases.
     const phrases = need
       .replace(/^(model|map|draw|show|design)\b[^:]*:\s*/i, "")
@@ -183,19 +305,180 @@ export const WF_EDGE_COMPONENT: Record<string, string> = {
   conditional: "wf.cond-edge",
 };
 
+export const UML_NODE_COMPONENT: Record<string, string> = {
+  actor: "kg.entity",
+  entity: "kg.entity",
+  class: "kg.class",
+  literal: "kg.literal",
+};
+export const UML_EDGE_COMPONENT: Record<string, string> = {
+  association: "kg.relation-edge",
+  relation: "kg.relation-edge",
+  property: "kg.property-edge",
+  subclass: "kg.subclass-edge",
+};
+export const DATABASE_NODE_COMPONENT: Record<string, string> = {
+  table: "kg.class",
+  entity: "kg.entity",
+  column: "kg.literal",
+  literal: "kg.literal",
+  class: "kg.class",
+};
+export const DATABASE_EDGE_COMPONENT: Record<string, string> = {
+  "foreign-key": "kg.relation-edge",
+  contains: "kg.property-edge",
+  property: "kg.property-edge",
+  relation: "kg.relation-edge",
+};
+export const MUI_NODE_COMPONENT: Record<string, string> = {
+  component: "prim.node.generic",
+  page: "prim.node.generic",
+  section: "prim.container.plain",
+  entity: "prim.node.generic",
+  class: "prim.node.generic",
+};
+export const MUI_EDGE_COMPONENT: Record<string, string> = {
+  contains: "prim.edge.plain",
+  navigation: "prim.edge.plain",
+  relation: "prim.edge.plain",
+  flow: "prim.edge.plain",
+};
+export const FLOWCHART_NODE_COMPONENT: Record<string, string> = {
+  task: "wf.task",
+  process: "wf.task",
+  start: "wf.start-end",
+  end: "wf.start-end",
+  decision: "wf.decision",
+  parallel: "wf.parallel",
+  data: "wf.data",
+};
+export const FLOWCHART_EDGE_COMPONENT: Record<string, string> = {
+  flow: "wf.flow-edge",
+  branch: "wf.cond-edge",
+  conditional: "wf.cond-edge",
+};
+export const IA_NODE_COMPONENT: Record<string, string> = {
+  page: "kg.entity",
+  section: "kg.class",
+  entity: "kg.entity",
+  class: "kg.class",
+  topic: "kg.entity",
+};
+export const IA_EDGE_COMPONENT: Record<string, string> = {
+  contains: "kg.property-edge",
+  navigation: "kg.relation-edge",
+  relation: "kg.relation-edge",
+};
+export const MIND_MAP_NODE_COMPONENT: Record<string, string> = {
+  topic: "kg.entity",
+  entity: "kg.entity",
+  class: "kg.class",
+  literal: "kg.literal",
+};
+export const MIND_MAP_EDGE_COMPONENT: Record<string, string> = {
+  branch: "kg.relation-edge",
+  relation: "kg.relation-edge",
+  contains: "kg.property-edge",
+};
+
+const NODE_COMPONENTS_BY_LANGUAGE: Record<VisualLanguage, Record<string, string>> = {
+  "knowledge-graph": KG_NODE_COMPONENT,
+  uml: UML_NODE_COMPONENT,
+  database: DATABASE_NODE_COMPONENT,
+  "mui-ui": MUI_NODE_COMPONENT,
+  flowchart: FLOWCHART_NODE_COMPONENT,
+  workflow: WF_NODE_COMPONENT,
+  "information-architecture": IA_NODE_COMPONENT,
+  "mind-map": MIND_MAP_NODE_COMPONENT,
+};
+
+const EDGE_COMPONENTS_BY_LANGUAGE: Record<VisualLanguage, Record<string, string>> = {
+  "knowledge-graph": KG_EDGE_COMPONENT,
+  uml: UML_EDGE_COMPONENT,
+  database: DATABASE_EDGE_COMPONENT,
+  "mui-ui": MUI_EDGE_COMPONENT,
+  flowchart: FLOWCHART_EDGE_COMPONENT,
+  workflow: WF_EDGE_COMPONENT,
+  "information-architecture": IA_EDGE_COMPONENT,
+  "mind-map": MIND_MAP_EDGE_COMPONENT,
+};
+
+function definitionFor(manifest: Manifest, language: VisualLanguage): VisualLanguageDefinition {
+  return manifest.visualLanguages?.find((definition) => definition.id === language)
+    ?? VISUAL_LANGUAGE_BY_ID.get(language)
+    ?? VISUAL_LANGUAGE_BY_ID.get("knowledge-graph")!;
+}
+
+function componentSupportsLanguage(
+  component: ManifestComponent,
+  language: VisualLanguage,
+  manifest: Manifest,
+): boolean {
+  const definition = definitionFor(manifest, language);
+  if (!definition.componentFamilies.includes(component.family)) return false;
+  if (component.visualLanguages?.length) return component.visualLanguages.includes(definition.id);
+  const family = manifest.componentFamilies?.find((candidate) => candidate.id === component.family);
+  return family?.visualLanguages.includes(definition.id)
+    ?? (component.family === "tier1" || component.family === definition.baseFamily);
+}
+
+function normalizeNodeKind(language: VisualLanguage, kind: string): string {
+  if (language === "database") {
+    if (kind === "literal" || kind === "column") return "column";
+    if (["entity", "class", "table"].includes(kind)) return "table";
+  }
+  if (language === "mui-ui") {
+    if (["entity", "class", "literal", "task", "process"].includes(kind)) return "component";
+  }
+  if (language === "information-architecture") {
+    if (kind === "entity") return "page";
+    if (["class", "literal"].includes(kind)) return "section";
+  }
+  if (language === "mind-map" && ["entity", "class", "literal"].includes(kind)) return "topic";
+  if (language === "uml" && kind === "literal") return "class";
+  if (language === "flowchart" && kind === "task") return "process";
+  return kind;
+}
+
+function normalizeEdgeKind(language: VisualLanguage, kind: string): string {
+  if (language === "database") {
+    return kind === "property" ? "contains" : "foreign-key";
+  }
+  if (language === "mui-ui") {
+    return kind === "relation" ? "navigation" : "contains";
+  }
+  if (language === "information-architecture") {
+    return kind === "relation" ? "navigation" : "contains";
+  }
+  if (language === "mind-map") return "branch";
+  if (language === "uml" && ["relation", "property"].includes(kind)) return "association";
+  if (language === "flowchart" && kind === "conditional") return "branch";
+  return kind;
+}
+
 // ---------------------------------------------------------------------------
 // Plan builder
 // ---------------------------------------------------------------------------
 
 export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan {
-  const family = request.family ?? classifyFamily(request.need);
+  const visualLanguage = request.visualLanguage
+    ?? (request.family ? request.family : classifyVisualLanguageFromManifest(request.need, manifest));
+  const languageDefinition = definitionFor(manifest, visualLanguage);
+  const family = request.family && !request.visualLanguage
+    ? request.family
+    : languageDefinition.baseFamily;
   const view = request.view ?? "overview";
   const notes: string[] = [];
+  if (!request.visualLanguage) {
+    notes.push(`Visual language inferred as "${visualLanguage}".`);
+  } else {
+    notes.push(`Visual language selected as "${visualLanguage}".`);
+  }
 
   let nodes = request.nodes;
   let edges = request.edges ?? [];
   if (!nodes || nodes.length === 0) {
-    const derived = deriveStructure(request.need, family);
+    const derived = deriveStructure(request.need, visualLanguage);
     nodes = derived.nodes;
     edges = derived.edges;
     notes.push(...derived.notes);
@@ -207,6 +490,16 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
     if (!c) throw new Error(`Manifest has no component "${id}"`);
     return c;
   };
+  const nodeTable = NODE_COMPONENTS_BY_LANGUAGE[visualLanguage];
+  const edgeTable = EDGE_COMPONENTS_BY_LANGUAGE[visualLanguage];
+  const fallbackNodeKind = visualLanguageFamily(visualLanguage) === "workflow" ? "task" : "entity";
+  const fallbackNodeComponent = nodeTable[fallbackNodeKind] ?? (
+    visualLanguageFamily(visualLanguage) === "workflow" ? "wf.task" : "kg.entity"
+  );
+  const fallbackEdgeKind = visualLanguageFamily(visualLanguage) === "workflow" ? "flow" : "relation";
+  const fallbackEdgeComponent = edgeTable[fallbackEdgeKind] ?? (
+    visualLanguageFamily(visualLanguage) === "workflow" ? "wf.flow-edge" : "kg.relation-edge"
+  );
 
   // §6.2 — Tier-1 equal-consequence draft (structure checkpoint).
   const tier1Draft: DraftPlacement[] = [
@@ -244,17 +537,21 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
 
   const focalId = nodes.find((n) => n.focal)?.id;
   for (const n of nodes) {
-    let kind = n.kind ?? (family === "workflow" ? "task" : "entity");
-    const nodeTable = family === "workflow" ? WF_NODE_COMPONENT : KG_NODE_COMPONENT;
+    let kind = normalizeNodeKind(visualLanguage, n.kind ?? fallbackNodeKind);
     if (!nodeTable[kind]) {
-      const fallback = family === "workflow" ? "task" : "entity";
+      const fallback = fallbackNodeKind;
       notes.push(
         `Node "${n.id}" has unrecognised kind "${kind}" for ${family}; falling back to "${fallback}".`,
       );
       kind = fallback as typeof kind;
     }
-    const compId = nodeTable[kind];
+    const compId = nodeTable[kind] ?? fallbackNodeComponent;
     const comp = component(compId);
+    if (!componentSupportsLanguage(comp, visualLanguage, manifest)) {
+      notes.push(
+        `Component "${comp.id}" is not declared for visual language "${visualLanguage}".`,
+      );
+    }
     const axes: AxisCoords = { ...comp.axes };
     const hueIndex = hueByClass.get(n.className);
     // A2 — class membership. Components default to palette level (2); drop to
@@ -277,26 +574,26 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
       content: {
         label: n.label,
         typeTag: axes.a5 >= 2 ? n.className : undefined,
+        className: n.className,
         properties: axes.a5 >= 3 ? n.properties : undefined,
         hueIndex,
         parent: n.parent,
-        role: n.className,
+        role: kind,
         focal: n.id === focalId || undefined,
       },
     });
   }
 
   edges.forEach((e, i) => {
-    let kind = e.kind ?? (family === "workflow" ? "flow" : "relation");
-    const edgeTable = family === "workflow" ? WF_EDGE_COMPONENT : KG_EDGE_COMPONENT;
+    let kind = normalizeEdgeKind(visualLanguage, e.kind ?? fallbackEdgeKind);
     if (!edgeTable[kind]) {
-      const fallback = family === "workflow" ? "flow" : "relation";
+      const fallback = fallbackEdgeKind;
       notes.push(
         `Edge "${e.id ?? `edge-${i + 1}`}" has unrecognised kind "${kind}" for ${family}; falling back to "${fallback}".`,
       );
       kind = fallback as typeof kind;
     }
-    const compId = edgeTable[kind];
+    const compId = edgeTable[kind] ?? fallbackEdgeComponent;
     const comp = component(compId);
     const axes: AxisCoords = { ...comp.axes };
     if (!e.label && axes.a5 > 0) axes.a5 = 0;
@@ -310,7 +607,11 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
   });
 
   (request.groups ?? []).forEach((g) => {
-    const compId = family === "workflow" && g.kind === "lane" ? "wf.lane" : "kg.group";
+    const compId = visualLanguageFamily(visualLanguage) === "workflow" && g.kind === "lane"
+      ? "wf.lane"
+      : visualLanguage === "mui-ui"
+        ? "prim.container.plain"
+        : "kg.group";
     const comp = component(compId);
     placements.push({
       id: g.id,
@@ -324,6 +625,8 @@ export function buildPlan(request: PlanRequest, manifest: Manifest): DiagramPlan
     need: request.need,
     title: titleCase(request.need),
     family,
+    visualLanguage,
+    compositionIds: request.compositionIds,
     axisMeanings: {
       a1: "category (role family)",
       a2: "class membership",

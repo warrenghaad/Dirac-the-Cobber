@@ -1,3 +1,5 @@
+> PRIORITY: Import components from UI kits, graph visualization libraries, IA patterns, database/schema diagrams, and component matrices. Extract visual logic from each. Build the manifest as a connected knowledge graph.
+
 # Project: Tiered Wireframe Library (design-logic hub)
 
 Hub-and-spoke system where LLM agents auto-design knowledge/property graphs and workflow diagrams.
@@ -6,6 +8,13 @@ Hub-and-spoke system where LLM agents auto-design knowledge/property graphs and 
 - `docs/wireframe-library/SPEC.md` — tiers, five growth axes (A1 shape, A2 color, A3 size, A4 stroke, A5 labels), librarian selection rules. v0.1.0
 - `docs/wireframe-library/manifest.json` (+ `manifest.schema.json`) — machine-readable component manifest for LLM consumption; `figmaNodeId: null` means the React reference render is source of truth.
 - `artifacts/mockup-sandbox/src/components/mockups/wireframe-library/` — React reference sheets (TierLadder, GrowthAxes, KnowledgeGraphExample, WorkflowExample) rendered on the canvas.
+
+## North star
+This project is the **visual-logic inference layer between an LLM that understands a user's need and the visual language the user wants to communicate**.
+
+The LLM should extract and reason about the user's semantic need — entities, relationships, sequence, hierarchy, ownership, state, and emphasis — without inventing visual implementation details. The Librarian then maps that structure deterministically onto a broad, composable visual vocabulary: UML, database diagrams, MUI-based UI structures, flowcharts, workflows, information architecture, mind maps, and future visual families.
+
+The manifest is therefore a remixable vocabulary, not a catalog tied to one Figma file or one diagram style. Components may come from any readable Figma source, the React reference set, or future libraries. What matters is whether a component provides the right visual role and can be composed, parameterized, validated, rendered, and shared consistently. Figma intake exists to attach usable references to that vocabulary; it must never narrow the Librarian's inference space or make source provenance more important than semantic fit.
 
 ## Core design logic
 Tier 1 primitives are equal-consequence (S2 size, mono ink, W1 stroke, no label); complexity grows along parallel, independent, linear axes so a semi-autonomous "librarian" can map need → tier → axis coordinates deterministically. Invariant: `max(axes) ≤ tier` (checked ad hoc via node script against manifest).

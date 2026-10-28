@@ -1,6 +1,6 @@
 // AUTO-GENERATED — do not edit by hand.
 // Run `pnpm --filter @workspace/scripts run generate:tokens` to regenerate.
-// Source: docs/wireframe-library/manifest.json v0.1.0
+// Source: docs/wireframe-library/manifest.json v0.2.0
 
 // ── Manifest tokens ──────────────────────────────────────────────────────────
 export const INK = "#1A1D23";
@@ -36,7 +36,7 @@ export function SheetHeader({ title, subtitle }: { title: string; subtitle: stri
   return (
     <div className="mb-6">
       <div className="text-[11px] font-semibold tracking-[0.2em] uppercase" style={{ color: ACCENT }}>
-        Tiered Wireframe Library · v0.1.0
+        Tiered Wireframe Library · v0.2.0
       </div>
       <h1 className="text-2xl font-bold mt-1" style={{ color: INK }}>{title}</h1>
       <p className="text-sm mt-1 max-w-3xl" style={{ color: TEXT_BODY }}>{subtitle}</p>

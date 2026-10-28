@@ -1,9 +1,50 @@
 # Tiered Wireframe Library
 
+## Publish safely to GitHub
+
+The repository publish command runs a GitHub access preflight before it can
+push anything:
+
+```bash
+pnpm run publish:github
+```
+
+It stops without pushing when the remote is misconfigured, GitHub access is
+stale, or the remote branch has conflicting history. Only after read access and
+the dry-run write check pass does it push the current branch to the verified
+GitHub remote.
+
+To run the read-only preflight by itself:
+
+```bash
+pnpm run preflight:github
+```
+
+The command selects the only configured GitHub remote automatically. If more
+than one GitHub remote is configured, select the publishing remote explicitly:
+
+```bash
+pnpm run preflight:github -- --remote origin --branch main
+pnpm run publish:github -- --remote origin --branch main
+```
+
+It verifies read access with `git ls-remote` and write access with
+`git push --dry-run`. Neither check changes remote history. A successful result
+labels the destination as an **empty repository** or an **existing repository**,
+so an empty destination is not confused with an authorization failure.
+
+If GitHub rejects the read or dry-run write check, the command reports
+`authentication-failure` and tells you to reconnect the GitHub account used by
+this workspace in its connected services, confirm access to the repository, and
+run the preflight again. A `history-conflict` is reported separately when the
+remote contains unrelated branch history; reconcile that history before
+publishing rather than force-pushing.
+
 A design-logic hub where a **Librarian** — human or AI — turns a plain-language need statement into a validated, shareable wireframe diagram. Instead of drawing by hand, diagrams are *composed* from a tiered catalog of primitives (the manifest) and rendered by rules, so every diagram is consistent, auditable, and reproducible.
 
 ## Table of Contents
 
+- [Verify GitHub access before publishing](#verify-github-access-before-publishing)
 - [Project Purpose](#project-purpose)
 - [Problems It Solves](#problems-it-solves)
 - [How It Solves Them](#how-it-solves-them)
@@ -67,7 +108,7 @@ There are three ways templates enter the picture, from "pick one off the shelf" 
 - The wireframe-library UI can browse compositions/templates and share template URLs with slot settings preserved.
 
 **Open questions.**
-- Does the Figma file referenced by each `figmaNodeId` still match the composition schema? An audit is needed — many entries are `null`, meaning the React reference render is the source of truth.
+- The [Figma manifest audit](docs/wireframe-library/FIGMA-AUDIT.md) confirms which references are usable. Entries at `figmaNodeId: null` intentionally use the React reference render as their source of truth.
 - Which compositions should surface as "starter templates" vs. advanced compositions?
 - Should template selection be guided automatically by the need statement, or remain a manual Librarian choice?
 
