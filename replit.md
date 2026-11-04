@@ -7,6 +7,13 @@ none of its application directories. Do not delete or replace the README. The
 separate Librarian restoration task owns recovery of that application.
 The functioning FigJam workbench is isolated under `workflow_system/`.
 
+## User-directed scope
+
+Work through the requested Figma files in order; do not move on from the
+current file until asked. Earlier Git hub, mirror, CMS and shared-brain
+discussion was exploratory, not approval to build infrastructure or create
+follow-up work from those ideas.
+
 ## Running and verification
 
 - Run the **FigJam workflow** workflow, or `python -m workflow_system.server`.
