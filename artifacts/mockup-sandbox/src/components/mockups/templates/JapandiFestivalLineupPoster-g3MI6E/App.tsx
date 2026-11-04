@@ -85,7 +85,7 @@ const DAYS = [
       { name: 'Closing Bell', place: 'All Stages', genre: 'Single Strike, 432 Hz', time: '22:00', stage: 'H', span: 2, tier: 4 },
     ],
   },
-];
+] as const;
 
 const STATS = [
   { value: '100%', label: 'OF PROCEEDS TO APPRENTICESHIPS', span: 3 },
@@ -100,7 +100,7 @@ export default function App() {
   const [dayIdx, setDayIdx] = useState(0);
   const day = DAYS[dayIdx];
 
-  const tierName = (t) =>
+  const tierName = (t: number) =>
     t === 1 ? 'shippori text-[clamp(28px,3.4vw,46px)] leading-[1.02]' :
     t === 2 ? 'shippori text-[clamp(20px,2.2vw,30px)] leading-[1.05]' :
     t === 3 ? 'shippori text-[clamp(16px,1.7vw,22px)] leading-[1.1]' :

@@ -173,8 +173,19 @@ if (catalog) {
     }
   }
 
-  const unmatchedIds = new Set<string>(catalog.intakeReport?.unmatchedAssetIds ?? []);
-  const excludedIds = new Set<string>(catalog.intakeReport?.excludedAssetIds ?? []);
+  const unmatchedReportIds: unknown[] = catalog.intakeReport?.unmatchedAssetIds ?? [];
+  const excludedReportIds: unknown[] = catalog.intakeReport?.excludedAssetIds ?? [];
+  for (const reportId of [...unmatchedReportIds, ...excludedReportIds]) {
+    if (typeof reportId !== "string") {
+      fail("source-catalog: intake report ids must be strings");
+    }
+  }
+  const unmatchedIds = new Set<string>(
+    unmatchedReportIds.filter((id): id is string => typeof id === "string"),
+  );
+  const excludedIds = new Set<string>(
+    excludedReportIds.filter((id): id is string => typeof id === "string"),
+  );
   const reportIds = new Set([...unmatchedIds, ...excludedIds]);
   for (const reportId of reportIds) {
     if (!assetIds.has(reportId) && !templateIds.has(reportId)) {

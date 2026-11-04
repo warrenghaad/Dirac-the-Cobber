@@ -9,7 +9,7 @@ import {
   parseStoredGraphDocument,
   validateGraphDocument,
 } from "@/lib/graph-document";
-import type { DiagramPlan } from "@/lib/diagram-types";
+import type { DiagramPlan } from "@workspace/api-client-react";
 
 const plan: DiagramPlan = {
   need: "map ownership",

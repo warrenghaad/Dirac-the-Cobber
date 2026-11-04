@@ -13,6 +13,8 @@ export interface PlacementContent {
   properties?: string[];
   /** @minimum 0 */
   hueIndex?: number;
+  /** Known manifest composition to render for this node */
+  compositionId?: string;
   from?: string;
   to?: string;
   parent?: string;

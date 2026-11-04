@@ -88,6 +88,21 @@ describe("buildSystemPrompt – kind list completeness (regression guard)", () =
   });
 });
 
+describe("buildSystemPrompt – composition choices", () => {
+  it("lists exact ids and tells the model to omit non-matches", () => {
+    const prompt = buildSystemPrompt([{
+      id: "org.workflow-decision-branch",
+      atomicLevel: "organism",
+      label: "Workflow Decision Branch",
+      family: "workflow",
+      slots: [],
+    }]);
+    expect(prompt).toContain("org.workflow-decision-branch");
+    expect(prompt).toContain('"compositionId"');
+    expect(prompt).toContain("omit the field when no composition is a good match");
+  });
+});
+
 describe("planToStructured – MUI refinement preservation", () => {
   it("reconstructs Tier-1 UI nodes, containers, and edges", () => {
     const result = planToStructured({

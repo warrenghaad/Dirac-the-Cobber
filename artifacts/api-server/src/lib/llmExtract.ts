@@ -15,6 +15,7 @@
  */
 
 import type {
+  Composition,
   DiagramFamily,
   StructuredEdge,
   StructuredGroup,
@@ -106,13 +107,29 @@ export function isLLMConfigured(): boolean {
   return getLLMConfig() !== null;
 }
 
-// ---------------------------------------------------------------------------
-// System prompt — generated at module load time from the librarian's component
-// tables so that adding a new kind there automatically updates what the LLM
-// knows about.  Never hand-edit the kind lists here; edit the tables instead.
-// ---------------------------------------------------------------------------
+function compositionPrompt(
+  compositions: readonly Composition[] = [],
+): string {
+  if (compositions.length === 0) {
+    return `- "compositionId" is optional. When a known composition list is supplied, use only an exact id from that list.`;
+  }
 
-export function buildSystemPrompt(): string {
+  const entries = compositions
+    .map(
+      (composition) =>
+        `  - ${composition.id} (${composition.family}, ${composition.atomicLevel}): ${composition.label}${composition.description ? ` — ${composition.description}` : ""}`,
+    )
+    .join("\n");
+  return `Known compositions from the manifest:
+${entries}
+
+- "compositionId" is optional. Set it only when one of the known compositions is a good visual and structural match for the node.
+- Use the exact manifest id and omit the field when no composition is a good match.
+- A composition is rendered as one node; do not emit its internal slots as separate nodes.`;
+}
+export function buildSystemPrompt(
+  compositions: readonly Composition[] = [],
+): string {
   const kgNodeKinds = [...KG_NODE_KINDS].join("|");
   const kgEdgeKinds = [...KG_EDGE_KINDS].join("|");
   const wfNodeKinds = [...WF_NODE_KINDS].join("|");
@@ -128,6 +145,7 @@ export function buildSystemPrompt(): string {
       "label": "<display label>",
       "className": "<role/type name, e.g. Supplier, Warehouse, Task>",
       "kind": "<see valid kinds per family below>",
+      "compositionId": "<known manifest composition id, omit when none matches>",
       "focal": <true for the single most important node, omit otherwise>,
       "properties": ["<key prop>", ...] // omit when none
     }
@@ -165,11 +183,10 @@ Rules:
 - For knowledge-graph: use kind "entity" for instances, "class" for class/type nodes.
 - For workflow: always include one "start" node (id "start") and one "end" node (id "end").
 - "groups" may be an empty array when not needed.
+- Known composition guidance:
+${compositionPrompt(compositions)}
 - Output only the JSON object — no explanation, no code fences.`;
 }
-
-const SYSTEM_PROMPT = buildSystemPrompt();
-
 /**
  * Attempts LLM extraction of nodes/edges/groups from a need string.
  * Returns null when no LLM is configured, so the caller can fall back to
@@ -178,6 +195,7 @@ const SYSTEM_PROMPT = buildSystemPrompt();
 export async function extractWithLLM(
   need: string,
   hintFamily?: DiagramFamily,
+  compositions: readonly Composition[] = [],
 ): Promise<LLMExtractionResult | null> {
   const config = getLLMConfig();
   if (!config) {
@@ -202,7 +220,7 @@ export async function extractWithLLM(
     model: config.model,
     max_completion_tokens: 2048,
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: buildSystemPrompt(compositions) },
       { role: "user", content: userContent },
     ],
   });
@@ -303,11 +321,13 @@ export async function refineWithLLM(
         to?: string;
         focal?: boolean;
         properties?: string[];
+        compositionId?: string;
       };
     }>;
     notes: string[];
   },
   refinement: string,
+  compositions: readonly Composition[] = [],
 ): Promise<LLMExtractionResult | null> {
   const config = getLLMConfig();
   if (!config) {
@@ -338,7 +358,7 @@ export async function refineWithLLM(
     model: config.model,
     max_completion_tokens: 2048,
     messages: [
-      { role: "system", content: REFINEMENT_SYSTEM_PROMPT },
+      { role: "system", content: buildRefinementSystemPrompt(compositions) },
       { role: "user", content: userContent },
     ],
   });
@@ -401,7 +421,10 @@ export async function refineWithLLM(
   };
 }
 
-const REFINEMENT_SYSTEM_PROMPT = `You are a diagram-structure editor. You will receive an existing diagram as JSON and a refinement instruction. Output an updated JSON object (no markdown fences) with this exact shape:
+function buildRefinementSystemPrompt(
+  compositions: readonly Composition[] = [],
+): string {
+  return `You are a diagram-structure editor. You will receive an existing diagram as JSON and a refinement instruction. Output an updated JSON object (no markdown fences) with this exact shape:
 
 {
   "family": "knowledge-graph" | "workflow",
@@ -411,6 +434,7 @@ const REFINEMENT_SYSTEM_PROMPT = `You are a diagram-structure editor. You will r
       "label": "<display label>",
       "className": "<role/type name>",
       "kind": "<entity|class|task|start|end|decision|parallel|data>",
+      "compositionId": "<known manifest composition id, omit when none matches>",
       "focal": <true for the single most important node, omit otherwise>,
       "properties": ["<key prop>", ...] // omit when none
     }
@@ -433,8 +457,10 @@ Rules:
 - Every "from"/"to" in edges must exactly match an "id" in nodes.
 - Node ids must be URL-safe slugs (lowercase, hyphens only).
 - For workflow diagrams always keep exactly one "start" node and one "end" node.
+- Known composition guidance:
+${compositionPrompt(compositions)}
 - Output only the JSON object — no explanation, no code fences.`;
-
+}
 /**
  * Reconstruct StructuredNode/StructuredEdge arrays from a DiagramPlan so the
  * LLM can see the current diagram in the same schema it was built from.
@@ -452,6 +478,7 @@ export function planToStructured(plan: {
       to?: string;
       focal?: boolean;
       properties?: string[];
+      compositionId?: string;
     };
   }>;
 }): { nodes: StructuredNode[]; edges: StructuredEdge[] } {
@@ -483,6 +510,7 @@ export function planToStructured(plan: {
         label: p.content.label ?? p.id,
         className: kind === "start" ? "terminator" : "terminator",
         kind,
+        compositionId: p.content.compositionId,
       });
       continue;
     }
@@ -497,6 +525,7 @@ export function planToStructured(plan: {
         kind: nodeKind,
         focal: p.content.focal,
         properties: p.content.properties,
+        compositionId: p.content.compositionId,
       });
     }
   }

@@ -1,4 +1,4 @@
-import type { AxisCoords, DiagramPlan, PlanResult, ValidationReport } from "./diagram-types";
+import type { AxisCoords, DiagramPlan, PlanResult, ValidationReport } from "@workspace/api-client-react";
 
 const SNAPSHOT_VERSION = 1;
 export const MAX_DIAGRAM_SNAPSHOT_LENGTH = 60_000;

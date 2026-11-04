@@ -53,6 +53,8 @@ export interface PlacementContent {
   properties?: string[];
   /** @minimum 0 */
   hueIndex?: number;
+  /** Known manifest composition to render for this node */
+  compositionId?: string;
   from?: string;
   to?: string;
   parent?: string;
@@ -143,6 +145,8 @@ export interface StructuredNode {
   focal?: boolean;
   properties?: string[];
   parent?: string;
+  /** Known manifest composition to render for this node */
+  compositionId?: string;
 }
 
 export type StructuredEdgeKind = typeof StructuredEdgeKind[keyof typeof StructuredEdgeKind];
@@ -378,4 +382,3 @@ export interface PromoteDiagramPlanRequest {
 export interface PromoteDiagramPlanResult {
   composition: PromotedComposition;
 }
-

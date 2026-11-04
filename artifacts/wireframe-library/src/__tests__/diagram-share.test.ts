@@ -5,7 +5,7 @@ import {
   encodeDiagramSnapshot,
   MAX_DIAGRAM_SNAPSHOT_LENGTH,
 } from "@/lib/diagram-share";
-import type { PlanResult } from "@/lib/diagram-types";
+import type { PlanResult } from "@workspace/api-client-react";
 
 const RESULT: PlanResult = {
   plan: {

@@ -15,4 +15,6 @@ export interface StructuredNode {
   focal?: boolean;
   properties?: string[];
   parent?: string;
+  /** Known manifest composition to render for this node */
+  compositionId?: string;
 }
