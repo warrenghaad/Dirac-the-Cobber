@@ -5,3 +5,4 @@
 - [Source catalog offline mirror](source-catalog-offline-mirror.md) — retain the complete baseline during API outages without bloating the initial bundle.
 - [Editable persistence schemas](editable-persistence-schemas.md) — persisted drafts must accept every intermediate state the editor can create, not only final valid output.
 - [Non-destructive graph imports](graph-import-safety.md) — bulk data imports create a separate workspace by default; replacement or merging needs an explicit choice.
+- [Large GitHub blob transfers](github-large-blob-transfer.md) — when connector API requests reject a large blob, preserve the file and use an authenticated Git/LFS path rather than truncating or omitting it.
