@@ -2,7 +2,8 @@
 // The api-server owns the /api path on the shared proxy.
 import { useCallback, useEffect, useState } from "react";
 import type { DiagramPlan, ValidationReport } from "@workspace/wireframe-librarian";
-import { SheetHeader, INK } from "./_shared/tokens";
+import { Spinner } from "../../ui/spinner";
+import { SheetHeader, ACCENT, INK } from "./_shared/tokens";
 import PlanRenderer from "./PlanRenderer";
 
 const NEED = "map who works where";
@@ -60,8 +61,9 @@ export default function LibrarianPlanDemo() {
         subtitle={`Live plan for the need "${NEED}" — fetched from POST /api/librarian/plan and drawn by PlanRenderer. Axes drive every visual channel.`}
       />
       {loading && (
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-          Generating diagram…
+        <div className="flex items-center gap-2 rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <Spinner className="size-4 shrink-0" style={{ color: ACCENT }} />
+          <span>Generating diagram…</span>
         </div>
       )}
       {error && !loading && (
